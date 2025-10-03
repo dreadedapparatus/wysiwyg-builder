@@ -633,6 +633,67 @@ body {
     background-color: #444;
 }
 
+/* Container & Border Styles */
+.container-style-editor {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+.container-style-editor h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+.border-editor {
+    margin-top: 16px;
+}
+.border-editor > label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+.border-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+.border-row > span {
+    text-transform: capitalize;
+    font-size: 0.85rem;
+    color: var(--text-muted-color);
+}
+.border-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.border-inputs input[type="number"] {
+    width: 60px;
+    padding: 6px 8px;
+    background-color: var(--input-background);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+.border-inputs input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+.border-inputs span {
+    font-size: 0.8rem;
+    color: var(--text-muted-color);
+}
+.border-inputs input[type="color"] {
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+}
+
+
 /* Modal */
 .modal-overlay {
   position: fixed;

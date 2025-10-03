@@ -2605,6 +2605,7 @@
             }
             switch (typeof value) {
               case "function":
+              // $FlowIssue symbol is perfectly valid here
               case "symbol":
                 return true;
               case "boolean": {
@@ -3619,6 +3620,7 @@
                 return "SuspenseList";
               case TracingMarkerComponent:
                 return "TracingMarker";
+              // The display name for this tags come from the user-provided type:
               case ClassComponent:
               case FunctionComponent:
               case IncompleteClassComponent:
@@ -4616,6 +4618,10 @@
               return typeof props.is === "string";
             }
             switch (tagName) {
+              // These are reserved SVG and MathML elements.
+              // We don't mind this list too much because we expect it to never grow.
+              // The alternative is to track the namespace in a few places which is convoluted.
+              // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
               case "annotation-xml":
               case "color-profile":
               case "font-face":
@@ -7445,6 +7451,7 @@
           }
           function getEventPriority(domEventName) {
             switch (domEventName) {
+              // Used by SimpleEventPlugin:
               case "cancel":
               case "click":
               case "close":
@@ -7480,14 +7487,20 @@
               case "touchend":
               case "touchstart":
               case "volumechange":
+              // Used by polyfills:
+              // eslint-disable-next-line no-fallthrough
               case "change":
               case "selectionchange":
               case "textInput":
               case "compositionstart":
               case "compositionend":
               case "compositionupdate":
+              // Only enableCreateEventHandleAPI:
+              // eslint-disable-next-line no-fallthrough
               case "beforeblur":
               case "afterblur":
+              // Not used by React but could be by user code:
+              // eslint-disable-next-line no-fallthrough
               case "beforeinput":
               case "blur":
               case "fullscreenchange":
@@ -7512,6 +7525,8 @@
               case "toggle":
               case "touchmove":
               case "wheel":
+              // Not used by React but could be by user code:
+              // eslint-disable-next-line no-fallthrough
               case "mouseenter":
               case "mouseleave":
               case "pointerenter":
@@ -7743,8 +7758,7 @@
             button: 0,
             buttons: 0,
             relatedTarget: function(event) {
-              if (event.relatedTarget === void 0)
-                return event.fromElement === event.srcElement ? event.toElement : event.fromElement;
+              if (event.relatedTarget === void 0) return event.fromElement === event.srcElement ? event.toElement : event.fromElement;
               return event.relatedTarget;
             },
             movementX: function(event) {
@@ -8460,43 +8474,42 @@
             var indexWithinFocus = 0;
             var node = outerNode;
             var parentNode = null;
-            outer:
+            outer: while (true) {
+              var next = null;
               while (true) {
-                var next = null;
-                while (true) {
-                  if (node === anchorNode && (anchorOffset === 0 || node.nodeType === TEXT_NODE)) {
-                    start = length + anchorOffset;
-                  }
-                  if (node === focusNode && (focusOffset === 0 || node.nodeType === TEXT_NODE)) {
-                    end = length + focusOffset;
-                  }
-                  if (node.nodeType === TEXT_NODE) {
-                    length += node.nodeValue.length;
-                  }
-                  if ((next = node.firstChild) === null) {
-                    break;
-                  }
-                  parentNode = node;
-                  node = next;
+                if (node === anchorNode && (anchorOffset === 0 || node.nodeType === TEXT_NODE)) {
+                  start = length + anchorOffset;
                 }
-                while (true) {
-                  if (node === outerNode) {
-                    break outer;
-                  }
-                  if (parentNode === anchorNode && ++indexWithinAnchor === anchorOffset) {
-                    start = length;
-                  }
-                  if (parentNode === focusNode && ++indexWithinFocus === focusOffset) {
-                    end = length;
-                  }
-                  if ((next = node.nextSibling) !== null) {
-                    break;
-                  }
-                  node = parentNode;
-                  parentNode = node.parentNode;
+                if (node === focusNode && (focusOffset === 0 || node.nodeType === TEXT_NODE)) {
+                  end = length + focusOffset;
                 }
+                if (node.nodeType === TEXT_NODE) {
+                  length += node.nodeValue.length;
+                }
+                if ((next = node.firstChild) === null) {
+                  break;
+                }
+                parentNode = node;
                 node = next;
               }
+              while (true) {
+                if (node === outerNode) {
+                  break outer;
+                }
+                if (parentNode === anchorNode && ++indexWithinAnchor === anchorOffset) {
+                  start = length;
+                }
+                if (parentNode === focusNode && ++indexWithinFocus === focusOffset) {
+                  end = length;
+                }
+                if ((next = node.nextSibling) !== null) {
+                  break;
+                }
+                node = parentNode;
+                parentNode = node.parentNode;
+              }
+              node = next;
+            }
             if (start === -1 || end === -1) {
               return null;
             }
@@ -8699,6 +8712,7 @@
           function extractEvents$3(dispatchQueue, domEventName, targetInst, nativeEvent, nativeEventTarget, eventSystemFlags, targetContainer) {
             var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
             switch (domEventName) {
+              // Track the input node that has focus.
               case "focusin":
                 if (isTextInputElement(targetNode) || targetNode.contentEditable === "true") {
                   activeElement$1 = targetNode;
@@ -8711,6 +8725,8 @@
                 activeElementInst$1 = null;
                 lastSelection = null;
                 break;
+              // Don't fire the event while the user is dragging. This matches the
+              // semantics of the native select event.
               case "mousedown":
                 mouseDown = true;
                 break;
@@ -8720,10 +8736,20 @@
                 mouseDown = false;
                 constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
                 break;
+              // Chrome and IE fire non-standard event when selection is changed (and
+              // sometimes when it hasn't). IE's event fires out of order with respect
+              // to key and input events on deletion, so we discard it.
+              //
+              // Firefox doesn't support selectionchange, so check selection status
+              // after each key entry. The selection changes after keydown and before
+              // keyup, but we check on keydown as well in the case of holding down a
+              // key, when multiple keydown events are fired but only one keyup is.
+              // This is also our approach for IE handling, for the reason above.
               case "selectionchange":
                 if (skipSelectionChangeEvent) {
                   break;
                 }
+              // falls through
               case "keydown":
               case "keyup":
                 constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
@@ -8806,6 +8832,7 @@
                 if (getEventCharCode(nativeEvent) === 0) {
                   return;
                 }
+              /* falls through */
               case "keydown":
               case "keyup":
                 SyntheticEventCtor = SyntheticKeyboardEvent;
@@ -8826,11 +8853,14 @@
                 if (nativeEvent.button === 2) {
                   return;
                 }
+              /* falls through */
               case "auxclick":
               case "dblclick":
               case "mousedown":
               case "mousemove":
               case "mouseup":
+              // TODO: Disabled elements should not respond to mouse events
+              /* falls through */
               case "mouseout":
               case "mouseover":
               case "contextmenu":
@@ -9038,45 +9068,44 @@
               var targetContainerNode = targetContainer;
               if (targetInst !== null) {
                 var node = targetInst;
-                mainLoop:
-                  while (true) {
-                    if (node === null) {
-                      return;
-                    }
-                    var nodeTag = node.tag;
-                    if (nodeTag === HostRoot || nodeTag === HostPortal) {
-                      var container = node.stateNode.containerInfo;
-                      if (isMatchingRootContainer(container, targetContainerNode)) {
-                        break;
-                      }
-                      if (nodeTag === HostPortal) {
-                        var grandNode = node.return;
-                        while (grandNode !== null) {
-                          var grandTag = grandNode.tag;
-                          if (grandTag === HostRoot || grandTag === HostPortal) {
-                            var grandContainer = grandNode.stateNode.containerInfo;
-                            if (isMatchingRootContainer(grandContainer, targetContainerNode)) {
-                              return;
-                            }
-                          }
-                          grandNode = grandNode.return;
-                        }
-                      }
-                      while (container !== null) {
-                        var parentNode = getClosestInstanceFromNode(container);
-                        if (parentNode === null) {
-                          return;
-                        }
-                        var parentTag = parentNode.tag;
-                        if (parentTag === HostComponent || parentTag === HostText) {
-                          node = ancestorInst = parentNode;
-                          continue mainLoop;
-                        }
-                        container = container.parentNode;
-                      }
-                    }
-                    node = node.return;
+                mainLoop: while (true) {
+                  if (node === null) {
+                    return;
                   }
+                  var nodeTag = node.tag;
+                  if (nodeTag === HostRoot || nodeTag === HostPortal) {
+                    var container = node.stateNode.containerInfo;
+                    if (isMatchingRootContainer(container, targetContainerNode)) {
+                      break;
+                    }
+                    if (nodeTag === HostPortal) {
+                      var grandNode = node.return;
+                      while (grandNode !== null) {
+                        var grandTag = grandNode.tag;
+                        if (grandTag === HostRoot || grandTag === HostPortal) {
+                          var grandContainer = grandNode.stateNode.containerInfo;
+                          if (isMatchingRootContainer(grandContainer, targetContainerNode)) {
+                            return;
+                          }
+                        }
+                        grandNode = grandNode.return;
+                      }
+                    }
+                    while (container !== null) {
+                      var parentNode = getClosestInstanceFromNode(container);
+                      if (parentNode === null) {
+                        return;
+                      }
+                      var parentTag = parentNode.tag;
+                      if (parentTag === HostComponent || parentTag === HostText) {
+                        node = ancestorInst = parentNode;
+                        continue mainLoop;
+                      }
+                      container = container.parentNode;
+                    }
+                  }
+                  node = node.return;
+                }
               }
             }
             batchedUpdates(function() {
@@ -9356,10 +9385,8 @@
                 } else if (typeof nextProp === "number") {
                   setTextContent(domElement, "" + nextProp);
                 }
-              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING)
-                ;
-              else if (propKey === AUTOFOCUS)
-                ;
+              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING) ;
+              else if (propKey === AUTOFOCUS) ;
               else if (registrationNameDependencies.hasOwnProperty(propKey)) {
                 if (nextProp != null) {
                   if (typeof nextProp !== "function") {
@@ -9575,12 +9602,9 @@
                     styleUpdates[styleName] = "";
                   }
                 }
-              } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN)
-                ;
-              else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING)
-                ;
-              else if (propKey === AUTOFOCUS)
-                ;
+              } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) ;
+              else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING) ;
+              else if (propKey === AUTOFOCUS) ;
               else if (registrationNameDependencies.hasOwnProperty(propKey)) {
                 if (!updatePayload) {
                   updatePayload = [];
@@ -9639,8 +9663,7 @@
                 if (typeof nextProp === "string" || typeof nextProp === "number") {
                   (updatePayload = updatePayload || []).push(propKey, "" + nextProp);
                 }
-              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING)
-                ;
+              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING) ;
               else if (registrationNameDependencies.hasOwnProperty(propKey)) {
                 if (nextProp != null) {
                   if (typeof nextProp !== "function") {
@@ -9751,6 +9774,8 @@
               for (var _i = 0; _i < attributes.length; _i++) {
                 var name = attributes[_i].name.toLowerCase();
                 switch (name) {
+                  // Controlled attributes are not validated
+                  // TODO: Only ignore them on controlled tags.
                   case "value":
                     break;
                   case "checked":
@@ -9797,12 +9822,10 @@
               typeof isCustomComponentTag === "boolean") {
                 var serverValue = void 0;
                 var propertyInfo = isCustomComponentTag && enableCustomElementPropertySupport ? null : getPropertyInfo(propKey);
-                if (rawProps[SUPPRESS_HYDRATION_WARNING] === true)
-                  ;
+                if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) ;
                 else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING || // Controlled attributes are not validated
                 // TODO: Only ignore them on controlled tags.
-                propKey === "value" || propKey === "checked" || propKey === "selected")
-                  ;
+                propKey === "value" || propKey === "checked" || propKey === "selected") ;
                 else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
                   var serverHTML = domElement.innerHTML;
                   var nextHtml = nextProp ? nextProp[HTML$1] : void 0;
@@ -10020,24 +10043,37 @@
             };
             var isTagValidWithParent = function(tag, parentTag) {
               switch (parentTag) {
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
                 case "select":
                   return tag === "option" || tag === "optgroup" || tag === "#text";
                 case "optgroup":
                   return tag === "option" || tag === "#text";
+                // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
+                // but
                 case "option":
                   return tag === "#text";
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
+                // No special behavior since these rules fall back to "in body" mode for
+                // all except special table nodes which cause bad parsing behavior anyway.
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
                 case "tr":
                   return tag === "th" || tag === "td" || tag === "style" || tag === "script" || tag === "template";
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
                 case "tbody":
                 case "thead":
                 case "tfoot":
                   return tag === "tr" || tag === "style" || tag === "script" || tag === "template";
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
                 case "colgroup":
                   return tag === "col" || tag === "template";
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
                 case "table":
                   return tag === "caption" || tag === "colgroup" || tag === "tbody" || tag === "tfoot" || tag === "thead" || tag === "style" || tag === "script" || tag === "template";
+                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
                 case "head":
                   return tag === "base" || tag === "basefont" || tag === "bgsound" || tag === "link" || tag === "meta" || tag === "title" || tag === "noscript" || tag === "noframes" || tag === "style" || tag === "script" || tag === "template";
+                // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
                 case "html":
                   return tag === "head" || tag === "body" || tag === "frameset";
                 case "frameset":
@@ -10598,8 +10634,7 @@
             {
               if (instance.nodeType === ELEMENT_NODE) {
                 warnForDeletedHydratableElement(parentContainer, instance);
-              } else if (instance.nodeType === COMMENT_NODE)
-                ;
+              } else if (instance.nodeType === COMMENT_NODE) ;
               else {
                 warnForDeletedHydratableText(parentContainer, instance);
               }
@@ -10611,8 +10646,7 @@
               if (parentNode !== null) {
                 if (instance.nodeType === ELEMENT_NODE) {
                   warnForDeletedHydratableElement(parentNode, instance);
-                } else if (instance.nodeType === COMMENT_NODE)
-                  ;
+                } else if (instance.nodeType === COMMENT_NODE) ;
                 else {
                   warnForDeletedHydratableText(parentNode, instance);
                 }
@@ -10624,8 +10658,7 @@
               if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING$1] !== true) {
                 if (instance.nodeType === ELEMENT_NODE) {
                   warnForDeletedHydratableElement(parentInstance, instance);
-                } else if (instance.nodeType === COMMENT_NODE)
-                  ;
+                } else if (instance.nodeType === COMMENT_NODE) ;
                 else {
                   warnForDeletedHydratableText(parentInstance, instance);
                 }
@@ -10645,15 +10678,13 @@
           function didNotFindHydratableInstanceWithinSuspenseInstance(parentInstance, type, props) {
             {
               var parentNode = parentInstance.parentNode;
-              if (parentNode !== null)
-                warnForInsertedHydratedElement(parentNode, type);
+              if (parentNode !== null) warnForInsertedHydratedElement(parentNode, type);
             }
           }
           function didNotFindHydratableTextInstanceWithinSuspenseInstance(parentInstance, text) {
             {
               var parentNode = parentInstance.parentNode;
-              if (parentNode !== null)
-                warnForInsertedHydratedText(parentNode, text);
+              if (parentNode !== null) warnForInsertedHydratedText(parentNode, text);
             }
           }
           function didNotFindHydratableInstance(parentType, parentProps, parentInstance, type, props, isConcurrentMode) {
@@ -11240,8 +11271,7 @@
                 }
                 case SuspenseComponent: {
                   var suspenseState = returnFiber.memoizedState;
-                  if (suspenseState.dehydrated !== null)
-                    didNotHydrateInstanceWithinSuspenseInstance(suspenseState.dehydrated, instance);
+                  if (suspenseState.dehydrated !== null) didNotHydrateInstanceWithinSuspenseInstance(suspenseState.dehydrated, instance);
                   break;
                 }
               }
@@ -11320,18 +11350,17 @@
                 case SuspenseComponent: {
                   var suspenseState = returnFiber.memoizedState;
                   var _parentInstance = suspenseState.dehydrated;
-                  if (_parentInstance !== null)
-                    switch (fiber.tag) {
-                      case HostComponent:
-                        var _type2 = fiber.type;
-                        var _props2 = fiber.pendingProps;
-                        didNotFindHydratableInstanceWithinSuspenseInstance(_parentInstance, _type2);
-                        break;
-                      case HostText:
-                        var _text2 = fiber.pendingProps;
-                        didNotFindHydratableTextInstanceWithinSuspenseInstance(_parentInstance, _text2);
-                        break;
-                    }
+                  if (_parentInstance !== null) switch (fiber.tag) {
+                    case HostComponent:
+                      var _type2 = fiber.type;
+                      var _props2 = fiber.pendingProps;
+                      didNotFindHydratableInstanceWithinSuspenseInstance(_parentInstance, _type2);
+                      break;
+                    case HostText:
+                      var _text2 = fiber.pendingProps;
+                      didNotFindHydratableTextInstanceWithinSuspenseInstance(_parentInstance, _text2);
+                      break;
+                  }
                   break;
                 }
                 default:
@@ -12620,8 +12649,7 @@
                       var update = createUpdate(NoTimestamp, lane);
                       update.tag = ForceUpdate;
                       var updateQueue = fiber.updateQueue;
-                      if (updateQueue === null)
-                        ;
+                      if (updateQueue === null) ;
                       else {
                         var sharedQueue = updateQueue.shared;
                         var pending = sharedQueue.pending;
@@ -12707,8 +12735,7 @@
               }
             }
             var value = context._currentValue;
-            if (lastFullyObservedContext === context)
-              ;
+            if (lastFullyObservedContext === context) ;
             else {
               var contextItem = {
                 context,
@@ -13005,6 +13032,7 @@
               case CaptureUpdate: {
                 workInProgress2.flags = workInProgress2.flags & ~ShouldCapture | DidCapture;
               }
+              // Intentional fallthrough
               case UpdateState: {
                 var _payload = update.payload;
                 var partialState;
@@ -17942,8 +17970,7 @@
               while (node !== null) {
                 if (node.tag === HostComponent || node.tag === HostText) {
                   appendInitialChild(parent, node.stateNode);
-                } else if (node.tag === HostPortal)
-                  ;
+                } else if (node.tag === HostPortal) ;
                 else if (node.child !== null) {
                   node.child.return = node;
                   node = node.child;
@@ -18897,20 +18924,19 @@
                       onPostCommit(id, phase, passiveEffectDuration, commitTime2);
                     }
                     var parentFiber = finishedWork.return;
-                    outer:
-                      while (parentFiber !== null) {
-                        switch (parentFiber.tag) {
-                          case HostRoot:
-                            var root3 = parentFiber.stateNode;
-                            root3.passiveEffectDuration += passiveEffectDuration;
-                            break outer;
-                          case Profiler:
-                            var parentStateNode = parentFiber.stateNode;
-                            parentStateNode.passiveEffectDuration += passiveEffectDuration;
-                            break outer;
-                        }
-                        parentFiber = parentFiber.return;
+                    outer: while (parentFiber !== null) {
+                      switch (parentFiber.tag) {
+                        case HostRoot:
+                          var root3 = parentFiber.stateNode;
+                          root3.passiveEffectDuration += passiveEffectDuration;
+                          break outer;
+                        case Profiler:
+                          var parentStateNode = parentFiber.stateNode;
+                          parentStateNode.passiveEffectDuration += passiveEffectDuration;
+                          break outer;
                       }
+                      parentFiber = parentFiber.return;
+                    }
                     break;
                   }
                 }
@@ -19057,20 +19083,19 @@
                       }
                       enqueuePendingPassiveProfilerEffect(finishedWork);
                       var parentFiber = finishedWork.return;
-                      outer:
-                        while (parentFiber !== null) {
-                          switch (parentFiber.tag) {
-                            case HostRoot:
-                              var root3 = parentFiber.stateNode;
-                              root3.effectDuration += effectDuration;
-                              break outer;
-                            case Profiler:
-                              var parentStateNode = parentFiber.stateNode;
-                              parentStateNode.effectDuration += effectDuration;
-                              break outer;
-                          }
-                          parentFiber = parentFiber.return;
+                      outer: while (parentFiber !== null) {
+                        switch (parentFiber.tag) {
+                          case HostRoot:
+                            var root3 = parentFiber.stateNode;
+                            root3.effectDuration += effectDuration;
+                            break outer;
+                          case Profiler:
+                            var parentStateNode = parentFiber.stateNode;
+                            parentStateNode.effectDuration += effectDuration;
+                            break outer;
                         }
+                        parentFiber = parentFiber.return;
+                      }
                     }
                   }
                   break;
@@ -19162,8 +19187,7 @@
                       captureCommitPhaseError(finishedWork, finishedWork.return, error2);
                     }
                   }
-                } else if ((node.tag === OffscreenComponent || node.tag === LegacyHiddenComponent) && node.memoizedState !== null && node !== finishedWork)
-                  ;
+                } else if ((node.tag === OffscreenComponent || node.tag === LegacyHiddenComponent) && node.memoizedState !== null && node !== finishedWork) ;
                 else if (node.child !== null) {
                   node.child.return = node;
                   node = node.child;
@@ -19281,31 +19305,30 @@
           }
           function getHostSibling(fiber) {
             var node = fiber;
-            siblings:
-              while (true) {
-                while (node.sibling === null) {
-                  if (node.return === null || isHostParent(node.return)) {
-                    return null;
-                  }
-                  node = node.return;
+            siblings: while (true) {
+              while (node.sibling === null) {
+                if (node.return === null || isHostParent(node.return)) {
+                  return null;
                 }
-                node.sibling.return = node.return;
-                node = node.sibling;
-                while (node.tag !== HostComponent && node.tag !== HostText && node.tag !== DehydratedFragment) {
-                  if (node.flags & Placement) {
-                    continue siblings;
-                  }
-                  if (node.child === null || node.tag === HostPortal) {
-                    continue siblings;
-                  } else {
-                    node.child.return = node;
-                    node = node.child;
-                  }
+                node = node.return;
+              }
+              node.sibling.return = node.return;
+              node = node.sibling;
+              while (node.tag !== HostComponent && node.tag !== HostText && node.tag !== DehydratedFragment) {
+                if (node.flags & Placement) {
+                  continue siblings;
                 }
-                if (!(node.flags & Placement)) {
-                  return node.stateNode;
+                if (node.child === null || node.tag === HostPortal) {
+                  continue siblings;
+                } else {
+                  node.child.return = node;
+                  node = node.child;
                 }
               }
+              if (!(node.flags & Placement)) {
+                return node.stateNode;
+              }
+            }
           }
           function commitPlacement(finishedWork) {
             var parentFiber = getHostParentFiber(finishedWork);
@@ -19327,6 +19350,7 @@
                 insertOrAppendPlacementNodeIntoContainer(finishedWork, _before, _parent);
                 break;
               }
+              // eslint-disable-next-line-no-fallthrough
               default:
                 throw new Error("Invalid host parent fiber. This error is likely caused by a bug in React. Please file an issue.");
             }
@@ -19341,8 +19365,7 @@
               } else {
                 appendChildToContainer(parent, stateNode);
               }
-            } else if (tag === HostPortal)
-              ;
+            } else if (tag === HostPortal) ;
             else {
               var child = node.child;
               if (child !== null) {
@@ -19365,8 +19388,7 @@
               } else {
                 appendChild(parent, stateNode);
               }
-            } else if (tag === HostPortal)
-              ;
+            } else if (tag === HostPortal) ;
             else {
               var child = node.child;
               if (child !== null) {
@@ -19384,27 +19406,26 @@
           function commitDeletionEffects(root3, returnFiber, deletedFiber) {
             {
               var parent = returnFiber;
-              findParent:
-                while (parent !== null) {
-                  switch (parent.tag) {
-                    case HostComponent: {
-                      hostParent = parent.stateNode;
-                      hostParentIsContainer = false;
-                      break findParent;
-                    }
-                    case HostRoot: {
-                      hostParent = parent.stateNode.containerInfo;
-                      hostParentIsContainer = true;
-                      break findParent;
-                    }
-                    case HostPortal: {
-                      hostParent = parent.stateNode.containerInfo;
-                      hostParentIsContainer = true;
-                      break findParent;
-                    }
+              findParent: while (parent !== null) {
+                switch (parent.tag) {
+                  case HostComponent: {
+                    hostParent = parent.stateNode;
+                    hostParentIsContainer = false;
+                    break findParent;
                   }
-                  parent = parent.return;
+                  case HostRoot: {
+                    hostParent = parent.stateNode.containerInfo;
+                    hostParentIsContainer = true;
+                    break findParent;
+                  }
+                  case HostPortal: {
+                    hostParent = parent.stateNode.containerInfo;
+                    hostParentIsContainer = true;
+                    break findParent;
+                  }
                 }
+                parent = parent.return;
+              }
               if (hostParent === null) {
                 throw new Error("Expected to find a host parent. This error is likely caused by a bug in React. Please file an issue.");
               }
@@ -19429,6 +19450,7 @@
                   safelyDetachRef(deletedFiber, nearestMountedAncestor);
                 }
               }
+              // eslint-disable-next-line-no-fallthrough
               case HostText: {
                 {
                   var prevHostParent = hostParent;
@@ -20690,6 +20712,9 @@
               case RootFatalErrored: {
                 throw new Error("Root did not complete. This is a bug in React.");
               }
+              // Flow knows about invariant, so it complains if I add a break
+              // statement, but eslint doesn't know about invariant, so it complains
+              // if I do. eslint-disable-next-line no-fallthrough
               case RootErrored: {
                 commitRoot(root3, workInProgressRootRecoverableErrors, workInProgressTransitions);
                 break;
@@ -22316,67 +22341,71 @@
             } else if (typeof type === "string") {
               fiberTag = HostComponent;
             } else {
-              getTag:
-                switch (type) {
-                  case REACT_FRAGMENT_TYPE:
-                    return createFiberFromFragment(pendingProps.children, mode, lanes, key);
-                  case REACT_STRICT_MODE_TYPE:
-                    fiberTag = Mode;
-                    mode |= StrictLegacyMode;
-                    if ((mode & ConcurrentMode) !== NoMode) {
-                      mode |= StrictEffectsMode;
-                    }
-                    break;
-                  case REACT_PROFILER_TYPE:
-                    return createFiberFromProfiler(pendingProps, mode, lanes, key);
-                  case REACT_SUSPENSE_TYPE:
-                    return createFiberFromSuspense(pendingProps, mode, lanes, key);
-                  case REACT_SUSPENSE_LIST_TYPE:
-                    return createFiberFromSuspenseList(pendingProps, mode, lanes, key);
-                  case REACT_OFFSCREEN_TYPE:
-                    return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-                  case REACT_LEGACY_HIDDEN_TYPE:
-                  case REACT_SCOPE_TYPE:
-                  case REACT_CACHE_TYPE:
-                  case REACT_TRACING_MARKER_TYPE:
-                  case REACT_DEBUG_TRACING_MODE_TYPE:
-                  default: {
-                    if (typeof type === "object" && type !== null) {
-                      switch (type.$$typeof) {
-                        case REACT_PROVIDER_TYPE:
-                          fiberTag = ContextProvider;
-                          break getTag;
-                        case REACT_CONTEXT_TYPE:
-                          fiberTag = ContextConsumer;
-                          break getTag;
-                        case REACT_FORWARD_REF_TYPE:
-                          fiberTag = ForwardRef;
-                          {
-                            resolvedType = resolveForwardRefForHotReloading(resolvedType);
-                          }
-                          break getTag;
-                        case REACT_MEMO_TYPE:
-                          fiberTag = MemoComponent;
-                          break getTag;
-                        case REACT_LAZY_TYPE:
-                          fiberTag = LazyComponent;
-                          resolvedType = null;
-                          break getTag;
-                      }
-                    }
-                    var info = "";
-                    {
-                      if (type === void 0 || typeof type === "object" && type !== null && Object.keys(type).length === 0) {
-                        info += " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.";
-                      }
-                      var ownerName = owner ? getComponentNameFromFiber(owner) : null;
-                      if (ownerName) {
-                        info += "\n\nCheck the render method of `" + ownerName + "`.";
-                      }
-                    }
-                    throw new Error("Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) " + ("but got: " + (type == null ? type : typeof type) + "." + info));
+              getTag: switch (type) {
+                case REACT_FRAGMENT_TYPE:
+                  return createFiberFromFragment(pendingProps.children, mode, lanes, key);
+                case REACT_STRICT_MODE_TYPE:
+                  fiberTag = Mode;
+                  mode |= StrictLegacyMode;
+                  if ((mode & ConcurrentMode) !== NoMode) {
+                    mode |= StrictEffectsMode;
                   }
+                  break;
+                case REACT_PROFILER_TYPE:
+                  return createFiberFromProfiler(pendingProps, mode, lanes, key);
+                case REACT_SUSPENSE_TYPE:
+                  return createFiberFromSuspense(pendingProps, mode, lanes, key);
+                case REACT_SUSPENSE_LIST_TYPE:
+                  return createFiberFromSuspenseList(pendingProps, mode, lanes, key);
+                case REACT_OFFSCREEN_TYPE:
+                  return createFiberFromOffscreen(pendingProps, mode, lanes, key);
+                case REACT_LEGACY_HIDDEN_TYPE:
+                // eslint-disable-next-line no-fallthrough
+                case REACT_SCOPE_TYPE:
+                // eslint-disable-next-line no-fallthrough
+                case REACT_CACHE_TYPE:
+                // eslint-disable-next-line no-fallthrough
+                case REACT_TRACING_MARKER_TYPE:
+                // eslint-disable-next-line no-fallthrough
+                case REACT_DEBUG_TRACING_MODE_TYPE:
+                // eslint-disable-next-line no-fallthrough
+                default: {
+                  if (typeof type === "object" && type !== null) {
+                    switch (type.$$typeof) {
+                      case REACT_PROVIDER_TYPE:
+                        fiberTag = ContextProvider;
+                        break getTag;
+                      case REACT_CONTEXT_TYPE:
+                        fiberTag = ContextConsumer;
+                        break getTag;
+                      case REACT_FORWARD_REF_TYPE:
+                        fiberTag = ForwardRef;
+                        {
+                          resolvedType = resolveForwardRefForHotReloading(resolvedType);
+                        }
+                        break getTag;
+                      case REACT_MEMO_TYPE:
+                        fiberTag = MemoComponent;
+                        break getTag;
+                      case REACT_LAZY_TYPE:
+                        fiberTag = LazyComponent;
+                        resolvedType = null;
+                        break getTag;
+                    }
+                  }
+                  var info = "";
+                  {
+                    if (type === void 0 || typeof type === "object" && type !== null && Object.keys(type).length === 0) {
+                      info += " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.";
+                    }
+                    var ownerName = owner ? getComponentNameFromFiber(owner) : null;
+                    if (ownerName) {
+                      info += "\n\nCheck the render method of `" + ownerName + "`.";
+                    }
+                  }
+                  throw new Error("Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) " + ("but got: " + (type == null ? type : typeof type) + "." + info));
                 }
+              }
             }
             var fiber = createFiber(fiberTag, pendingProps, key, mode);
             fiber.elementType = type;
@@ -24511,33 +24540,34 @@
     const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const createNewComponent = (type) => {
       const id = `comp_${Date.now()}`;
+      const baseProps = { id, containerStyle: { backgroundColor: "transparent" } };
       switch (type) {
         case "text":
-          return { id, type, content: "This is a new text block. Click to edit!", fontSize: "16", color: "#000000", fontFamily: "Arial", textAlign: "left" };
+          return { ...baseProps, type, content: "This is a new text block. Click to edit!", fontSize: "16", color: "#000000", fontFamily: "Arial", textAlign: "left" };
         case "image":
-          return { id, type, src: "https://via.placeholder.com/600x300", alt: "Placeholder", borderRadius: "0", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
+          return { ...baseProps, type, src: "https://via.placeholder.com/600x300", alt: "Placeholder", borderRadius: "0", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
         case "button":
-          return { id, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal" };
+          return { ...baseProps, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal" };
         case "spacer":
-          return { id, type, height: "20" };
+          return { ...baseProps, type, height: "20" };
         case "divider":
-          return { id, type, color: "#cccccc", height: "1", padding: "10" };
+          return { ...baseProps, type, color: "#cccccc", height: "1", padding: "10" };
         case "social":
-          return { id, type, alignment: "center", links: [
+          return { ...baseProps, type, alignment: "center", links: [
             { id: `social_${Date.now()}_1`, platform: "facebook", url: "#" },
             { id: `social_${Date.now()}_2`, platform: "twitter", url: "#" },
             { id: `social_${Date.now()}_3`, platform: "instagram", url: "#" }
           ] };
         case "video":
-          return { id, type, videoUrl: "#", imageUrl: "https://via.placeholder.com/600x300?text=Video+Thumbnail", alt: "Video thumbnail", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
+          return { ...baseProps, type, videoUrl: "#", imageUrl: "https://via.placeholder.com/600x300?text=Video+Thumbnail", alt: "Video thumbnail", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
         case "card":
-          return { id, type, src: "https://via.placeholder.com/600x400", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", naturalWidth: 600, naturalHeight: 400 };
+          return { ...baseProps, type, src: "https://via.placeholder.com/600x400", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", naturalWidth: 600, naturalHeight: 400 };
         case "logo":
-          return { id, type, src: "https://via.placeholder.com/150x50?text=Your+Logo", alt: "Company Logo", width: "150", alignment: "center", naturalWidth: 150, naturalHeight: 50 };
+          return { ...baseProps, type, src: "https://via.placeholder.com/150x50?text=Your+Logo", alt: "Company Logo", width: "150", alignment: "center", naturalWidth: 150, naturalHeight: 50 };
         case "footer":
-          return { id, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center" };
+          return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center" };
         case "button-group":
-          return { id, type, alignment: "center", buttons: [
+          return { ...baseProps, type, alignment: "center", buttons: [
             { id: `btn_${Date.now()}_1`, text: "Button 1", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff" },
             { id: `btn_${Date.now()}_2`, text: "Button 2", href: "#", backgroundColor: "#6c757d", textColor: "#ffffff" }
           ] };
@@ -24704,6 +24734,27 @@
           return null;
       }
     };
+    const getContainerInlineStyles = (component) => {
+      const styles = {};
+      if (!component.containerStyle) return styles;
+      const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
+      if (backgroundColor && backgroundColor !== "transparent") {
+        styles.backgroundColor = backgroundColor;
+      }
+      if (borderTop?.width && parseInt(borderTop.width) > 0) {
+        styles.borderTop = `${borderTop.width}px solid ${borderTop.color}`;
+      }
+      if (borderRight?.width && parseInt(borderRight.width) > 0) {
+        styles.borderRight = `${borderRight.width}px solid ${borderRight.color}`;
+      }
+      if (borderBottom?.width && parseInt(borderBottom.width) > 0) {
+        styles.borderBottom = `${borderBottom.width}px solid ${borderBottom.color}`;
+      }
+      if (borderLeft?.width && parseInt(borderLeft.width) > 0) {
+        styles.borderLeft = `${borderLeft.width}px solid ${borderLeft.color}`;
+      }
+      return styles;
+    };
     const RenderItem = ({ component, targetPath }) => {
       const isLayout = component.type === "layout";
       const clickHandler = isLayout ? void 0 : (e) => {
@@ -24721,8 +24772,7 @@
         setDraggingId(null);
       };
       const handleItemDragOver = (e) => {
-        if (isLayout)
-          return;
+        if (isLayout) return;
         e.preventDefault();
         e.stopPropagation();
         const rect = e.currentTarget.getBoundingClientRect();
@@ -24732,8 +24782,7 @@
         handleDragOver(e, newTarget);
       };
       const handleItemDrop = (e) => {
-        if (isLayout)
-          return;
+        if (isLayout) return;
         handleDrop(e, dragOverTarget);
       };
       const isDropTarget = dragOverTarget?.type === targetPath.type && (targetPath.type === "root" || dragOverTarget.type === "column" && targetPath.type === "column" && dragOverTarget.layoutId === targetPath.layoutId && dragOverTarget.columnIndex === targetPath.columnIndex);
@@ -24746,6 +24795,7 @@
         !isLayout && isDropTargetBefore ? "drop-target-before" : "",
         !isLayout && isDropTargetAfter ? "drop-target-after" : ""
       ].filter(Boolean).join(" ");
+      const containerStyles = isLayout ? {} : getContainerInlineStyles(component);
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
         "div",
         {
@@ -24765,7 +24815,7 @@
                 handleDeleteComponent(component.id);
               }, children: "\u{1F5D1}\uFE0F" })
             ] }),
-            component.type === "layout" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `layout-grid ${component.layoutType}`, children: component.columns.map((col, colIndex) => {
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerStyles, children: component.type === "layout" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `layout-grid ${component.layoutType}`, children: component.columns.map((col, colIndex) => {
               const targetForEmpty = { type: "column", layoutId: component.id, columnIndex: colIndex, index: 0 };
               const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
               return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "layout-column", children: col.components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
@@ -24787,7 +24837,7 @@
                 },
                 innerComp.id
               )) }) }, col.id);
-            }) }) : renderContentComponent(component)
+            }) }) : renderContentComponent(component) })
           ]
         }
       );
@@ -24805,6 +24855,60 @@
         ]
       }
     ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: components.map((component, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RenderItem, { component, targetPath: { type: "root", index } }, component.id)) }) }) });
+  };
+  var ContainerStyleEditor = ({ component, onUpdate }) => {
+    const { containerStyle = {} } = component;
+    const handleStyleChange = (prop, value) => {
+      const newStyle = { ...containerStyle, [prop]: value };
+      onUpdate(component.id, { ...component, containerStyle: newStyle });
+    };
+    const handleBorderChange = (side, prop, value) => {
+      const newStyle = {
+        ...containerStyle,
+        [side]: {
+          ...containerStyle[side] || { width: "0", color: "#000000" },
+          [prop]: value
+        }
+      };
+      onUpdate(component.id, { ...component, containerStyle: newStyle });
+    };
+    const borderSides = ["borderTop", "borderRight", "borderBottom", "borderLeft"];
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "container-style-editor", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Container Styles" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: containerStyle.backgroundColor || "#ffffff", onChange: (e) => handleStyleChange("backgroundColor", e.target.value) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: containerStyle.backgroundColor || "#ffffff", onChange: (e) => handleStyleChange("backgroundColor", e.target.value) })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "border-editor", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Borders" }),
+        borderSides.map((side) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "border-row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: side.replace("border", "") }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "border-inputs", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "input",
+              {
+                type: "number",
+                min: "0",
+                value: containerStyle[side]?.width || "0",
+                onChange: (e) => handleBorderChange(side, "width", e.target.value)
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "px" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "input",
+              {
+                type: "color",
+                value: containerStyle[side]?.color || "#000000",
+                onChange: (e) => handleBorderChange(side, "color", e.target.value)
+              }
+            )
+          ] })
+        ] }, side))
+      ] })
+    ] });
   };
   var PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings }) => {
     const FONT_FAMILIES = ["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
@@ -25299,12 +25403,14 @@
           return null;
       }
     };
+    const showContainerEditor = component.type !== "layout";
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "properties-panel", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
         component.type.charAt(0).toUpperCase() + component.type.slice(1),
         " Properties"
       ] }),
-      renderProperties()
+      renderProperties(),
+      showContainerEditor && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
     ] });
   };
   var ExportModal = ({ html, onClose }) => {
@@ -25334,8 +25440,7 @@
     const handleUpdateComponent = (id, updatedComponent) => {
       const recursiveUpdate = (items) => {
         return items.map((c) => {
-          if (c.id === id)
-            return updatedComponent;
+          if (c.id === id) return updatedComponent;
           if (c.type === "layout") {
             return {
               ...c,
@@ -25355,35 +25460,57 @@
     };
     const findComponent = (id, items) => {
       for (const component of items) {
-        if (component.id === id)
-          return component;
+        if (component.id === id) return component;
         if (component.type === "layout") {
           for (const col of component.columns) {
             const found = findComponent(id, col.components);
-            if (found)
-              return found;
+            if (found) return found;
           }
         }
       }
       return null;
     };
     const selectedComponent = findComponent(selectedId, components);
+    const getContainerStyleString = (component) => {
+      if (!component.containerStyle) return "";
+      const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
+      let style = "";
+      if (backgroundColor && backgroundColor !== "transparent") {
+        style += `background-color:${backgroundColor};`;
+      }
+      if (borderTop?.width && parseInt(borderTop.width) > 0) {
+        style += `border-top:${borderTop.width}px solid ${borderTop.color};`;
+      }
+      if (borderRight?.width && parseInt(borderRight.width) > 0) {
+        style += `border-right:${borderRight.width}px solid ${borderRight.color};`;
+      }
+      if (borderBottom?.width && parseInt(borderBottom.width) > 0) {
+        style += `border-bottom:${borderBottom.width}px solid ${borderBottom.color};`;
+      }
+      if (borderLeft?.width && parseInt(borderLeft.width) > 0) {
+        style += `border-left:${borderLeft.width}px solid ${borderLeft.color};`;
+      }
+      return style;
+    };
     const generateComponentHtml = (component) => {
       const getPlaceholderSrc = (imgComponent, defaultW = 600, defaultH = 300) => {
         const w = imgComponent.naturalWidth || defaultW;
         const h = imgComponent.naturalHeight || defaultH;
         return `https://via.placeholder.com/${Math.round(w)}x${Math.round(h)}.png?text=Image`;
       };
+      const containerStyles = component.type !== "layout" && component.containerStyle ? getContainerStyleString(component) : "";
       switch (component.type) {
         case "text":
         case "footer":
-          return `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+          const textContent = `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${textContent}</td></tr></table>`;
         case "image":
           const imgTag = `<img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
+          const imageTdStyle = `padding: 10px 0; ${containerStyles}`;
           if (component.href) {
-            return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
+            return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${imageTdStyle}"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
           }
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;">${imgTag}</td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${imageTdStyle}">${imgTag}</td></tr></table>`;
         case "logo":
           const { naturalWidth, naturalHeight } = component;
           const logoWidth = parseInt(component.width, 10);
@@ -25394,27 +25521,34 @@
           } else {
             placeholderSrc = `https://via.placeholder.com/${logoWidth}x${Math.round(logoWidth / 3)}.png?text=Logo`;
           }
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px;"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
+          const logoTdStyle = `padding: 10px; ${containerStyles}`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${logoTdStyle}"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
         case "button":
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${component.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${component.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
         case "button-group":
           const buttonsHtml = component.buttons.map(
             (btn) => `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: sans-serif;">${btn.text}</a></td>`
           ).join('<td width="10">&nbsp;</td>');
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px;"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
+          const buttonGroupTdStyle = `padding:10px; ${containerStyles}`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
         case "spacer":
-          return `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
+          const spacerContent = `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${spacerContent}</td></tr></table>`;
         case "divider":
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="padding:${component.padding}px 0;"><hr style="border:none; border-top:${component.height}px solid ${component.color};"></td></tr></table>`;
+          const dividerContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="padding:${component.padding}px 0;"><hr style="border:none; border-top:${component.height}px solid ${component.color};"></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${dividerContent}</td></tr></table>`;
         case "social":
           const linksHtml = component.links.map(
             (link) => `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank"><img src="${SOCIAL_ICONS[link.platform]}" alt="${link.platform}" width="32" height="32" style="display: block;"></a></td>`
           ).join("");
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px;"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
+          const socialTdStyle = `padding:10px; ${containerStyles}`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${socialTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
         case "video":
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px 0;"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
+          const videoTdStyle = `padding:10px 0; ${containerStyles}`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${videoTdStyle}"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
         case "card":
-          return `
+          const cardContent = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
                 <tr><td><img src="${getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>
                 <tr><td style="padding: 15px; color: ${component.textColor}; font-family: sans-serif;">
@@ -25424,6 +25558,7 @@
                 </td></tr>
             </table>
         `;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${cardContent}</td></tr></table>`;
         case "layout":
           const columnCount = component.columns.length;
           const columnWidth = `${100 / columnCount}%`;
