@@ -24537,13 +24537,14 @@
   };
   var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings }) => {
     const [dragOverTarget, setDragOverTarget] = (0, import_react.useState)(null);
+    const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const createNewComponent = (type) => {
       const id = `comp_${Date.now()}`;
       switch (type) {
         case "text":
           return { id, type, content: "This is a new text block. Click to edit!", fontSize: "16", color: "#000000", fontFamily: "Arial", textAlign: "left" };
         case "image":
-          return { id, type, src: "https://via.placeholder.com/600x300", alt: "Placeholder", borderRadius: "0" };
+          return { id, type, src: "https://via.placeholder.com/600x300", alt: "Placeholder", borderRadius: "0", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
         case "button":
           return { id, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal" };
         case "spacer":
@@ -24557,11 +24558,11 @@
             { id: `social_${Date.now()}_3`, platform: "instagram", url: "#" }
           ] };
         case "video":
-          return { id, type, videoUrl: "#", imageUrl: "https://via.placeholder.com/600x300?text=Video+Thumbnail", alt: "Video thumbnail" };
+          return { id, type, videoUrl: "#", imageUrl: "https://via.placeholder.com/600x300?text=Video+Thumbnail", alt: "Video thumbnail", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
         case "card":
-          return { id, type, src: "https://via.placeholder.com/600x400", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff" };
+          return { id, type, src: "https://via.placeholder.com/600x400", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", naturalWidth: 600, naturalHeight: 400 };
         case "logo":
-          return { id, type, src: "https://via.placeholder.com/150x50?text=Your+Logo", alt: "Company Logo", width: "150", alignment: "center" };
+          return { id, type, src: "https://via.placeholder.com/150x50?text=Your+Logo", alt: "Company Logo", width: "150", alignment: "center", naturalWidth: 150, naturalHeight: 50 };
         case "footer":
           return { id, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center" };
         case "button-group":
@@ -24577,59 +24578,68 @@
           throw new Error("Unknown component type");
       }
     };
-    const handleAddComponent = (target, newComponent) => {
-      setComponents((prev) => {
-        if (target.type === "root") {
-          const newItems = [...prev];
-          newItems.splice(target.index, 0, newComponent);
-          return newItems;
-        } else {
-          return prev.map((c) => {
-            if (c.id === target.layoutId && c.type === "layout") {
-              const newColumns = c.columns.map((col, index) => {
-                if (index === target.columnIndex) {
-                  const newComponents = [...col.components];
-                  newComponents.splice(target.index, 0, newComponent);
-                  return { ...col, components: newComponents };
-                }
-                return col;
-              });
-              return { ...c, columns: newColumns };
-            }
-            return c;
-          });
+    const recursiveDelete = (items, idToDelete) => {
+      const filtered = items.filter((c) => c.id !== idToDelete);
+      return filtered.map((c) => {
+        if (c.type === "layout") {
+          return {
+            ...c,
+            columns: c.columns.map((col) => ({
+              ...col,
+              components: recursiveDelete(col.components, idToDelete)
+            }))
+          };
         }
+        return c;
       });
+    };
+    const insertComponent = (items, target, componentToAdd) => {
+      if (target.type === "root") {
+        const newItems = [...items];
+        newItems.splice(target.index, 0, componentToAdd);
+        return newItems;
+      } else {
+        return items.map((c) => {
+          if (c.id === target.layoutId && c.type === "layout") {
+            const newColumns = c.columns.map((col, index) => {
+              if (index === target.columnIndex) {
+                const newComponents = [...col.components];
+                newComponents.splice(target.index, 0, componentToAdd);
+                return { ...col, components: newComponents };
+              }
+              return col;
+            });
+            return { ...c, columns: newColumns };
+          }
+          return c;
+        });
+      }
+    };
+    const handleAddComponent = (target, newComponent) => {
+      setComponents((prev) => insertComponent(prev, target, newComponent));
       setSelectedId(newComponent.id);
     };
     const handleDeleteComponent = (idToDelete) => {
       if (selectedId === idToDelete) {
         setSelectedId(null);
       }
-      const recursiveDelete = (items) => {
-        const filtered = items.filter((c) => c.id !== idToDelete);
-        return filtered.map((c) => {
-          if (c.type === "layout") {
-            return {
-              ...c,
-              columns: c.columns.map((col) => ({
-                ...col,
-                components: recursiveDelete(col.components)
-              }))
-            };
-          }
-          return c;
-        });
-      };
-      setComponents((prev) => recursiveDelete(prev));
+      setComponents((prev) => recursiveDelete(prev, idToDelete));
     };
     const handleDrop = (e, target) => {
       e.preventDefault();
       e.stopPropagation();
       setDragOverTarget(null);
-      const componentType = e.dataTransfer.getData("application/reactflow");
-      if (componentType) {
-        const newComponent = createNewComponent(componentType);
+      const newComponentType = e.dataTransfer.getData("application/reactflow");
+      const movedComponentData = e.dataTransfer.getData("application/json-component");
+      if (movedComponentData) {
+        const movedComponent = JSON.parse(movedComponentData);
+        setComponents((prev) => {
+          const componentsAfterDelete = recursiveDelete(prev, movedComponent.id);
+          return insertComponent(componentsAfterDelete, target, movedComponent);
+        });
+        setSelectedId(movedComponent.id);
+      } else if (newComponentType) {
+        const newComponent = createNewComponent(newComponentType);
         handleAddComponent(target, newComponent);
       }
     };
@@ -24644,7 +24654,19 @@
         case "footer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: component.color, fontFamily: component.fontFamily, textAlign: component.textAlign } });
         case "image":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block", borderRadius: `${component.borderRadius}px` } });
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px 0" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "img",
+            {
+              src: component.previewSrc || component.src,
+              alt: component.alt,
+              style: {
+                width: `${component.width}%`,
+                maxWidth: "100%",
+                display: "inline-block",
+                borderRadius: `${component.borderRadius}px`
+              }
+            }
+          ) });
         case "logo":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { width: `${component.width}px`, maxWidth: "100%", display: "inline-block" } }) });
         case "button":
@@ -24675,8 +24697,8 @@
         case "social":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: component.alignment }, children: component.links.map((link) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: link.url, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "0 5px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: SOCIAL_ICONS[link.platform], alt: link.platform, width: "32", height: "32" }) }, link.id)) });
         case "video":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { position: "relative", textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", { href: component.videoUrl, target: "_blank", rel: "noopener noreferrer", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.imageUrl, alt: component.alt, style: { maxWidth: "100%", display: "block" } }),
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px 0", textAlign: component.alignment }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", { href: component.videoUrl, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", width: `${component.width}%`, position: "relative" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.imageUrl, alt: component.alt, style: { width: "100%", display: "block" } }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "video-play-button", children: "\u25B6" })
           ] }) });
         case "card":
@@ -24707,13 +24729,27 @@
         e.stopPropagation();
         setSelectedId(component.id);
       };
+      const handleDragStart = (e) => {
+        e.stopPropagation();
+        e.dataTransfer.setData("application/json-component", JSON.stringify(component));
+        e.dataTransfer.effectAllowed = "move";
+        setTimeout(() => setDraggingId(component.id), 0);
+      };
+      const handleDragEnd = (e) => {
+        e.stopPropagation();
+        setDraggingId(null);
+      };
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
         "div",
         {
-          className: `canvas-component ${selectedId === component.id ? "selected" : ""}`,
+          className: `canvas-component ${selectedId === component.id ? "selected" : ""} ${draggingId === component.id ? "dragging" : ""}`,
           onClick: clickHandler,
+          draggable: !isLayout,
+          onDragStart: isLayout ? void 0 : handleDragStart,
+          onDragEnd: isLayout ? void 0 : handleDragEnd,
           children: [
             selectedId === component.id && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.type.charAt(0).toUpperCase() + component.type.slice(1) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button delete", onClick: (e) => {
                 e.stopPropagation();
@@ -24796,14 +24832,46 @@
       e.preventDefault();
       document.execCommand(command, false);
     };
+    const getImageDimensions = (url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => reject("Could not load image");
+        img.src = url;
+      });
+    };
     const handleImageUpload = (e) => {
       const file = e.target.files?.[0];
       if (file) {
         const reader = new FileReader();
-        reader.onloadend = () => {
-          handleChange("previewSrc", reader.result);
+        reader.onloadend = async () => {
+          const dataUrl = reader.result;
+          try {
+            const { width, height } = await getImageDimensions(dataUrl);
+            onUpdate(component.id, {
+              ...component,
+              previewSrc: dataUrl,
+              naturalWidth: width,
+              naturalHeight: height
+            });
+          } catch (error) {
+            console.error("Error getting image dimensions from uploaded file:", error);
+            onUpdate(component.id, { ...component, previewSrc: dataUrl });
+          }
         };
         reader.readAsDataURL(file);
+      }
+    };
+    const handleUrlBlur = async (e) => {
+      const url = e.target.value;
+      if (url) {
+        try {
+          const { width, height } = await getImageDimensions(url);
+          onUpdate(component.id, { ...component, naturalWidth: width, naturalHeight: height });
+        } catch (error) {
+          console.error("Error getting image dimensions from URL:", error);
+          onUpdate(component.id, { ...component, naturalWidth: void 0, naturalHeight: void 0 });
+        }
       }
     };
     const handleSocialLinkChange = (index, prop, value) => {
@@ -24839,14 +24907,33 @@
         case "text":
         case "footer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", style: { flexBasis: "80px" }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Size" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "8",
+                    max: "72",
+                    value: component.fontSize,
+                    onChange: (e) => handleChange("fontSize", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "number",
+                    min: "1",
+                    className: "slider-value-input",
+                    value: component.fontSize,
+                    onChange: (e) => handleChange("fontSize", e.target.value)
+                  }
+                )
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
@@ -24895,7 +24982,7 @@
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "The upload above is for preview only. You must provide a public URL here for the final email." })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -24903,22 +24990,43 @@
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Corner Radius" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "10",
+                    max: "100",
+                    value: component.width,
+                    onChange: (e) => handleChange("width", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "left" ? "active" : "", onClick: () => handleChange("alignment", "left"), children: "L" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "center" ? "active" : "", onClick: () => handleChange("alignment", "center"), children: "C" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Corner Radius (px)" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                   "input",
                   {
                     type: "range",
                     min: "0",
-                    max: "50",
+                    max: "100",
                     value: component.borderRadius,
                     onChange: (e) => handleChange("borderRadius", e.target.value)
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                  component.borderRadius,
-                  "px"
-                ] })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "0", className: "slider-value-input", value: component.borderRadius, onChange: (e) => handleChange("borderRadius", e.target.value) })
               ] })
             ] })
           ] });
@@ -24930,7 +25038,7 @@
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "The upload above is for preview only. You must provide a public URL here for the final email." })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -24939,7 +25047,10 @@
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (px)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "20", max: "400", value: component.width, onChange: (e) => handleChange("width", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+              ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
@@ -24960,17 +25071,36 @@
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "URL" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.href, onChange: (e) => handleChange("href", e.target.value) })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size (px)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Weight" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "normal" ? "active" : "", onClick: () => handleChange("fontWeight", "normal"), children: "Normal" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
-                ] })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "8",
+                    max: "48",
+                    value: component.fontSize,
+                    onChange: (e) => handleChange("fontSize", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "number",
+                    min: "1",
+                    className: "slider-value-input",
+                    value: component.fontSize,
+                    onChange: (e) => handleChange("fontSize", e.target.value)
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Weight" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "normal" ? "active" : "", onClick: () => handleChange("fontWeight", "normal"), children: "Normal" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -25068,12 +25198,36 @@
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Thumbnail Image URL" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.imageUrl, onChange: (e) => handleChange("imageUrl", e.target.value) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.imageUrl, onChange: (e) => handleChange("imageUrl", e.target.value), onBlur: handleUrlBlur }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "The upload above is for preview only. You must provide a public URL." })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "10",
+                    max: "100",
+                    value: component.width,
+                    onChange: (e) => handleChange("width", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "left" ? "active" : "", onClick: () => handleChange("alignment", "left"), children: "L" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "center" ? "active" : "", onClick: () => handleChange("alignment", "center"), children: "C" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
+              ] })
             ] })
           ] });
         case "card":
@@ -25084,7 +25238,7 @@
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Public URL required for final email." })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -25195,14 +25349,28 @@
     };
     const selectedComponent = findComponent(selectedId, components);
     const generateComponentHtml = (component) => {
+      const getPlaceholderSrc = (imgComponent, defaultW = 600, defaultH = 300) => {
+        const w = imgComponent.naturalWidth || defaultW;
+        const h = imgComponent.naturalHeight || defaultH;
+        return `https://via.placeholder.com/${Math.round(w)}x${Math.round(h)}.png?text=Image`;
+      };
       switch (component.type) {
         case "text":
         case "footer":
           return `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
         case "image":
-          return `<img src="${component.src}" alt="${component.alt}" style="max-width:100%; display:block; border-radius:${component.borderRadius}px;" width="100%">`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border-radius:${component.borderRadius}px;"></td></tr></table>`;
         case "logo":
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px;"><img src="${component.src}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
+          const { naturalWidth, naturalHeight } = component;
+          const logoWidth = parseInt(component.width, 10);
+          let placeholderSrc;
+          if (naturalWidth && naturalHeight && naturalWidth > 0) {
+            const calculatedHeight = logoWidth * (naturalHeight / naturalWidth);
+            placeholderSrc = `https://via.placeholder.com/${logoWidth}x${Math.round(calculatedHeight)}.png?text=Logo`;
+          } else {
+            placeholderSrc = `https://via.placeholder.com/${logoWidth}x${Math.round(logoWidth / 3)}.png?text=Logo`;
+          }
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px;"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
         case "button":
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${component.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
         case "button-group":
@@ -25220,11 +25388,11 @@
           ).join("");
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px;"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
         case "video":
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="center"><a href="${component.videoUrl}" target="_blank"><img src="${component.imageUrl}" alt="${component.alt}" width="100%" style="max-width:600px; display:block;"></a></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px 0;"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
         case "card":
           return `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
-                <tr><td><img src="${component.src}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>
+                <tr><td><img src="${getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>
                 <tr><td style="padding: 15px; color: ${component.textColor}; font-family: sans-serif;">
                     <h4 style="margin:0 0 5px; font-size: 18px;">${component.title}</h4>
                     <p style="margin:0 0 15px; font-size: 14px;">${component.content}</p>
