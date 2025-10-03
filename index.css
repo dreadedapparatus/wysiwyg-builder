@@ -176,6 +176,11 @@ body {
   box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.4);
 }
 
+.canvas-component.dragging {
+  opacity: 0.4;
+  border: 2px dashed var(--primary-color);
+}
+
 .component-toolbar {
   position: absolute;
   top: -28px;
@@ -187,6 +192,14 @@ body {
   display: none;
   z-index: 10;
   font-size: 0.75rem;
+  align-items: center;
+}
+
+.drag-handle {
+    cursor: move;
+    padding: 0 6px;
+    font-size: 1.2rem;
+    color: white;
 }
 
 .canvas-component.selected .component-toolbar {
@@ -417,14 +430,27 @@ body {
   cursor: pointer;
 }
 
-.slider-group span {
+.slider-group .slider-value-input {
     background-color: var(--input-background);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
     padding: 4px 8px;
     border-radius: var(--border-radius);
     font-size: 0.8rem;
-    min-width: 50px;
+    width: 60px;
     text-align: center;
-    border: 1px solid var(--border-color);
+    -moz-appearance: textfield;
+}
+
+.slider-group .slider-value-input::-webkit-outer-spin-button,
+.slider-group .slider-value-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.slider-group .slider-value-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 .text-align-group,
