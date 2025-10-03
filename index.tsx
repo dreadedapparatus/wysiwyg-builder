@@ -41,6 +41,7 @@ interface ImageComponent extends BaseComponent {
   alignment: 'left' | 'center' | 'right';
   naturalWidth?: number;
   naturalHeight?: number;
+  href?: string;
 }
 
 interface LogoComponent extends BaseComponent {
@@ -341,12 +342,29 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
     } 
   };
 
-
   const handleDragOver = (e: React.DragEvent, target: DropTarget) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragOverTarget(target);
+    if (JSON.stringify(target) !== JSON.stringify(dragOverTarget)) {
+        setDragOverTarget(target);
+    }
   };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+      // Fix: Cast relatedTarget to Element to use the 'closest' method.
+      if (!(e.relatedTarget as Element)?.closest('.canvas-container')) {
+          setDragOverTarget(null);
+      }
+  };
+
+  const handleBackgroundClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    // Deselect if clicking on the canvas container or the canvas itself
+    if (target.classList.contains('canvas-container') || target.classList.contains('canvas')) {
+      setSelectedId(null);
+    }
+  };
+
 
   const renderContentComponent = (component: ContentComponent) => {
       switch (component.type) {
@@ -354,20 +372,32 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'footer':
           return <div dangerouslySetInnerHTML={{ __html: component.content }} style={{ padding: '10px', fontSize: `${component.fontSize}px`, color: component.color, fontFamily: component.fontFamily, textAlign: component.textAlign }} />;
       case 'image':
+        const imageElement = (
+          <img 
+            src={component.previewSrc || component.src} 
+            alt={component.alt} 
+            style={{ 
+              width: `${component.width}%`, 
+              maxWidth: '100%', 
+              display: 'inline-block', 
+              borderRadius: `${component.borderRadius}px` 
+            }} 
+          />
+        );
+        const imageContainerStyle: React.CSSProperties = {
+          textAlign: component.alignment,
+          padding: '10px 0'
+        };
+        if (component.href) {
           return (
-            <div style={{ textAlign: component.alignment, padding: '10px 0' }}>
-              <img 
-                src={component.previewSrc || component.src} 
-                alt={component.alt} 
-                style={{ 
-                    width: `${component.width}%`, 
-                    maxWidth: '100%', 
-                    display: 'inline-block', 
-                    borderRadius: `${component.borderRadius}px` 
-                }} 
-              />
+            <div style={imageContainerStyle}>
+              <a href={component.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'inline-block', lineHeight: 0 }}>
+                {imageElement}
+              </a>
             </div>
           );
+        }
+        return <div style={imageContainerStyle}>{imageElement}</div>;
       case 'logo':
           return <div style={{ textAlign: component.alignment, padding: '10px' }}><img src={component.previewSrc || component.src} alt={component.alt} style={{ width: `${component.width}px`, maxWidth: '100%', display: 'inline-block' }} /></div>;
       case 'button':
@@ -444,18 +474,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       }
   };
 
-  const DropZone = ({ target }: { target: DropTarget }) => {
-    const isActive = JSON.stringify(dragOverTarget) === JSON.stringify(target);
-    return (
-        <div 
-            className={`drop-zone ${isActive ? 'active' : ''}`}
-            onDragOver={(e) => handleDragOver(e, target)}
-            onDrop={(e) => handleDrop(e, target)}
-        />
-    );
-  };
-
-  const RenderItem = ({ component }: { component: EmailComponent }) => {
+  const RenderItem = ({ component, targetPath }: { component: EmailComponent, targetPath: DropTarget }) => {
     const isLayout = component.type === 'layout';
     
     const clickHandler = isLayout
@@ -476,63 +495,104 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
         e.stopPropagation();
         setDraggingId(null);
     };
+
+    const handleItemDragOver = (e: React.DragEvent) => {
+        if (isLayout) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        const isTopHalf = e.clientY < rect.top + rect.height / 2;
+        const newIndex = isTopHalf ? targetPath.index : targetPath.index + 1;
+        
+        const newTarget: DropTarget = 'layoutId' in targetPath 
+            ? { type: 'column', layoutId: targetPath.layoutId, columnIndex: targetPath.columnIndex, index: newIndex }
+            : { type: 'root', index: newIndex };
+        
+        handleDragOver(e, newTarget);
+    };
+    
+    const handleItemDrop = (e: React.DragEvent) => {
+        if (isLayout) return;
+        handleDrop(e, dragOverTarget!);
+    };
+
+    // --- Class calculation for drop indicator ---
+    const isDropTarget = dragOverTarget?.type === targetPath.type &&
+        (targetPath.type === 'root' || 
+         (dragOverTarget.type === 'column' && targetPath.type === 'column' &&
+          dragOverTarget.layoutId === targetPath.layoutId && 
+          dragOverTarget.columnIndex === targetPath.columnIndex));
+
+    const isDropTargetBefore = isDropTarget && dragOverTarget.index === targetPath.index;
+    const isDropTargetAfter = isDropTarget && dragOverTarget.index === targetPath.index + 1;
+
+    const classNames = [
+        'canvas-component',
+        selectedId === component.id ? 'selected' : '',
+        draggingId === component.id ? 'dragging' : '',
+        !isLayout && isDropTargetBefore ? 'drop-target-before' : '',
+        !isLayout && isDropTargetAfter ? 'drop-target-after' : '',
+    ].filter(Boolean).join(' ');
     
     return (
-    <div
-      className={`canvas-component ${selectedId === component.id ? 'selected' : ''} ${draggingId === component.id ? 'dragging' : ''}`}
-      onClick={clickHandler}
-      draggable={!isLayout}
-      onDragStart={isLayout ? undefined : handleDragStart}
-      onDragEnd={isLayout ? undefined : handleDragEnd}
-    >
-      {selectedId === component.id && (
-         <div className="component-toolbar">
-           <div className="drag-handle">✥</div>
-           <span>{component.type.charAt(0).toUpperCase() + component.type.slice(1)}</span>
-           <button className="toolbar-button delete" onClick={(e) => { e.stopPropagation(); handleDeleteComponent(component.id); }}>
-             🗑️
-           </button>
-         </div>
-      )}
-      {component.type === 'layout' ? (
-          <div className={`layout-grid ${component.layoutType}`}>
-              {component.columns.map((col, colIndex) => {
-                  const targetForEmpty: DropTarget = {type: 'column', layoutId: component.id, columnIndex: colIndex, index: 0};
-                  const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
-
-                  return (
-                      <div key={col.id} className="layout-column">
-                          {col.components.length === 0 ? (
-                              <div
-                                  className={`empty-column-dropzone ${isEmptyColumnActive ? 'active' : ''}`}
-                                  onDragOver={(e) => handleDragOver(e, targetForEmpty)}
-                                  onDrop={(e) => handleDrop(e, targetForEmpty)}
-                               >
-                                  <span className="icon">➕</span>
-                                  <span>Drop Here</span>
-                              </div>
-                          ) : (
-                              <>
-                                  <DropZone target={{type: 'column', layoutId: component.id, columnIndex: colIndex, index: 0}} />
-                                  {col.components.map((innerComp, innerIndex) => (
-                                      <React.Fragment key={innerComp.id}>
-                                          <RenderItem component={innerComp} />
-                                          <DropZone target={{type: 'column', layoutId: component.id, columnIndex: colIndex, index: innerIndex + 1}} />
-                                      </React.Fragment>
-                                  ))}
-                              </>
-                          )}
-                      </div>
-                  )
-              })}
-          </div>
-      ) : renderContentComponent(component as ContentComponent)}
-    </div>
-  );
+        <div
+            className={classNames}
+            onClick={clickHandler}
+            draggable={!isLayout}
+            onDragStart={isLayout ? undefined : handleDragStart}
+            onDragEnd={isLayout ? undefined : handleDragEnd}
+            onDragOver={handleItemDragOver}
+            onDrop={handleItemDrop}
+        >
+          {selectedId === component.id && !isLayout && (
+             <div className="component-toolbar">
+               <div className="drag-handle">✥</div>
+               <span>{component.type.charAt(0).toUpperCase() + component.type.slice(1)}</span>
+               <button className="toolbar-button delete" onClick={(e) => { e.stopPropagation(); handleDeleteComponent(component.id); }}>
+                 🗑️
+               </button>
+             </div>
+          )}
+          {component.type === 'layout' ? (
+              <div className={`layout-grid ${component.layoutType}`}>
+                  {component.columns.map((col, colIndex) => {
+                      const targetForEmpty: DropTarget = {type: 'column', layoutId: component.id, columnIndex: colIndex, index: 0};
+                      const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
+    
+                      return (
+                          <div key={col.id} className="layout-column">
+                              {col.components.length === 0 ? (
+                                  <div
+                                      className={`empty-column-dropzone ${isEmptyColumnActive ? 'active' : ''}`}
+                                      onDragOver={(e) => handleDragOver(e, targetForEmpty)}
+                                      onDrop={(e) => handleDrop(e, targetForEmpty)}
+                                   >
+                                      <span className="icon">➕</span>
+                                      <span>Drop Here</span>
+                                  </div>
+                              ) : (
+                                  <>
+                                      {col.components.map((innerComp, innerIndex) => (
+                                          <RenderItem 
+                                            key={innerComp.id} 
+                                            component={innerComp} 
+                                            targetPath={{type: 'column', layoutId: component.id, columnIndex: colIndex, index: innerIndex}} 
+                                          />
+                                      ))}
+                                  </>
+                              )}
+                          </div>
+                      )
+                  })}
+              </div>
+          ) : renderContentComponent(component as ContentComponent)}
+        </div>
+      );
 };
 
   return (
-    <div className="canvas-container" onDragLeave={() => setDragOverTarget(null)} style={{ backgroundColor: emailSettings.backgroundColor }}>
+    <div className="canvas-container" onDragLeave={handleDragLeave} style={{ backgroundColor: emailSettings.backgroundColor }} onClick={handleBackgroundClick}>
       <div className="canvas" style={{ backgroundColor: emailSettings.contentBackgroundColor }}>
         {components.length === 0 ? (
           <div className="empty-canvas" 
@@ -544,12 +604,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           </div>
         ) : (
           <>
-            <DropZone target={{ type: 'root', index: 0 }} />
             {components.map((component, index) => (
-              <React.Fragment key={component.id}>
-                 <RenderItem component={component} />
-                 <DropZone target={{ type: 'root', index: index + 1 }} />
-              </React.Fragment>
+              <RenderItem key={component.id} component={component} targetPath={{ type: 'root', index: index }} />
             ))}
           </>
         )}
@@ -592,7 +648,15 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
     
     const handleFormat = (e: React.MouseEvent, command: string) => {
         e.preventDefault();
-        document.execCommand(command, false);
+        if (command === 'createLink') {
+            const url = prompt('Enter the link URL:', 'https://');
+            if (url) {
+                // execCommand is deprecated but necessary for this simple implementation
+                document.execCommand(command, false, url);
+            }
+        } else {
+            document.execCommand(command, false);
+        }
     };
 
     const getImageDimensions = (url: string): Promise<{ width: number, height: number }> => {
@@ -730,6 +794,8 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             <button onMouseDown={(e) => handleFormat(e, 'bold')}><b>B</b></button>
                             <button onMouseDown={(e) => handleFormat(e, 'italic')}><i>I</i></button>
                             <button onMouseDown={(e) => handleFormat(e, 'underline')}><u>U</u></button>
+                            <button onMouseDown={(e) => handleFormat(e, 'createLink')}>🔗</button>
+                            <button onMouseDown={(e) => handleFormat(e, 'unlink')}>🚫</button>
                             <button onMouseDown={(e) => handleFormat(e, 'insertUnorderedList')}>●</button>
                             <button onMouseDown={(e) => handleFormat(e, 'insertOrderedList')}>1.</button>
                         </div>
@@ -753,6 +819,10 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         <label>Image URL</label>
                         <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
                         <p className="helper-text">The upload above is for preview only. You must provide a public URL here for the final email.</p>
+                    </div>
+                     <div className="form-group">
+                        <label>Link URL (optional)</label>
+                        <input type="url" placeholder="https://example.com" value={component.href || ''} onChange={(e) => handleChange('href', e.target.value)} />
                     </div>
                     <div className="form-group">
                         <label>Alt Text</label>
@@ -1152,7 +1222,11 @@ const App = () => {
       case 'footer':
         return `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
       case 'image':
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border-radius:${component.borderRadius}px;"></td></tr></table>`;
+        const imgTag = `<img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
+        if (component.href) {
+            return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
+        }
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;">${imgTag}</td></tr></table>`;
       case 'logo':
         const { naturalWidth, naturalHeight } = component;
         const logoWidth = parseInt(component.width, 10);
