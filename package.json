@@ -5,10 +5,10 @@
   "private": true,
   "homepage": "https://dreadedapparatus.github.io/wysiwyg-builder/",
   "scripts": {
-    "start": "esbuild index.tsx --bundle --outfile=index.js --jsx=automatic --servedir=.",
-    "build": "rimraf dist && esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic && cpx index.html dist && cpx index.css dist",
+    "start": "npx esbuild index.tsx --bundle --outfile=index.js --jsx=automatic --servedir=.",
+    "build": "npx rimraf dist && npx esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic && npx cpx index.html dist && npx cpx index.css dist",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "npx gh-pages -d dist"
   },
   "dependencies": {
     "react": "^18.3.1",
