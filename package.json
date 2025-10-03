@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "start": "esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic --servedir=.",
-    "build": "esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic"
+    "build": "esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d ."
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -15,6 +17,7 @@
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
     "esbuild": "^0.20.2",
+    "gh-pages": "^6.1.1",
     "typescript": "^5.4.5"
   }
 }
