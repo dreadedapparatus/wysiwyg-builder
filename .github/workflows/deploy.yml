@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Explicitly grant write permissions for the GITHUB_TOKEN
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
@@ -26,9 +28,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to GitHub Pages 🚀
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          publish_branch: gh-pages
-          cname: '' # Add your custom domain here if you have one
