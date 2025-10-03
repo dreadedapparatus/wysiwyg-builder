@@ -24646,7 +24646,20 @@
     const handleDragOver = (e, target) => {
       e.preventDefault();
       e.stopPropagation();
-      setDragOverTarget(target);
+      if (JSON.stringify(target) !== JSON.stringify(dragOverTarget)) {
+        setDragOverTarget(target);
+      }
+    };
+    const handleDragLeave = (e) => {
+      if (!e.relatedTarget?.closest(".canvas-container")) {
+        setDragOverTarget(null);
+      }
+    };
+    const handleBackgroundClick = (e) => {
+      const target = e.target;
+      if (target.classList.contains("canvas-container") || target.classList.contains("canvas")) {
+        setSelectedId(null);
+      }
     };
     const renderContentComponent = (component) => {
       switch (component.type) {
@@ -24654,7 +24667,7 @@
         case "footer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: component.color, fontFamily: component.fontFamily, textAlign: component.textAlign } });
         case "image":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px 0" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          const imageElement = /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
             "img",
             {
               src: component.previewSrc || component.src,
@@ -24666,7 +24679,15 @@
                 borderRadius: `${component.borderRadius}px`
               }
             }
-          ) });
+          );
+          const imageContainerStyle = {
+            textAlign: component.alignment,
+            padding: "10px 0"
+          };
+          if (component.href) {
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageContainerStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.href, target: "_blank", rel: "noopener noreferrer", style: { textDecoration: "none", display: "inline-block", lineHeight: 0 }, children: imageElement }) });
+          }
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageContainerStyle, children: imageElement });
         case "logo":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { width: `${component.width}px`, maxWidth: "100%", display: "inline-block" } }) });
         case "button":
@@ -24712,18 +24733,7 @@
           return null;
       }
     };
-    const DropZone = ({ target }) => {
-      const isActive = JSON.stringify(dragOverTarget) === JSON.stringify(target);
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-        "div",
-        {
-          className: `drop-zone ${isActive ? "active" : ""}`,
-          onDragOver: (e) => handleDragOver(e, target),
-          onDrop: (e) => handleDrop(e, target)
-        }
-      );
-    };
-    const RenderItem = ({ component }) => {
+    const RenderItem = ({ component, targetPath }) => {
       const isLayout = component.type === "layout";
       const clickHandler = isLayout ? void 0 : (e) => {
         e.stopPropagation();
@@ -24739,16 +24749,42 @@
         e.stopPropagation();
         setDraggingId(null);
       };
+      const handleItemDragOver = (e) => {
+        if (isLayout) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const isTopHalf = e.clientY < rect.top + rect.height / 2;
+        const newIndex = isTopHalf ? targetPath.index : targetPath.index + 1;
+        const newTarget = "layoutId" in targetPath ? { type: "column", layoutId: targetPath.layoutId, columnIndex: targetPath.columnIndex, index: newIndex } : { type: "root", index: newIndex };
+        handleDragOver(e, newTarget);
+      };
+      const handleItemDrop = (e) => {
+        if (isLayout) return;
+        handleDrop(e, dragOverTarget);
+      };
+      const isDropTarget = dragOverTarget?.type === targetPath.type && (targetPath.type === "root" || dragOverTarget.type === "column" && targetPath.type === "column" && dragOverTarget.layoutId === targetPath.layoutId && dragOverTarget.columnIndex === targetPath.columnIndex);
+      const isDropTargetBefore = isDropTarget && dragOverTarget.index === targetPath.index;
+      const isDropTargetAfter = isDropTarget && dragOverTarget.index === targetPath.index + 1;
+      const classNames = [
+        "canvas-component",
+        selectedId === component.id ? "selected" : "",
+        draggingId === component.id ? "dragging" : "",
+        !isLayout && isDropTargetBefore ? "drop-target-before" : "",
+        !isLayout && isDropTargetAfter ? "drop-target-after" : ""
+      ].filter(Boolean).join(" ");
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
         "div",
         {
-          className: `canvas-component ${selectedId === component.id ? "selected" : ""} ${draggingId === component.id ? "dragging" : ""}`,
+          className: classNames,
           onClick: clickHandler,
           draggable: !isLayout,
           onDragStart: isLayout ? void 0 : handleDragStart,
           onDragEnd: isLayout ? void 0 : handleDragEnd,
+          onDragOver: handleItemDragOver,
+          onDrop: handleItemDrop,
           children: [
-            selectedId === component.id && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
+            selectedId === component.id && !isLayout && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.type.charAt(0).toUpperCase() + component.type.slice(1) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button delete", onClick: (e) => {
@@ -24770,19 +24806,20 @@
                     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Drop Here" })
                   ]
                 }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropZone, { target: { type: "column", layoutId: component.id, columnIndex: colIndex, index: 0 } }),
-                col.components.map((innerComp, innerIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.default.Fragment, { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RenderItem, { component: innerComp }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropZone, { target: { type: "column", layoutId: component.id, columnIndex: colIndex, index: innerIndex + 1 } })
-                ] }, innerComp.id))
-              ] }) }, col.id);
+              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: col.components.map((innerComp, innerIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                RenderItem,
+                {
+                  component: innerComp,
+                  targetPath: { type: "column", layoutId: component.id, columnIndex: colIndex, index: innerIndex }
+                },
+                innerComp.id
+              )) }) }, col.id);
             }) }) : renderContentComponent(component)
           ]
         }
       );
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas-container", onDragLeave: () => setDragOverTarget(null), style: { backgroundColor: emailSettings.backgroundColor }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas", style: { backgroundColor: emailSettings.contentBackgroundColor }, children: components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas-container", onDragLeave: handleDragLeave, style: { backgroundColor: emailSettings.backgroundColor }, onClick: handleBackgroundClick, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas", style: { backgroundColor: emailSettings.contentBackgroundColor }, children: components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
       "div",
       {
         className: "empty-canvas",
@@ -24794,13 +24831,7 @@
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Drag a component from the left panel to get started." })
         ]
       }
-    ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropZone, { target: { type: "root", index: 0 } }),
-      components.map((component, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.default.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RenderItem, { component }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropZone, { target: { type: "root", index: index + 1 } })
-      ] }, component.id))
-    ] }) }) });
+    ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: components.map((component, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RenderItem, { component, targetPath: { type: "root", index } }, component.id)) }) }) });
   };
   var PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings }) => {
     const FONT_FAMILIES = ["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
@@ -24830,7 +24861,14 @@
     };
     const handleFormat = (e, command) => {
       e.preventDefault();
-      document.execCommand(command, false);
+      if (command === "createLink") {
+        const url = prompt("Enter the link URL:", "https://");
+        if (url) {
+          document.execCommand(command, false, url);
+        }
+      } else {
+        document.execCommand(command, false);
+      }
     };
     const getImageDimensions = (url) => {
       return new Promise((resolve, reject) => {
@@ -24959,6 +24997,8 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onMouseDown: (e) => handleFormat(e, "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "B" }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onMouseDown: (e) => handleFormat(e, "italic"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "I" }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onMouseDown: (e) => handleFormat(e, "underline"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("u", { children: "U" }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onMouseDown: (e) => handleFormat(e, "createLink"), children: "\u{1F517}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onMouseDown: (e) => handleFormat(e, "unlink"), children: "\u{1F6AB}" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onMouseDown: (e) => handleFormat(e, "insertUnorderedList"), children: "\u25CF" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onMouseDown: (e) => handleFormat(e, "insertOrderedList"), children: "1." })
               ] }),
@@ -24984,6 +25024,10 @@
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "The upload above is for preview only. You must provide a public URL here for the final email." })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Link URL (optional)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", placeholder: "https://example.com", value: component.href || "", onChange: (e) => handleChange("href", e.target.value) })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
@@ -25359,7 +25403,11 @@
         case "footer":
           return `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
         case "image":
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border-radius:${component.borderRadius}px;"></td></tr></table>`;
+          const imgTag = `<img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
+          if (component.href) {
+            return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
+          }
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;">${imgTag}</td></tr></table>`;
         case "logo":
           const { naturalWidth, naturalHeight } = component;
           const logoWidth = parseInt(component.width, 10);

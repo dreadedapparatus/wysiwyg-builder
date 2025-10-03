@@ -144,20 +144,6 @@ body {
   min-height: 400px;
 }
 
-.drop-zone {
-  height: 20px;
-  background-color: rgba(58, 134, 255, 0.2);
-  border: 1px dashed var(--primary-color);
-  margin: 4px 0;
-  transition: height 0.2s;
-  opacity: 0;
-}
-
-.drop-zone.active {
-  height: 50px;
-  opacity: 1;
-}
-
 .canvas-component {
   position: relative;
   cursor: pointer;
@@ -180,6 +166,28 @@ body {
   opacity: 0.4;
   border: 2px dashed var(--primary-color);
 }
+
+/* NEW Drop Indicator Styles */
+.canvas-component.drop-target-before::before,
+.canvas-component.drop-target-after::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: var(--primary-color);
+    z-index: 20;
+    border-radius: 2px;
+}
+
+.canvas-component.drop-target-before::before {
+    top: -4px;
+}
+
+.canvas-component.drop-target-after::after {
+    bottom: -4px;
+}
+
 
 .component-toolbar {
   position: absolute;
