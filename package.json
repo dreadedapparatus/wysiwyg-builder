@@ -6,7 +6,7 @@
   "homepage": "https://dreadedapparatus.github.io/wysiwyg-builder/",
   "scripts": {
     "start": "esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic --servedir=.",
-    "build": "esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic"
+    "build": "rm -rf dist && mkdir dist && esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic && cp index.html dist/ && cp index.css dist/"
   },
   "dependencies": {
     "react": "^18.3.1",

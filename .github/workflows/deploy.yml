@@ -3,7 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # Or whatever your default branch is
+      - master
+  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
 
 jobs:
   build-and-deploy:
@@ -28,9 +29,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          # We need to publish the root directory because index.html and index.css are there.
-          # The build script places the JS in /dist, which is fine.
-          # We will just tell our index.html to look for it there.
+          publish_dir: ./dist
           publish_branch: gh-pages
           cname: '' # Add your custom domain here if you have one
