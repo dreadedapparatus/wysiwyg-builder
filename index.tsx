@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -12,6 +13,21 @@ interface BaseComponent {
   type: ComponentType;
 }
 
+// --- STYLING TYPES ---
+interface BorderSide {
+  width: string;
+  color: string;
+}
+
+interface ContainerStyle {
+  backgroundColor?: string;
+  borderTop?: BorderSide;
+  borderRight?: BorderSide;
+  borderBottom?: BorderSide;
+  borderLeft?: BorderSide;
+}
+
+
 // --- Content Components ---
 interface TextComponent extends BaseComponent {
   type: 'text';
@@ -20,6 +36,7 @@ interface TextComponent extends BaseComponent {
   color: string;
   fontFamily: string;
   textAlign: 'left' | 'center' | 'right';
+  containerStyle?: ContainerStyle;
 }
 
 interface FooterComponent extends BaseComponent {
@@ -29,6 +46,7 @@ interface FooterComponent extends BaseComponent {
     color: string;
     fontFamily: string;
     textAlign: 'left' | 'center' | 'right';
+    containerStyle?: ContainerStyle;
 }
 
 interface ImageComponent extends BaseComponent {
@@ -42,6 +60,7 @@ interface ImageComponent extends BaseComponent {
   naturalWidth?: number;
   naturalHeight?: number;
   href?: string;
+  containerStyle?: ContainerStyle;
 }
 
 interface LogoComponent extends BaseComponent {
@@ -53,6 +72,7 @@ interface LogoComponent extends BaseComponent {
     alignment: 'left' | 'center' | 'right';
     naturalWidth?: number;
     naturalHeight?: number;
+    containerStyle?: ContainerStyle;
 }
 
 interface ButtonComponent extends BaseComponent {
@@ -63,6 +83,7 @@ interface ButtonComponent extends BaseComponent {
   textColor: string;
   fontSize: string;
   fontWeight: 'normal' | 'bold';
+  containerStyle?: ContainerStyle;
 }
 
 interface SubButton {
@@ -77,11 +98,13 @@ interface ButtonGroupComponent extends BaseComponent {
     type: 'button-group';
     buttons: SubButton[];
     alignment: 'left' | 'center' | 'right';
+    containerStyle?: ContainerStyle;
 }
 
 interface SpacerComponent extends BaseComponent {
   type: 'spacer';
   height: string;
+  containerStyle?: ContainerStyle;
 }
 
 interface DividerComponent extends BaseComponent {
@@ -89,6 +112,7 @@ interface DividerComponent extends BaseComponent {
     color: string;
     height: string;
     padding: string;
+    containerStyle?: ContainerStyle;
 }
 
 interface SocialLink {
@@ -100,6 +124,7 @@ interface SocialComponent extends BaseComponent {
     type: 'social';
     links: SocialLink[];
     alignment: 'left' | 'center' | 'right';
+    containerStyle?: ContainerStyle;
 }
 
 interface VideoComponent extends BaseComponent {
@@ -112,6 +137,7 @@ interface VideoComponent extends BaseComponent {
     alignment: 'left' | 'center' | 'right';
     naturalWidth?: number;
     naturalHeight?: number;
+    containerStyle?: ContainerStyle;
 }
 
 interface CardComponent extends BaseComponent {
@@ -129,6 +155,7 @@ interface CardComponent extends BaseComponent {
   buttonTextColor: string;
   naturalWidth?: number;
   naturalHeight?: number;
+  containerStyle?: ContainerStyle;
 }
 
 type ContentComponent = 
@@ -227,33 +254,34 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
   
   const createNewComponent = (type: CreationComponentType): EmailComponent => {
     const id = `comp_${Date.now()}`;
+    const baseProps = { id, containerStyle: { backgroundColor: 'transparent' } };
     switch (type) {
       case 'text':
-        return { id, type, content: 'This is a new text block. Click to edit!', fontSize: '16', color: '#000000', fontFamily: 'Arial', textAlign: 'left' };
+        return { ...baseProps, type, content: 'This is a new text block. Click to edit!', fontSize: '16', color: '#000000', fontFamily: 'Arial', textAlign: 'left' };
       case 'image':
-        return { id, type, src: 'https://via.placeholder.com/600x300', alt: 'Placeholder', borderRadius: '0', width: '100', alignment: 'center', naturalWidth: 600, naturalHeight: 300 };
+        return { ...baseProps, type, src: 'https://via.placeholder.com/600x300', alt: 'Placeholder', borderRadius: '0', width: '100', alignment: 'center', naturalWidth: 600, naturalHeight: 300 };
       case 'button':
-        return { id, type, text: 'Click Me', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal' };
+        return { ...baseProps, type, text: 'Click Me', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal' };
       case 'spacer':
-        return { id, type, height: '20' };
+        return { ...baseProps, type, height: '20' };
       case 'divider':
-        return { id, type, color: '#cccccc', height: '1', padding: '10' };
+        return { ...baseProps, type, color: '#cccccc', height: '1', padding: '10' };
       case 'social':
-        return { id, type, alignment: 'center', links: [
+        return { ...baseProps, type, alignment: 'center', links: [
             { id: `social_${Date.now()}_1`, platform: 'facebook', url: '#' },
             { id: `social_${Date.now()}_2`, platform: 'twitter', url: '#' },
             { id: `social_${Date.now()}_3`, platform: 'instagram', url: '#' },
         ]};
       case 'video':
-        return { id, type, videoUrl: '#', imageUrl: 'https://via.placeholder.com/600x300?text=Video+Thumbnail', alt: 'Video thumbnail', width: '100', alignment: 'center', naturalWidth: 600, naturalHeight: 300 };
+        return { ...baseProps, type, videoUrl: '#', imageUrl: 'https://via.placeholder.com/600x300?text=Video+Thumbnail', alt: 'Video thumbnail', width: '100', alignment: 'center', naturalWidth: 600, naturalHeight: 300 };
       case 'card':
-        return { id, type, src: 'https://via.placeholder.com/600x400', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', naturalWidth: 600, naturalHeight: 400 };
+        return { ...baseProps, type, src: 'https://via.placeholder.com/600x400', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', naturalWidth: 600, naturalHeight: 400 };
       case 'logo':
-        return { id, type, src: 'https://via.placeholder.com/150x50?text=Your+Logo', alt: 'Company Logo', width: '150', alignment: 'center', naturalWidth: 150, naturalHeight: 50 };
+        return { ...baseProps, type, src: 'https://via.placeholder.com/150x50?text=Your+Logo', alt: 'Company Logo', width: '150', alignment: 'center', naturalWidth: 150, naturalHeight: 50 };
       case 'footer':
-        return { id, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: '12', color: '#888888', fontFamily: 'Arial', textAlign: 'center' };
+        return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: '12', color: '#888888', fontFamily: 'Arial', textAlign: 'center' };
       case 'button-group':
-        return { id, type, alignment: 'center', buttons: [
+        return { ...baseProps, type, alignment: 'center', buttons: [
             { id: `btn_${Date.now()}_1`, text: 'Button 1', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff' },
             { id: `btn_${Date.now()}_2`, text: 'Button 2', href: '#', backgroundColor: '#6c757d', textColor: '#ffffff' },
         ]};
@@ -474,6 +502,31 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       }
   };
 
+  const getContainerInlineStyles = (component: ContentComponent): React.CSSProperties => {
+    const styles: React.CSSProperties = {};
+    if (!component.containerStyle) return styles;
+
+    const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
+
+    if (backgroundColor && backgroundColor !== 'transparent') {
+        styles.backgroundColor = backgroundColor;
+    }
+    if (borderTop?.width && parseInt(borderTop.width) > 0) {
+        styles.borderTop = `${borderTop.width}px solid ${borderTop.color}`;
+    }
+    if (borderRight?.width && parseInt(borderRight.width) > 0) {
+        styles.borderRight = `${borderRight.width}px solid ${borderRight.color}`;
+    }
+    if (borderBottom?.width && parseInt(borderBottom.width) > 0) {
+        styles.borderBottom = `${borderBottom.width}px solid ${borderBottom.color}`;
+    }
+    if (borderLeft?.width && parseInt(borderLeft.width) > 0) {
+        styles.borderLeft = `${borderLeft.width}px solid ${borderLeft.color}`;
+    }
+
+    return styles;
+  };
+
   const RenderItem = ({ component, targetPath }: { component: EmailComponent, targetPath: DropTarget }) => {
     const isLayout = component.type === 'layout';
     
@@ -535,6 +588,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
         !isLayout && isDropTargetAfter ? 'drop-target-after' : '',
     ].filter(Boolean).join(' ');
     
+    const containerStyles = isLayout ? {} : getContainerInlineStyles(component as ContentComponent);
+    
     return (
         <div
             className={classNames}
@@ -554,39 +609,41 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                </button>
              </div>
           )}
-          {component.type === 'layout' ? (
-              <div className={`layout-grid ${component.layoutType}`}>
-                  {component.columns.map((col, colIndex) => {
-                      const targetForEmpty: DropTarget = {type: 'column', layoutId: component.id, columnIndex: colIndex, index: 0};
-                      const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
-    
-                      return (
-                          <div key={col.id} className="layout-column">
-                              {col.components.length === 0 ? (
-                                  <div
-                                      className={`empty-column-dropzone ${isEmptyColumnActive ? 'active' : ''}`}
-                                      onDragOver={(e) => handleDragOver(e, targetForEmpty)}
-                                      onDrop={(e) => handleDrop(e, targetForEmpty)}
-                                   >
-                                      <span className="icon">➕</span>
-                                      <span>Drop Here</span>
-                                  </div>
-                              ) : (
-                                  <>
-                                      {col.components.map((innerComp, innerIndex) => (
-                                          <RenderItem 
-                                            key={innerComp.id} 
-                                            component={innerComp} 
-                                            targetPath={{type: 'column', layoutId: component.id, columnIndex: colIndex, index: innerIndex}} 
-                                          />
-                                      ))}
-                                  </>
-                              )}
-                          </div>
-                      )
-                  })}
-              </div>
-          ) : renderContentComponent(component as ContentComponent)}
+          <div style={containerStyles}>
+            {component.type === 'layout' ? (
+                <div className={`layout-grid ${component.layoutType}`}>
+                    {component.columns.map((col, colIndex) => {
+                        const targetForEmpty: DropTarget = {type: 'column', layoutId: component.id, columnIndex: colIndex, index: 0};
+                        const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
+      
+                        return (
+                            <div key={col.id} className="layout-column">
+                                {col.components.length === 0 ? (
+                                    <div
+                                        className={`empty-column-dropzone ${isEmptyColumnActive ? 'active' : ''}`}
+                                        onDragOver={(e) => handleDragOver(e, targetForEmpty)}
+                                        onDrop={(e) => handleDrop(e, targetForEmpty)}
+                                     >
+                                        <span className="icon">➕</span>
+                                        <span>Drop Here</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {col.components.map((innerComp, innerIndex) => (
+                                            <RenderItem 
+                                              key={innerComp.id} 
+                                              component={innerComp} 
+                                              targetPath={{type: 'column', layoutId: component.id, columnIndex: colIndex, index: innerIndex}} 
+                                            />
+                                        ))}
+                                    </>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+            ) : renderContentComponent(component as ContentComponent)}
+          </div>
         </div>
       );
 };
@@ -612,6 +669,64 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       </div>
     </div>
   );
+};
+
+const ContainerStyleEditor = ({ component, onUpdate }) => {
+    const { containerStyle = {} } = component;
+
+    const handleStyleChange = (prop, value) => {
+        const newStyle = { ...containerStyle, [prop]: value };
+        onUpdate(component.id, { ...component, containerStyle: newStyle });
+    };
+
+    const handleBorderChange = (side, prop, value) => {
+        const newStyle = {
+            ...containerStyle,
+            [side]: {
+                ...(containerStyle[side] || { width: '0', color: '#000000' }),
+                [prop]: value
+            }
+        };
+        onUpdate(component.id, { ...component, containerStyle: newStyle });
+    };
+
+    const borderSides = ['borderTop', 'borderRight', 'borderBottom', 'borderLeft'];
+
+    return (
+        <div className="container-style-editor">
+            <h4>Container Styles</h4>
+            <div className="form-group">
+                <label>Background Color</label>
+                <div className="color-input-group">
+                    <input type="color" value={containerStyle.backgroundColor || '#ffffff'} onChange={(e) => handleStyleChange('backgroundColor', e.target.value)} />
+                    <input type="text" value={containerStyle.backgroundColor || '#ffffff'} onChange={(e) => handleStyleChange('backgroundColor', e.target.value)} />
+                </div>
+            </div>
+            
+            <div className="border-editor">
+                <label>Borders</label>
+                {borderSides.map(side => (
+                    <div key={side} className="border-row">
+                        <span>{side.replace('border', '')}</span>
+                        <div className="border-inputs">
+                            <input
+                                type="number"
+                                min="0"
+                                value={containerStyle[side]?.width || '0'}
+                                onChange={(e) => handleBorderChange(side, 'width', e.target.value)}
+                            />
+                            <span>px</span>
+                             <input
+                                type="color"
+                                value={containerStyle[side]?.color || '#000000'}
+                                onChange={(e) => handleBorderChange(side, 'color', e.target.value)}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 };
 
 
@@ -1124,10 +1239,13 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
         }
     }
 
+    const showContainerEditor = component.type !== 'layout';
+
     return (
         <div className="properties-panel">
             <h3>{component.type.charAt(0).toUpperCase() + component.type.slice(1)} Properties</h3>
             {renderProperties()}
+            {showContainerEditor && <ContainerStyleEditor component={component} onUpdate={onUpdate} />}
         </div>
     );
 }
@@ -1173,6 +1291,9 @@ const App = () => {
     contentBackgroundColor: '#ffffff',
   });
 
+  // Fix: Corrected the signature of handleUpdateComponent to use EmailComponent instead of Partial<EmailComponent>.
+  // This preserves the discriminated union type and fixes the type error when updating a component.
+  // The logic is also simplified to directly return the updated component object.
   const handleUpdateComponent = (id: string, updatedComponent: EmailComponent) => {
     const recursiveUpdate = (items: EmailComponent[]): EmailComponent[] => {
         return items.map(c => {
@@ -1210,23 +1331,52 @@ const App = () => {
   }
   const selectedComponent = findComponent(selectedId, components);
   
+  const getContainerStyleString = (component: ContentComponent): string => {
+    if (!component.containerStyle) return '';
+
+    const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
+    let style = '';
+
+    if (backgroundColor && backgroundColor !== 'transparent') {
+        style += `background-color:${backgroundColor};`;
+    }
+    if (borderTop?.width && parseInt(borderTop.width) > 0) {
+        style += `border-top:${borderTop.width}px solid ${borderTop.color};`;
+    }
+    if (borderRight?.width && parseInt(borderRight.width) > 0) {
+        style += `border-right:${borderRight.width}px solid ${borderRight.color};`;
+    }
+     if (borderBottom?.width && parseInt(borderBottom.width) > 0) {
+        style += `border-bottom:${borderBottom.width}px solid ${borderBottom.color};`;
+    }
+    if (borderLeft?.width && parseInt(borderLeft.width) > 0) {
+        style += `border-left:${borderLeft.width}px solid ${borderLeft.color};`;
+    }
+
+    return style;
+  };
+
   const generateComponentHtml = (component: EmailComponent): string => {
     const getPlaceholderSrc = (imgComponent: { naturalWidth?: number, naturalHeight?: number }, defaultW = 600, defaultH = 300) => {
         const w = imgComponent.naturalWidth || defaultW;
         const h = imgComponent.naturalHeight || defaultH;
         return `https://via.placeholder.com/${Math.round(w)}x${Math.round(h)}.png?text=Image`;
     };
+    
+    const containerStyles = (component.type !== 'layout' && component.containerStyle) ? getContainerStyleString(component) : '';
 
     switch (component.type) {
       case 'text':
       case 'footer':
-        return `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+        const textContent = `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${textContent}</td></tr></table>`;
       case 'image':
         const imgTag = `<img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
+        const imageTdStyle = `padding: 10px 0; ${containerStyles}`;
         if (component.href) {
-            return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
+            return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${imageTdStyle}"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
         }
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px 0;">${imgTag}</td></tr></table>`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${imageTdStyle}">${imgTag}</td></tr></table>`;
       case 'logo':
         const { naturalWidth, naturalHeight } = component;
         const logoWidth = parseInt(component.width, 10);
@@ -1237,27 +1387,35 @@ const App = () => {
         } else {
             placeholderSrc = `https://via.placeholder.com/${logoWidth}x${Math.round(logoWidth/3)}.png?text=Logo`;
         }
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding: 10px;"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
+        const logoTdStyle = `padding: 10px; ${containerStyles}`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${logoTdStyle}"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
       case 'button':
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${component.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+        const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${component.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
+
       case 'button-group':
         const buttonsHtml = component.buttons.map(btn => 
             `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: sans-serif;">${btn.text}</a></td>`
         ).join('<td width="10">&nbsp;</td>'); // Spacer cell
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px;"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
+        const buttonGroupTdStyle = `padding:10px; ${containerStyles}`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
       case 'spacer':
-        return `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
+        const spacerContent = `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${spacerContent}</td></tr></table>`;
        case 'divider':
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="padding:${component.padding}px 0;"><hr style="border:none; border-top:${component.height}px solid ${component.color};"></td></tr></table>`;
+        const dividerContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="padding:${component.padding}px 0;"><hr style="border:none; border-top:${component.height}px solid ${component.color};"></td></tr></table>`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${dividerContent}</td></tr></table>`;
       case 'social':
         const linksHtml = component.links.map(link => 
             `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank"><img src="${SOCIAL_ICONS[link.platform]}" alt="${link.platform}" width="32" height="32" style="display: block;"></a></td>`
         ).join('');
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px;"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
+        const socialTdStyle = `padding:10px; ${containerStyles}`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${socialTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
       case 'video':
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="padding:10px 0;"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
+        const videoTdStyle = `padding:10px 0; ${containerStyles}`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${videoTdStyle}"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
       case 'card':
-        return `
+        const cardContent = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
                 <tr><td><img src="${getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>
                 <tr><td style="padding: 15px; color: ${component.textColor}; font-family: sans-serif;">
@@ -1267,6 +1425,7 @@ const App = () => {
                 </td></tr>
             </table>
         `;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${cardContent}</td></tr></table>`;
       case 'layout':
         const columnCount = component.columns.length;
         const columnWidth = `${100 / columnCount}%`;
