@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A drag-and-drop email editor.",
   "private": true,
+  "homepage": "https://dreadedapparatus.github.io/wysiwyg-builder/",
   "scripts": {
     "start": "esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic --servedir=.",
     "build": "esbuild index.tsx --bundle --outfile=dist/index.js --jsx=automatic"
