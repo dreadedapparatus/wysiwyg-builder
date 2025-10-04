@@ -24522,7 +24522,7 @@
         case "spacer":
           return { ...baseProps, type, height: "20" };
         case "divider":
-          return { ...baseProps, type, color: "#cccccc", height: "1", padding: "10" };
+          return { ...baseProps, type, color: "#cccccc", height: "1", padding: "10", width: "100" };
         case "social":
           return { ...baseProps, type, alignment: "center", links: [
             { id: `social_${Date.now()}_1`, platform: "facebook", url: "#" },
@@ -24686,7 +24686,7 @@
         case "spacer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { height: `${component.height}px` } });
         case "divider":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: `${component.padding}px 0` }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", { style: { border: "none", borderTop: `${component.height}px solid ${component.color}` } }) });
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: `${component.padding}px 0` }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", { style: { border: "none", borderTop: `${component.height}px solid ${component.color}`, margin: 0, width: "100%" } }) }) });
         case "social":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: component.alignment }, children: component.links.map((link) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: link.url, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "0 5px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: SOCIAL_ICONS[link.platform], alt: link.platform, width: "32", height: "32" }) }, link.id)) });
         case "video":
@@ -25258,6 +25258,22 @@
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Vertical Padding (px)" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.padding, onChange: (e) => handleChange("padding", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "10",
+                    max: "100",
+                    value: component.width,
+                    onChange: (e) => handleChange("width", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+              ] })
             ] })
           ] });
         case "social":
@@ -25514,8 +25530,15 @@
           const spacerContent = `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${spacerContent}</td></tr></table>`;
         case "divider":
-          const dividerContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="padding:${component.padding}px 0;"><hr style="border:none; border-top:${component.height}px solid ${component.color};"></td></tr></table>`;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${dividerContent}</td></tr></table>`;
+          const dividerItself = `
+            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:${component.width}%;">
+                <tr>
+                    <td style="font-size: 0; line-height: 0; border-top: ${component.height}px solid ${component.color};">&nbsp;</td>
+                </tr>
+            </table>
+        `;
+          const wrapperTdStyle = `padding:${component.padding}px 0; ${containerStyles}`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${wrapperTdStyle}">${dividerItself}</td></tr></table>`;
         case "social":
           const linksHtml = component.links.map(
             (link) => `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank"><img src="${SOCIAL_ICONS[link.platform]}" alt="${link.platform}" width="32" height="32" style="display: block;"></a></td>`
