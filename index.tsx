@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -562,8 +563,67 @@ const ColumnResizer: React.FC<{
     return <div className="column-resizer" ref={resizerRef} onMouseDown={handleMouseDown} />;
 };
 
+// FIX: The original `InlineEditor` component had untyped props, causing several TypeScript errors. 
+// I've defined an explicit type for the props, making `tagName` a valid JSX element key,
+// and making `style` and `className` optional. This resolves the namespace error for `JSX`,
+// the invalid component type for `Tag`, and the missing `className` property errors at call sites.
+const InlineEditor = ({ html, onUpdate, tagName = 'div', style, className }: {
+    html: string;
+    onUpdate: (newHtml: string) => void;
+    tagName?: keyof React.JSX.IntrinsicElements;
+    style?: React.CSSProperties;
+    className?: string;
+}) => {
+    const editorRef = useRef<HTMLElement>(null);
+    const initialHtml = useRef(html); // Store initial value for Escape key
 
-const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite, componentList }) => {
+    useEffect(() => {
+        if (editorRef.current) {
+            editorRef.current.focus();
+            // Select all text for easy replacement
+            document.execCommand('selectAll', false, null);
+        }
+    }, []);
+
+    const handleBlur = () => {
+        if (editorRef.current) {
+            onUpdate(editorRef.current.innerHTML);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        // On Escape, revert and blur
+        if (e.key === 'Escape') {
+            if (editorRef.current) {
+                editorRef.current.innerHTML = initialHtml.current;
+                editorRef.current.blur();
+            }
+        }
+        // On Enter (without Shift), just blur to save
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            editorRef.current?.blur();
+        }
+    };
+
+    const Tag = tagName;
+
+    return (
+        <Tag
+            ref={editorRef}
+            contentEditable
+            suppressContentEditableWarning
+            dangerouslySetInnerHTML={{ __html: html }}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            style={style}
+            className={`inline-editor ${className || ''}`}
+        />
+    );
+};
+
+
+const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite, componentList, editingField, setEditingField }) => {
   const [dragOverTarget, setDragOverTarget] = useState<DropTarget | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   
@@ -744,7 +804,31 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'footer': {
           const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
-          const textContent = <div dangerouslySetInnerHTML={{ __html: component.content }} style={{ padding: '10px', fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign }} />;
+          const isEditing = editingField?.componentId === component.id && editingField?.field === 'content';
+          const textStyles = { padding: '10px', fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign, width: '100%' };
+          
+          const textContent = isEditing ? (
+              <InlineEditor
+                  html={component.content}
+                  onUpdate={(newHtml) => {
+                      onUpdate(component.id, { ...component, content: newHtml });
+                      setEditingField(null);
+                  }}
+                  style={textStyles}
+                  tagName="div"
+              />
+          ) : (
+              <div
+                  dangerouslySetInnerHTML={{ __html: component.content }}
+                  style={textStyles}
+                  onDoubleClick={() => {
+                      if (!component.isLocked) {
+                          setSelectedId(component.id);
+                          setEditingField({ componentId: component.id, field: 'content' });
+                      }
+                  }}
+              />
+          );
           return <div style={{ width: `${component.width}%`, margin: '0 auto' }}>{textContent}</div>;
       }
       case 'image': {
@@ -892,6 +976,9 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
+          const isEditingTitle = editingField?.componentId === component.id && editingField?.field === 'title';
+          const isEditingContent = editingField?.componentId === component.id && editingField?.field === 'content';
+
           const cardContent = (
               <div style={{ backgroundColor: component.backgroundColor, color: finalCardTextColor, padding: '15px', borderRadius: '5px', fontFamily: finalCardFontFamily }}>
                   {component.showImage && (
@@ -904,8 +991,30 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                         <img src={component.previewSrc || component.src} alt={component.alt} style={{ maxWidth: '100%', display: 'block', width: `${component.imageWidth}%`, margin: '0 auto' }} />
                     )
                   )}
-                  <h4 style={{ margin: '10px 0 5px' }}>{component.title}</h4>
-                  <p style={{ margin: '0 0 10px' }}>{component.content}</p>
+                  {isEditingTitle ? (
+                    <InlineEditor
+                      html={component.title}
+                      onUpdate={(newHtml) => { onUpdate(component.id, { ...component, title: newHtml }); setEditingField(null); }}
+                      tagName="h4"
+                      style={{ margin: '10px 0 5px' }}
+                    />
+                  ) : (
+                    <h4 style={{ margin: '10px 0 5px' }} onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title' }); }}}>
+                      <span dangerouslySetInnerHTML={{__html: component.title }} />
+                    </h4>
+                  )}
+                  {isEditingContent ? (
+                    <InlineEditor
+                      html={component.content}
+                      onUpdate={(newHtml) => { onUpdate(component.id, { ...component, content: newHtml }); setEditingField(null); }}
+                      tagName="p"
+                      style={{ margin: '0 0 10px' }}
+                    />
+                  ) : (
+                     <p style={{ margin: '0 0 10px' }} onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content' }); }}}>
+                        <span dangerouslySetInnerHTML={{__html: component.content }} />
+                     </p>
+                  )}
                   {component.showButton && (
                     <div style={{ textAlign: 'center' }}>
                          <a href={component.buttonHref} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: 'none', borderRadius: '5px', fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }}>{component.buttonText}</a>
@@ -962,7 +1071,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
     onFavorite: (id: string) => void;
   }> = ({ component, targetPath, onUpdate, onDuplicate, onDelete, onFavorite }) => {
     const isLayout = component.type === 'layout';
-    
+    const isEditingInline = editingField?.componentId === component.id;
+
     const clickHandler = (e: React.MouseEvent) => {
         e.stopPropagation();
         setSelectedId(component.id);
@@ -1132,7 +1242,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                  </div>
               ) : (
                 <>
-                    {selectedId === component.id && (
+                    {selectedId === component.id && !isEditingInline && (
                      <div className="component-toolbar">
                        {!component.isLocked && <div className="drag-handle">✥</div>}
                        <span>{component.type.charAt(0).toUpperCase() + component.type.slice(1)}</span>
@@ -2621,6 +2731,8 @@ const App = () => {
   const importInputRef = useRef<HTMLInputElement>(null);
   const [componentList, setComponentList] = useState<ComponentListItem[]>(DEFAULT_COMPONENT_LIST);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [editingField, setEditingField] = useState<{ componentId: string; field: string } | null>(null);
+
   
   // Load favorites and templates from localStorage on initial mount
   useEffect(() => {
@@ -2740,6 +2852,10 @@ const App = () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
   }, [undo, redo, isPreviewing]);
+
+  useEffect(() => {
+      setEditingField(null);
+  }, [selectedId]);
 
 
   const setComponents = (updater: (prev: EmailComponent[]) => EmailComponent[]) => {
@@ -3278,6 +3394,8 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
           onDelete={handleDeleteComponent}
           onFavorite={handleFavoriteComponent}
           componentList={componentList}
+          editingField={editingField}
+          setEditingField={setEditingField}
         />
         <PropertiesPanel
           component={selectedComponent}

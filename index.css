@@ -653,6 +653,13 @@ body.resizing * {
   margin-bottom: 0.5rem;
 }
 
+.inline-editor:focus {
+    outline: 2px solid var(--md-sys-color-primary);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+    border-radius: var(--shape-corner-xs);
+}
+
+
 /* Right Panel: Properties */
 .properties-panel {
   padding: 16px;
