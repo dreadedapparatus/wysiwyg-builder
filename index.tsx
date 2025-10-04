@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -155,6 +156,8 @@ interface CardComponent extends BaseComponent {
   naturalWidth?: number;
   naturalHeight?: number;
   showImage: boolean;
+  imageWidth: string;
+  showButton: boolean;
   fontFamily: string;
   useGlobalFont: boolean;
   useGlobalTextColor: boolean;
@@ -522,7 +525,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'video':
         return { ...baseProps, type, videoUrl: '#', imageUrl: '', alt: 'Video thumbnail', width: '100', alignment: 'center' };
       case 'card':
-        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: '100' };
+        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, imageWidth: '100', showButton: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: '100' };
       case 'logo':
         return { ...baseProps, type, src: '', alt: 'Company Logo', width: '150', alignment: 'center' };
       case 'footer':
@@ -821,14 +824,16 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                             <span>Card Image</span>
                         </div>
                     ) : (
-                        <img src={component.previewSrc || component.src} alt={component.alt} style={{ maxWidth: '100%', display: 'block' }} />
+                        <img src={component.previewSrc || component.src} alt={component.alt} style={{ maxWidth: '100%', display: 'block', width: `${component.imageWidth}%`, margin: '0 auto' }} />
                     )
                   )}
                   <h4 style={{ margin: '10px 0 5px' }}>{component.title}</h4>
                   <p style={{ margin: '0 0 10px' }}>{component.content}</p>
-                  <div style={{ textAlign: 'center' }}>
-                       <a href={component.buttonHref} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: 'none', borderRadius: '5px' }}>{component.buttonText}</a>
-                  </div>
+                  {component.showButton && (
+                    <div style={{ textAlign: 'center' }}>
+                         <a href={component.buttonHref} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: 'none', borderRadius: '5px' }}>{component.buttonText}</a>
+                    </div>
+                  )}
               </div>
           );
           return <div style={{ width: `${component.width}%`, margin: '0 auto' }}>{cardContent}</div>;
@@ -1863,6 +1868,19 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                 <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
                                 <p className="helper-text">Public URL required for final email.</p>
                             </div>
+                             <div className="form-group">
+                                <label>Image Width (%)</label>
+                                <div className="slider-group">
+                                    <input
+                                        type="range"
+                                        min="10"
+                                        max="100"
+                                        value={component.imageWidth}
+                                        onChange={(e) => handleChange('imageWidth', e.target.value)}
+                                    />
+                                    <input type="number" min="10" max="100" className="slider-value-input" value={component.imageWidth} onChange={(e) => handleChange('imageWidth', e.target.value)} />
+                                </div>
+                            </div>
                             <div className="form-group">
                                 <label>Alt Text</label>
                                 <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
@@ -1918,32 +1936,43 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         <textarea value={component.content} onChange={(e) => handleChange('content', e.target.value)} />
                     </div>
                     <div className="form-group">
-                        <label>Button Text</label>
-                        <input type="text" value={component.buttonText} onChange={(e) => handleChange('buttonText', e.target.value)} />
+                        <label>Show Button</label>
+                        <label className="switch">
+                            <input type="checkbox" checked={component.showButton} onChange={(e) => handleChange('showButton', e.target.checked)} />
+                            <span className="slider round"></span>
+                        </label>
                     </div>
-                     <div className="form-group">
-                        <label>Button URL</label>
-                        <input type="url" value={component.buttonHref} onChange={(e) => handleChange('buttonHref', e.target.value)} />
-                    </div>
+                    {component.showButton && (
+                        <>
+                            <div className="form-group">
+                                <label>Button Text</label>
+                                <input type="text" value={component.buttonText} onChange={(e) => handleChange('buttonText', e.target.value)} />
+                            </div>
+                             <div className="form-group">
+                                <label>Button URL</label>
+                                <input type="url" value={component.buttonHref} onChange={(e) => handleChange('buttonHref', e.target.value)} />
+                            </div>
+                             <div className="global-toggle-group">
+                                <label>Use Global Button Color</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('useGlobalButtonAccentColor', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
+                             <div className="form-group">
+                                <label>Button Background</label>
+                                 <div className="color-input-group">
+                                     <input type="color" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
+                                     <input type="text" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
+                                </div>
+                            </div>
+                        </>
+                    )}
                      <div className="form-group">
                         <label>Card Background</label>
                          <div className="color-input-group">
                              <input type="color" value={component.backgroundColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
                              <input type="text" value={component.backgroundColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
-                        </div>
-                    </div>
-                    <div className="global-toggle-group">
-                        <label>Use Global Button Color</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('useGlobalButtonAccentColor', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                     <div className="form-group">
-                        <label>Button Background</label>
-                         <div className="color-input-group">
-                             <input type="color" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
-                             <input type="text" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
                         </div>
                     </div>
                 </>
@@ -2064,6 +2093,130 @@ interface AppState {
     emailSettings: EmailSettings;
 }
 
+interface EmailTemplate {
+    id: string;
+    name: string;
+    state: AppState;
+}
+
+const TemplatesModal = ({ templates, onClose, onSave, onLoad, onDelete, onRename, setConfirmation }) => {
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingId && renameInputRef.current) {
+        renameInputRef.current.focus();
+        renameInputRef.current.select();
+    }
+  }, [editingId]);
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTemplateName.trim()) {
+      onSave(newTemplateName.trim());
+      setNewTemplateName('');
+    }
+  };
+
+  const handleLoad = (id: string) => {
+    setConfirmation({
+      message: 'This will replace your current email design. Are you sure?',
+      onConfirm: () => {
+        onLoad(id);
+        onClose();
+      }
+    });
+  };
+  
+  const handleDelete = (id: string) => {
+    setConfirmation({
+        message: 'Are you sure you want to delete this template?',
+        onConfirm: () => onDelete(id)
+    });
+  };
+
+  const handleRename = () => {
+    if (editingId && editText.trim()) {
+        onRename(editingId, editText.trim());
+    }
+    setEditingId(null);
+    setEditText('');
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content template-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Email Templates</h2>
+          <button onClick={onClose}>&times;</button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSave} className="template-save-form">
+            <input 
+              type="text" 
+              value={newTemplateName} 
+              onChange={e => setNewTemplateName(e.target.value)}
+              placeholder="Enter new template name"
+            />
+            <button type="submit">Save Current Email</button>
+          </form>
+          <ul className="template-list">
+            {templates.length === 0 ? (
+              <li className="no-templates">No saved templates yet.</li>
+            ) : (
+              templates.map(template => {
+                const isEditing = editingId === template.id;
+                return (
+                  <li key={template.id} className="template-item">
+                    {isEditing ? (
+                      <input 
+                         ref={renameInputRef}
+                         type="text"
+                         className="template-rename-input"
+                         value={editText}
+                         onChange={e => setEditText(e.target.value)}
+                         onBlur={handleRename}
+                         onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditingId(null); }}
+                      />
+                    ) : (
+                      <span className="template-name" onClick={() => { setEditingId(template.id); setEditText(template.name); }}>
+                        {template.name}
+                      </span>
+                    )}
+                    <div className="template-actions">
+                      <button onClick={() => handleLoad(template.id)} className="load-btn">Load</button>
+                      <button onClick={() => handleDelete(template.id)} className="delete-btn">Delete</button>
+                    </div>
+                  </li>
+                )
+              })
+            )}
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const ConfirmationModal = ({ message, onConfirm, onCancel }) => {
+    return (
+        <div className="modal-overlay">
+            <div className="modal-content confirmation-modal">
+                <div className="modal-body">
+                    <p>{message}</p>
+                </div>
+                <div className="modal-footer">
+                    <button className="confirm-btn-secondary" onClick={onCancel}>Cancel</button>
+                    <button className="confirm-btn-primary" onClick={onConfirm}>Confirm</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const App = () => {
   const initialState: AppState = {
       components: [],
@@ -2081,19 +2234,24 @@ const App = () => {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [draggingComponentType, setDraggingComponentType] = useState<CreationComponentType | null>(null);
   const [favoriteComponents, setFavoriteComponents] = useState<FavoriteItem[]>([]);
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   
-  // Load favorites from localStorage on initial mount
+  // Load favorites and templates from localStorage on initial mount
   useEffect(() => {
     try {
       const savedFavorites = localStorage.getItem('emailEditorFavorites');
-      if (savedFavorites) {
-        setFavoriteComponents(JSON.parse(savedFavorites));
-      }
+      if (savedFavorites) setFavoriteComponents(JSON.parse(savedFavorites));
+
+      const savedTemplates = localStorage.getItem('emailEditorTemplates');
+      if (savedTemplates) setTemplates(JSON.parse(savedTemplates));
+
     } catch (error) {
-      console.error("Failed to load favorites from localStorage:", error);
-      localStorage.removeItem('emailEditorFavorites');
+      console.error("Failed to load from localStorage:", error);
     }
   }, []);
 
@@ -2105,6 +2263,15 @@ const App = () => {
       console.error("Failed to save favorites to localStorage:", error);
     }
   }, [favoriteComponents]);
+  
+  // Save templates to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('emailEditorTemplates', JSON.stringify(templates));
+    } catch (error) {
+      console.error("Failed to save templates to localStorage:", error);
+    }
+  }, [templates]);
 
 
   useEffect(() => {
@@ -2265,6 +2432,91 @@ const App = () => {
   const handleRenameFavorite = (idToRename: string, newName: string) => {
     setFavoriteComponents(prev => prev.map(fav => fav.id === idToRename ? { ...fav, name: newName } : fav));
   };
+  
+  const handleSaveTemplate = (name: string) => {
+    const newTemplate: EmailTemplate = {
+      id: `tpl_${Date.now()}`,
+      name,
+      state: {
+        components: JSON.parse(JSON.stringify(components)),
+        emailSettings: JSON.parse(JSON.stringify(emailSettings)),
+      },
+    };
+    setTemplates(prev => [...prev, newTemplate]);
+  };
+
+  const handleLoadTemplate = (id: string) => {
+    const templateToLoad = templates.find(t => t.id === id);
+    if (templateToLoad) {
+      setState(templateToLoad.state);
+      setSelectedId(null);
+    }
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    setTemplates(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleRenameTemplate = (id: string, newName: string) => {
+    setTemplates(prev => prev.map(t => t.id === id ? { ...t, name: newName } : t));
+  };
+
+  const handleExportData = () => {
+    try {
+        const backupData = {
+            favorites: favoriteComponents,
+            templates: templates,
+        };
+        const jsonString = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const href = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = href;
+        link.download = 'email-editor-backup.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(href);
+    } catch (error) {
+        console.error("Failed to export data:", error);
+        alert("An error occurred while exporting your data.");
+    }
+  };
+
+  const handleImportFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const text = e.target?.result as string;
+            const data = JSON.parse(text);
+
+            if (Array.isArray(data.favorites) && Array.isArray(data.templates)) {
+                setConfirmation({
+                    message: 'This will overwrite your current favorites and templates. Are you sure you want to proceed?',
+                    onConfirm: () => {
+                        setFavoriteComponents(data.favorites);
+                        setTemplates(data.templates);
+                        alert('Data imported successfully!');
+                    }
+                });
+            } else {
+                throw new Error('Invalid backup file format.');
+            }
+        } catch (error) {
+            console.error("Failed to import data:", error);
+            alert(`Error importing file: ${(error as Error).message}`);
+        } finally {
+            if (importInputRef.current) {
+                importInputRef.current.value = '';
+            }
+        }
+    };
+    reader.readAsText(file);
+  };
+
 
   const selectedComponent = findComponent(selectedId, components);
   
@@ -2306,6 +2558,7 @@ const App = () => {
       case 'text':
       case 'footer': {
         const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+        // FIX: Correctly access the `color` property on TextComponent and FooterComponent. The property for text color is `color`, not `textColor`.
         const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
         const textContent = `<div style="padding:10px; font-family:${finalFontFamily}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
         const textWrapper = `
@@ -2374,14 +2627,15 @@ const App = () => {
         const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
         const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
         const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
-        const imageRow = component.showImage ? `<tr><td><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>` : '';
+        const imageRow = component.showImage ? `<tr><td align="center" style="font-size: 0; line-height: 0; padding-bottom: 15px;"><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="${component.imageWidth}%"></td></tr>` : '';
+        const buttonHtml = component.showButton ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>` : '';
         const cardContentTable = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
                 ${imageRow}
                 <tr><td style="padding: 15px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">
                     <h4 style="margin:0 0 5px; font-size: 18px;">${component.title}</h4>
                     <p style="margin:0 0 15px; font-size: 14px;">${component.content}</p>
-                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>
+                    ${buttonHtml}
                 </td></tr>
             </table>
         `;
@@ -2466,6 +2720,19 @@ const App = () => {
             <button onClick={undo} disabled={!canUndo}>Undo</button>
             <button onClick={redo} disabled={!canRedo}>Redo</button>
           </div>
+          <div className="data-actions">
+            {/* FIX: Removed `header-button` className to allow new styles from `data-actions button` to apply correctly. */}
+            <button onClick={() => importInputRef.current?.click()}>Import</button>
+            <button onClick={handleExportData}>Export</button>
+            <input
+                type="file"
+                ref={importInputRef}
+                style={{ display: 'none' }}
+                accept="application/json"
+                onChange={handleImportFileSelect}
+            />
+          </div>
+          <button className="header-button" onClick={() => setShowTemplatesModal(true)}>Templates</button>
           <button onClick={() => setShowExportModal(true)}>Export HTML</button>
         </div>
       </header>
@@ -2498,6 +2765,27 @@ const App = () => {
         />
       </main>
       {showExportModal && <ExportModal html={generateEmailHtml()} onClose={() => setShowExportModal(false)} />}
+      {showTemplatesModal && 
+        <TemplatesModal 
+            templates={templates}
+            onClose={() => setShowTemplatesModal(false)}
+            onSave={handleSaveTemplate}
+            onLoad={handleLoadTemplate}
+            onDelete={handleDeleteTemplate}
+            onRename={handleRenameTemplate}
+            setConfirmation={setConfirmation}
+        />
+      }
+      {confirmation && (
+        <ConfirmationModal 
+            message={confirmation.message}
+            onConfirm={() => {
+                confirmation.onConfirm();
+                setConfirmation(null);
+            }}
+            onCancel={() => setConfirmation(null)}
+        />
+      )}
     </>
   );
 };

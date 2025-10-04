@@ -1,3 +1,4 @@
+
 :root {
   /* Material 3 Dark Theme Palette */
   --md-sys-color-primary: #A8C7FA;
@@ -111,6 +112,12 @@ body.resizing * {
 
 .header-actions button:hover {
   box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.4);
+}
+
+.header-actions .header-button {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    padding: 10px 20px;
 }
 
 .history-controls {
@@ -1016,6 +1023,7 @@ body.resizing * {
     background-color: var(--md-sys-color-surface-bright);
     border-radius: var(--shape-corner-md);
     border: 1px solid var(--md-sys-color-outline-variant);
+    padding: 8px;
 }
 .modal-body pre {
     white-space: pre-wrap;
@@ -1203,4 +1211,144 @@ input:checked + .slider:before {
 .emoji-picker-button:hover {
     border-color: var(--md-sys-color-primary);
     box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+}
+
+/* Template Modal Styles */
+.modal-content.template-modal {
+    max-width: 600px;
+}
+
+.template-save-form {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--md-sys-color-surface-container-high);
+    border-radius: var(--shape-corner-md);
+}
+
+.template-save-form input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--shape-corner-sm);
+    background-color: var(--md-sys-color-surface-bright);
+    color: var(--md-sys-color-on-surface);
+}
+
+.template-save-form button {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none;
+    border-radius: var(--shape-corner-sm);
+    padding: 0 20px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.template-list {
+    list-style: none;
+}
+
+.no-templates {
+    text-align: center;
+    padding: 40px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.template-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.template-item:last-child {
+    border-bottom: none;
+}
+
+.template-name {
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.template-rename-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--md-sys-color-primary);
+    border-radius: var(--shape-corner-xs);
+    color: var(--md-sys-color-on-primary-container);
+    padding: 4px 8px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.template-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.template-actions button {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: var(--shape-corner-full);
+    cursor: pointer;
+    border: 1px solid var(--md-sys-color-outline);
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.template-actions button.load-btn {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-color: var(--md-sys-color-secondary-container);
+}
+
+.template-actions button.delete-btn:hover {
+    background-color: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    border-color: var(--md-sys-color-error-container);
+}
+
+/* Confirmation Modal Styles */
+.confirmation-modal {
+    max-width: 400px;
+}
+.confirmation-modal .modal-body {
+    background: transparent;
+    border: none;
+    padding: 16px 0;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+.confirmation-modal .modal-footer {
+    gap: 12px;
+}
+.confirm-btn-secondary {
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant) !important;
+}
+.confirm-btn-primary {
+    background-color: var(--md-sys-color-error);
+    color: var(--md-sys-color-error-container);
+}
+
+/* Data Actions (Import/Export) */
+.data-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.data-actions button {
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    padding: 10px 20px;
+}
+
+.data-actions button:hover {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-color: var(--md-sys-color-secondary-container);
 }
