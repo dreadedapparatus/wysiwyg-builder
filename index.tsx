@@ -570,7 +570,8 @@ const ColumnResizer: React.FC<{
 const InlineEditor = ({ html, onUpdate, tagName = 'div', style, className }: {
     html: string;
     onUpdate: (newHtml: string) => void;
-    tagName?: keyof React.JSX.IntrinsicElements;
+    // FIX: The type `keyof React.JSX.IntrinsicElements` was too broad, including SVG elements which are incompatible with the component's props (e.g., `contentEditable`). Constraining it to `keyof HTMLElementTagNameMap` resolves the type errors.
+    tagName?: keyof HTMLElementTagNameMap;
     style?: React.CSSProperties;
     className?: string;
 }) => {
@@ -980,7 +981,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const isEditingContent = editingField?.componentId === component.id && editingField?.field === 'content';
 
           const cardContent = (
-              <div style={{ backgroundColor: component.backgroundColor, color: finalCardTextColor, padding: '15px', borderRadius: '5px', fontFamily: finalCardFontFamily }}>
+              <div style={{ backgroundColor: component.backgroundColor, padding: '15px', borderRadius: '5px', fontFamily: finalCardFontFamily }}>
                   {component.showImage && (
                     (!component.previewSrc && !component.src) ? (
                         <div className="empty-image-placeholder" style={{ display: 'flex', width: '100%', minHeight: '200px' }}>
@@ -996,24 +997,28 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                       html={component.title}
                       onUpdate={(newHtml) => { onUpdate(component.id, { ...component, title: newHtml }); setEditingField(null); }}
                       tagName="h4"
-                      style={{ margin: '10px 0 5px' }}
+                      style={{ margin: '10px 0 5px', color: finalCardTextColor }}
                     />
                   ) : (
-                    <h4 style={{ margin: '10px 0 5px' }} onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title' }); }}}>
-                      <span dangerouslySetInnerHTML={{__html: component.title }} />
-                    </h4>
+                    <h4
+                      style={{ margin: '10px 0 5px', color: finalCardTextColor }}
+                      onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title' }); }}}
+                      dangerouslySetInnerHTML={{__html: component.title }}
+                    />
                   )}
                   {isEditingContent ? (
                     <InlineEditor
                       html={component.content}
                       onUpdate={(newHtml) => { onUpdate(component.id, { ...component, content: newHtml }); setEditingField(null); }}
                       tagName="p"
-                      style={{ margin: '0 0 10px' }}
+                      style={{ margin: '0 0 10px', color: finalCardTextColor }}
                     />
                   ) : (
-                     <p style={{ margin: '0 0 10px' }} onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content' }); }}}>
-                        <span dangerouslySetInnerHTML={{__html: component.content }} />
-                     </p>
+                     <p
+                       style={{ margin: '0 0 10px', color: finalCardTextColor }}
+                       onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content' }); }}}
+                       dangerouslySetInnerHTML={{__html: component.content }}
+                     />
                   )}
                   {component.showButton && (
                     <div style={{ textAlign: 'center' }}>
