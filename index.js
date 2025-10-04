@@ -24476,10 +24476,11 @@
     { type: "two-column", label: "2 Columns", icon: "||", isLayout: true },
     { type: "three-column", label: "3 Columns", icon: "|||", isLayout: true }
   ];
-  var ComponentsPanel = () => {
+  var ComponentsPanel = ({ setDraggingComponentType }) => {
     const onDragStart = (e, componentType) => {
       e.dataTransfer.setData("application/reactflow", componentType);
       e.dataTransfer.effectAllowed = "move";
+      setDraggingComponentType(componentType);
     };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "components-panel", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Components" }),
@@ -24489,6 +24490,7 @@
           className: `component-item ${isLayout ? "layout-item" : ""}`,
           draggable: true,
           onDragStart: (e) => onDragStart(e, type),
+          onDragEnd: () => setDraggingComponentType(null),
           children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: icon }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "label", children: label })
@@ -24506,7 +24508,7 @@
     youtube: "https://img.icons8.com/fluent/48/000000/youtube-play.png",
     website: "https://img.icons8.com/fluent/48/000000/domain.png"
   };
-  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings }) => {
+  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType }) => {
     const [dragOverTarget, setDragOverTarget] = (0, import_react.useState)(null);
     const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const createNewComponent = (type) => {
@@ -24516,7 +24518,7 @@
         case "text":
           return { ...baseProps, type, content: "This is a new text block. Click to edit!", fontSize: "16", color: "#000000", fontFamily: "Arial", textAlign: "left" };
         case "image":
-          return { ...baseProps, type, src: "https://via.placeholder.com/600x300", alt: "Placeholder", borderRadius: "0", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
+          return { ...baseProps, type, src: "", alt: "Placeholder", borderRadius: "0", width: "100", alignment: "center" };
         case "button":
           return { ...baseProps, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal" };
         case "spacer":
@@ -24530,11 +24532,11 @@
             { id: `social_${Date.now()}_3`, platform: "instagram", url: "#" }
           ] };
         case "video":
-          return { ...baseProps, type, videoUrl: "#", imageUrl: "https://via.placeholder.com/600x300?text=Video+Thumbnail", alt: "Video thumbnail", width: "100", alignment: "center", naturalWidth: 600, naturalHeight: 300 };
+          return { ...baseProps, type, videoUrl: "#", imageUrl: "", alt: "Video thumbnail", width: "100", alignment: "center" };
         case "card":
-          return { ...baseProps, type, src: "https://via.placeholder.com/600x400", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", naturalWidth: 600, naturalHeight: 400 };
+          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff" };
         case "logo":
-          return { ...baseProps, type, src: "https://via.placeholder.com/150x50?text=Your+Logo", alt: "Company Logo", width: "150", alignment: "center", naturalWidth: 150, naturalHeight: 50 };
+          return { ...baseProps, type, src: "", alt: "Company Logo", width: "150", alignment: "center" };
         case "footer":
           return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center" };
         case "button-group":
@@ -24570,7 +24572,7 @@
         const newItems = [...items];
         newItems.splice(target.index, 0, componentToAdd);
         return newItems;
-      } else {
+      } else if (target.type === "column") {
         return items.map((c) => {
           if (c.id === target.layoutId && c.type === "layout") {
             const newColumns = c.columns.map((col, index) => {
@@ -24586,6 +24588,7 @@
           return c;
         });
       }
+      return items;
     };
     const handleAddComponent = (target, newComponent) => {
       setComponents((prev) => insertComponent(prev, target, newComponent));
@@ -24601,18 +24604,22 @@
       e.preventDefault();
       e.stopPropagation();
       setDragOverTarget(null);
+      setDraggingComponentType(null);
       const newComponentType = e.dataTransfer.getData("application/reactflow");
       const movedComponentData = e.dataTransfer.getData("application/json-component");
+      const finalIndex = target.position === "after" ? target.index + 1 : target.index;
+      const finalDropTarget = { ...target, index: finalIndex };
+      delete finalDropTarget.position;
       if (movedComponentData) {
         const movedComponent = JSON.parse(movedComponentData);
         setComponents((prev) => {
           const componentsAfterDelete = recursiveDelete(prev, movedComponent.id);
-          return insertComponent(componentsAfterDelete, target, movedComponent);
+          return insertComponent(componentsAfterDelete, finalDropTarget, movedComponent);
         });
         setSelectedId(movedComponent.id);
       } else if (newComponentType) {
         const newComponent = createNewComponent(newComponentType);
-        handleAddComponent(target, newComponent);
+        handleAddComponent(finalDropTarget, newComponent);
       }
     };
     const handleDragOver = (e, target) => {
@@ -24633,12 +24640,32 @@
         setSelectedId(null);
       }
     };
+    const DropPlaceholder = ({ componentType }) => {
+      if (!componentType)
+        return null;
+      const { label } = COMPONENT_TYPES.find((c) => c.type === componentType) || { label: "Component" };
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drop-placeholder", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+        "Drop ",
+        label,
+        " here"
+      ] }) });
+    };
     const renderContentComponent = (component) => {
       switch (component.type) {
         case "text":
         case "footer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: component.color, fontFamily: component.fontFamily, textAlign: component.textAlign } });
-        case "image":
+        case "image": {
+          const imageContainerStyle = {
+            textAlign: component.alignment,
+            padding: "10px 0"
+          };
+          if (!component.previewSrc && !component.src) {
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageContainerStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { width: `${component.width}%` }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F5BC}\uFE0F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Image" })
+            ] }) });
+          }
           const imageElement = /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
             "img",
             {
@@ -24652,15 +24679,18 @@
               }
             }
           );
-          const imageContainerStyle = {
-            textAlign: component.alignment,
-            padding: "10px 0"
-          };
           if (component.href) {
             return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageContainerStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.href, target: "_blank", rel: "noopener noreferrer", style: { textDecoration: "none", display: "inline-block", lineHeight: 0 }, children: imageElement }) });
           }
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageContainerStyle, children: imageElement });
+        }
         case "logo":
+          if (!component.previewSrc && !component.src) {
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { width: `${component.width}px` }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F3E2}" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Logo" })
+            ] }) });
+          }
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { width: `${component.width}px`, maxWidth: "100%", display: "inline-block" } }) });
         case "button":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.href, target: "_blank", rel: "noopener noreferrer", style: {
@@ -24689,14 +24719,26 @@
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: `${component.padding}px 0` }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", { style: { border: "none", borderTop: `${component.height}px solid ${component.color}`, margin: 0, width: "100%" } }) }) });
         case "social":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: component.alignment }, children: component.links.map((link) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: link.url, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "0 5px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: SOCIAL_ICONS[link.platform], alt: link.platform, width: "32", height: "32" }) }, link.id)) });
-        case "video":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px 0", textAlign: component.alignment }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", { href: component.videoUrl, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", width: `${component.width}%`, position: "relative" }, children: [
+        case "video": {
+          const videoContainerStyle = { padding: "10px 0", textAlign: component.alignment };
+          const videoWrapperStyle = { display: "inline-block", width: `${component.width}%`, position: "relative" };
+          if (!component.previewSrc && !component.imageUrl) {
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: videoContainerStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { ...videoWrapperStyle, display: "inline-flex", position: "static" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u25B6\uFE0F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Video Thumbnail" })
+            ] }) });
+          }
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: videoContainerStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", { href: component.videoUrl, target: "_blank", rel: "noopener noreferrer", style: videoWrapperStyle, children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.imageUrl, alt: component.alt, style: { width: "100%", display: "block" } }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "video-play-button", children: "\u25B6" })
           ] }) });
+        }
         case "card":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, color: component.textColor, padding: "15px", borderRadius: "5px" }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block" } }),
+            !component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Card Image" })
+            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block" } }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "10px 0 5px" }, children: component.title }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 10px" }, children: component.content }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: component.buttonBackgroundColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px" }, children: component.buttonText }) })
@@ -24738,10 +24780,12 @@
         e.dataTransfer.setData("application/json-component", JSON.stringify(component));
         e.dataTransfer.effectAllowed = "move";
         setTimeout(() => setDraggingId(component.id), 0);
+        setDraggingComponentType(component.type);
       };
       const handleDragEnd = (e) => {
         e.stopPropagation();
         setDraggingId(null);
+        setDraggingComponentType(null);
       };
       const handleItemDragOver = (e) => {
         if (isLayout)
@@ -24750,83 +24794,80 @@
         e.stopPropagation();
         const rect = e.currentTarget.getBoundingClientRect();
         const isTopHalf = e.clientY < rect.top + rect.height / 2;
-        const newIndex = isTopHalf ? targetPath.index : targetPath.index + 1;
-        const newTarget = "layoutId" in targetPath ? { type: "column", layoutId: targetPath.layoutId, columnIndex: targetPath.columnIndex, index: newIndex } : { type: "root", index: newIndex };
+        const newTarget = targetPath.type === "column" ? { type: "column", layoutId: targetPath.layoutId, columnIndex: targetPath.columnIndex, index: targetPath.index, position: isTopHalf ? "before" : "after" } : { type: "root", index: targetPath.index, position: isTopHalf ? "before" : "after" };
         handleDragOver(e, newTarget);
       };
-      const handleItemDrop = (e) => {
-        if (isLayout)
-          return;
-        handleDrop(e, dragOverTarget);
-      };
-      const isDropTarget = dragOverTarget?.type === targetPath.type && (targetPath.type === "root" || dragOverTarget.type === "column" && targetPath.type === "column" && dragOverTarget.layoutId === targetPath.layoutId && dragOverTarget.columnIndex === targetPath.columnIndex);
-      const isDropTargetBefore = isDropTarget && dragOverTarget.index === targetPath.index;
-      const isDropTargetAfter = isDropTarget && dragOverTarget.index === targetPath.index + 1;
+      const isMyTargetForDrop = dragOverTarget && dragOverTarget.index === targetPath.index && (dragOverTarget.type === "root" && targetPath.type === "root" || dragOverTarget.type === "column" && targetPath.type === "column" && dragOverTarget.layoutId === targetPath.layoutId && dragOverTarget.columnIndex === targetPath.columnIndex);
+      const isDropTargetBefore = isMyTargetForDrop && dragOverTarget.position === "before";
+      const isDropTargetAfter = isMyTargetForDrop && dragOverTarget.position === "after";
       const classNames = [
         "canvas-component",
         selectedId === component.id ? "selected" : "",
-        draggingId === component.id ? "dragging" : "",
-        !isLayout && isDropTargetBefore ? "drop-target-before" : "",
-        !isLayout && isDropTargetAfter ? "drop-target-after" : ""
+        draggingId === component.id ? "dragging" : ""
       ].filter(Boolean).join(" ");
       const containerStyles = isLayout ? {} : getContainerInlineStyles(component);
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-        "div",
-        {
-          className: classNames,
-          onClick: clickHandler,
-          draggable: !isLayout,
-          onDragStart: isLayout ? void 0 : handleDragStart,
-          onDragEnd: isLayout ? void 0 : handleDragEnd,
-          onDragOver: handleItemDragOver,
-          onDrop: handleItemDrop,
-          children: [
-            selectedId === component.id && !isLayout && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.type.charAt(0).toUpperCase() + component.type.slice(1) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button delete", onClick: (e) => {
-                e.stopPropagation();
-                handleDeleteComponent(component.id);
-              }, children: "\u{1F5D1}\uFE0F" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerStyles, children: component.type === "layout" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `layout-grid ${component.layoutType}`, children: component.columns.map((col, colIndex) => {
-              const targetForEmpty = { type: "column", layoutId: component.id, columnIndex: colIndex, index: 0 };
-              const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
-              return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "layout-column", children: col.components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-                "div",
-                {
-                  className: `empty-column-dropzone ${isEmptyColumnActive ? "active" : ""}`,
-                  onDragOver: (e) => handleDragOver(e, targetForEmpty),
-                  onDrop: (e) => handleDrop(e, targetForEmpty),
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "icon", children: "\u2795" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Drop Here" })
-                  ]
-                }
-              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: col.components.map((innerComp, innerIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                RenderItem,
-                {
-                  component: innerComp,
-                  targetPath: { type: "column", layoutId: component.id, columnIndex: colIndex, index: innerIndex }
-                },
-                innerComp.id
-              )) }) }, col.id);
-            }) }) : renderContentComponent(component) })
-          ]
-        }
-      );
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.default.Fragment, { children: [
+        isDropTargetBefore && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+          "div",
+          {
+            className: classNames,
+            onClick: clickHandler,
+            draggable: !isLayout,
+            onDragStart: isLayout ? void 0 : handleDragStart,
+            onDragEnd: isLayout ? void 0 : handleDragEnd,
+            onDragOver: handleItemDragOver,
+            onDrop: (e) => handleDrop(e, dragOverTarget),
+            children: [
+              selectedId === component.id && !isLayout && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.type.charAt(0).toUpperCase() + component.type.slice(1) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button delete", onClick: (e) => {
+                  e.stopPropagation();
+                  handleDeleteComponent(component.id);
+                }, children: "\u{1F5D1}\uFE0F" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerStyles, children: component.type === "layout" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `layout-grid ${component.layoutType}`, children: component.columns.map((col, colIndex) => {
+                const targetForEmpty = { type: "column", layoutId: component.id, columnIndex: colIndex, index: 0 };
+                const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
+                return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "layout-column", children: col.components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "div",
+                  {
+                    className: `empty-column-dropzone ${isEmptyColumnActive ? "active" : ""}`,
+                    onDragOver: (e) => handleDragOver(e, targetForEmpty),
+                    onDrop: (e) => handleDrop(e, targetForEmpty),
+                    children: isEmptyColumnActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "icon", children: "\u2795" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Drop Here" })
+                    ] })
+                  }
+                ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: col.components.map((innerComp, innerIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  RenderItem,
+                  {
+                    component: innerComp,
+                    targetPath: { type: "column", layoutId: component.id, columnIndex: colIndex, index: innerIndex }
+                  },
+                  innerComp.id
+                )) }) }, col.id);
+              }) }) : renderContentComponent(component) })
+            ]
+          }
+        ),
+        isDropTargetAfter && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType })
+      ] });
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas-container", onDragLeave: handleDragLeave, style: { backgroundColor: emailSettings.backgroundColor }, onClick: handleBackgroundClick, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas", style: { backgroundColor: emailSettings.contentBackgroundColor }, children: components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+    const isInitialDropActive = dragOverTarget && dragOverTarget.type === "root" && dragOverTarget.index === 0;
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas-container", onDragLeave: handleDragLeave, style: { backgroundColor: emailSettings.backgroundColor }, onClick: handleBackgroundClick, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas", style: { backgroundColor: emailSettings.contentBackgroundColor }, children: components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
       "div",
       {
         className: "empty-canvas",
         onDragOver: (e) => handleDragOver(e, { type: "root", index: 0 }),
         onDrop: (e) => handleDrop(e, { type: "root", index: 0 }),
-        children: [
+        children: isInitialDropActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u2728" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Let's build an email" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Drag a component from the left panel to get started." })
-        ]
+        ] })
       }
     ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: components.map((component, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RenderItem, { component, targetPath: { type: "root", index } }, component.id)) }) }) });
   };
@@ -25423,6 +25464,7 @@
     const [components, setComponents] = (0, import_react.useState)([]);
     const [selectedId, setSelectedId] = (0, import_react.useState)(null);
     const [showExportModal, setShowExportModal] = (0, import_react.useState)(false);
+    const [draggingComponentType, setDraggingComponentType] = (0, import_react.useState)(null);
     const [emailSettings, setEmailSettings] = (0, import_react.useState)({
       backgroundColor: "#f8f9fa",
       contentBackgroundColor: "#ffffff"
@@ -25499,7 +25541,7 @@
           const textContent = `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${textContent}</td></tr></table>`;
         case "image":
-          const imgTag = `<img src="${getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
+          const imgTag = `<img src="${component.src || getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
           const imageTdStyle = `padding: 10px 0; ${containerStyles}`;
           if (component.href) {
             return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${imageTdStyle}"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
@@ -25509,7 +25551,9 @@
           const { naturalWidth, naturalHeight } = component;
           const logoWidth = parseInt(component.width, 10);
           let placeholderSrc;
-          if (naturalWidth && naturalHeight && naturalWidth > 0) {
+          if (component.src) {
+            placeholderSrc = component.src;
+          } else if (naturalWidth && naturalHeight && naturalWidth > 0) {
             const calculatedHeight = logoWidth * (naturalHeight / naturalWidth);
             placeholderSrc = `https://via.placeholder.com/${logoWidth}x${Math.round(calculatedHeight)}.png?text=Logo`;
           } else {
@@ -25547,11 +25591,11 @@
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${socialTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
         case "video":
           const videoTdStyle = `padding:10px 0; ${containerStyles}`;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${videoTdStyle}"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${videoTdStyle}"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${component.imageUrl || getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
         case "card":
           const cardContent = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
-                <tr><td><img src="${getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>
+                <tr><td><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>
                 <tr><td style="padding: 15px; color: ${component.textColor}; font-family: sans-serif;">
                     <h4 style="margin:0 0 5px; font-size: 18px;">${component.title}</h4>
                     <p style="margin:0 0 15px; font-size: 14px;">${component.content}</p>
@@ -25618,7 +25662,7 @@
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowExportModal(true), children: "Export HTML" }) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { className: "main-container", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ComponentsPanel, {}),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ComponentsPanel, { setDraggingComponentType }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
           Canvas,
           {
@@ -25626,7 +25670,9 @@
             setComponents,
             selectedId,
             setSelectedId,
-            emailSettings
+            emailSettings,
+            draggingComponentType,
+            setDraggingComponentType
           }
         ),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
