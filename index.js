@@ -2605,7 +2605,6 @@
             }
             switch (typeof value) {
               case "function":
-              // $FlowIssue symbol is perfectly valid here
               case "symbol":
                 return true;
               case "boolean": {
@@ -3620,7 +3619,6 @@
                 return "SuspenseList";
               case TracingMarkerComponent:
                 return "TracingMarker";
-              // The display name for this tags come from the user-provided type:
               case ClassComponent:
               case FunctionComponent:
               case IncompleteClassComponent:
@@ -4618,10 +4616,6 @@
               return typeof props.is === "string";
             }
             switch (tagName) {
-              // These are reserved SVG and MathML elements.
-              // We don't mind this list too much because we expect it to never grow.
-              // The alternative is to track the namespace in a few places which is convoluted.
-              // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
               case "annotation-xml":
               case "color-profile":
               case "font-face":
@@ -7451,7 +7445,6 @@
           }
           function getEventPriority(domEventName) {
             switch (domEventName) {
-              // Used by SimpleEventPlugin:
               case "cancel":
               case "click":
               case "close":
@@ -7487,20 +7480,14 @@
               case "touchend":
               case "touchstart":
               case "volumechange":
-              // Used by polyfills:
-              // eslint-disable-next-line no-fallthrough
               case "change":
               case "selectionchange":
               case "textInput":
               case "compositionstart":
               case "compositionend":
               case "compositionupdate":
-              // Only enableCreateEventHandleAPI:
-              // eslint-disable-next-line no-fallthrough
               case "beforeblur":
               case "afterblur":
-              // Not used by React but could be by user code:
-              // eslint-disable-next-line no-fallthrough
               case "beforeinput":
               case "blur":
               case "fullscreenchange":
@@ -7525,8 +7512,6 @@
               case "toggle":
               case "touchmove":
               case "wheel":
-              // Not used by React but could be by user code:
-              // eslint-disable-next-line no-fallthrough
               case "mouseenter":
               case "mouseleave":
               case "pointerenter":
@@ -7758,7 +7743,8 @@
             button: 0,
             buttons: 0,
             relatedTarget: function(event) {
-              if (event.relatedTarget === void 0) return event.fromElement === event.srcElement ? event.toElement : event.fromElement;
+              if (event.relatedTarget === void 0)
+                return event.fromElement === event.srcElement ? event.toElement : event.fromElement;
               return event.relatedTarget;
             },
             movementX: function(event) {
@@ -8474,42 +8460,43 @@
             var indexWithinFocus = 0;
             var node = outerNode;
             var parentNode = null;
-            outer: while (true) {
-              var next = null;
+            outer:
               while (true) {
-                if (node === anchorNode && (anchorOffset === 0 || node.nodeType === TEXT_NODE)) {
-                  start = length + anchorOffset;
+                var next = null;
+                while (true) {
+                  if (node === anchorNode && (anchorOffset === 0 || node.nodeType === TEXT_NODE)) {
+                    start = length + anchorOffset;
+                  }
+                  if (node === focusNode && (focusOffset === 0 || node.nodeType === TEXT_NODE)) {
+                    end = length + focusOffset;
+                  }
+                  if (node.nodeType === TEXT_NODE) {
+                    length += node.nodeValue.length;
+                  }
+                  if ((next = node.firstChild) === null) {
+                    break;
+                  }
+                  parentNode = node;
+                  node = next;
                 }
-                if (node === focusNode && (focusOffset === 0 || node.nodeType === TEXT_NODE)) {
-                  end = length + focusOffset;
+                while (true) {
+                  if (node === outerNode) {
+                    break outer;
+                  }
+                  if (parentNode === anchorNode && ++indexWithinAnchor === anchorOffset) {
+                    start = length;
+                  }
+                  if (parentNode === focusNode && ++indexWithinFocus === focusOffset) {
+                    end = length;
+                  }
+                  if ((next = node.nextSibling) !== null) {
+                    break;
+                  }
+                  node = parentNode;
+                  parentNode = node.parentNode;
                 }
-                if (node.nodeType === TEXT_NODE) {
-                  length += node.nodeValue.length;
-                }
-                if ((next = node.firstChild) === null) {
-                  break;
-                }
-                parentNode = node;
                 node = next;
               }
-              while (true) {
-                if (node === outerNode) {
-                  break outer;
-                }
-                if (parentNode === anchorNode && ++indexWithinAnchor === anchorOffset) {
-                  start = length;
-                }
-                if (parentNode === focusNode && ++indexWithinFocus === focusOffset) {
-                  end = length;
-                }
-                if ((next = node.nextSibling) !== null) {
-                  break;
-                }
-                node = parentNode;
-                parentNode = node.parentNode;
-              }
-              node = next;
-            }
             if (start === -1 || end === -1) {
               return null;
             }
@@ -8712,7 +8699,6 @@
           function extractEvents$3(dispatchQueue, domEventName, targetInst, nativeEvent, nativeEventTarget, eventSystemFlags, targetContainer) {
             var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
             switch (domEventName) {
-              // Track the input node that has focus.
               case "focusin":
                 if (isTextInputElement(targetNode) || targetNode.contentEditable === "true") {
                   activeElement$1 = targetNode;
@@ -8725,8 +8711,6 @@
                 activeElementInst$1 = null;
                 lastSelection = null;
                 break;
-              // Don't fire the event while the user is dragging. This matches the
-              // semantics of the native select event.
               case "mousedown":
                 mouseDown = true;
                 break;
@@ -8736,20 +8720,10 @@
                 mouseDown = false;
                 constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
                 break;
-              // Chrome and IE fire non-standard event when selection is changed (and
-              // sometimes when it hasn't). IE's event fires out of order with respect
-              // to key and input events on deletion, so we discard it.
-              //
-              // Firefox doesn't support selectionchange, so check selection status
-              // after each key entry. The selection changes after keydown and before
-              // keyup, but we check on keydown as well in the case of holding down a
-              // key, when multiple keydown events are fired but only one keyup is.
-              // This is also our approach for IE handling, for the reason above.
               case "selectionchange":
                 if (skipSelectionChangeEvent) {
                   break;
                 }
-              // falls through
               case "keydown":
               case "keyup":
                 constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
@@ -8832,7 +8806,6 @@
                 if (getEventCharCode(nativeEvent) === 0) {
                   return;
                 }
-              /* falls through */
               case "keydown":
               case "keyup":
                 SyntheticEventCtor = SyntheticKeyboardEvent;
@@ -8853,14 +8826,11 @@
                 if (nativeEvent.button === 2) {
                   return;
                 }
-              /* falls through */
               case "auxclick":
               case "dblclick":
               case "mousedown":
               case "mousemove":
               case "mouseup":
-              // TODO: Disabled elements should not respond to mouse events
-              /* falls through */
               case "mouseout":
               case "mouseover":
               case "contextmenu":
@@ -9068,44 +9038,45 @@
               var targetContainerNode = targetContainer;
               if (targetInst !== null) {
                 var node = targetInst;
-                mainLoop: while (true) {
-                  if (node === null) {
-                    return;
-                  }
-                  var nodeTag = node.tag;
-                  if (nodeTag === HostRoot || nodeTag === HostPortal) {
-                    var container = node.stateNode.containerInfo;
-                    if (isMatchingRootContainer(container, targetContainerNode)) {
-                      break;
+                mainLoop:
+                  while (true) {
+                    if (node === null) {
+                      return;
                     }
-                    if (nodeTag === HostPortal) {
-                      var grandNode = node.return;
-                      while (grandNode !== null) {
-                        var grandTag = grandNode.tag;
-                        if (grandTag === HostRoot || grandTag === HostPortal) {
-                          var grandContainer = grandNode.stateNode.containerInfo;
-                          if (isMatchingRootContainer(grandContainer, targetContainerNode)) {
-                            return;
+                    var nodeTag = node.tag;
+                    if (nodeTag === HostRoot || nodeTag === HostPortal) {
+                      var container = node.stateNode.containerInfo;
+                      if (isMatchingRootContainer(container, targetContainerNode)) {
+                        break;
+                      }
+                      if (nodeTag === HostPortal) {
+                        var grandNode = node.return;
+                        while (grandNode !== null) {
+                          var grandTag = grandNode.tag;
+                          if (grandTag === HostRoot || grandTag === HostPortal) {
+                            var grandContainer = grandNode.stateNode.containerInfo;
+                            if (isMatchingRootContainer(grandContainer, targetContainerNode)) {
+                              return;
+                            }
                           }
+                          grandNode = grandNode.return;
                         }
-                        grandNode = grandNode.return;
+                      }
+                      while (container !== null) {
+                        var parentNode = getClosestInstanceFromNode(container);
+                        if (parentNode === null) {
+                          return;
+                        }
+                        var parentTag = parentNode.tag;
+                        if (parentTag === HostComponent || parentTag === HostText) {
+                          node = ancestorInst = parentNode;
+                          continue mainLoop;
+                        }
+                        container = container.parentNode;
                       }
                     }
-                    while (container !== null) {
-                      var parentNode = getClosestInstanceFromNode(container);
-                      if (parentNode === null) {
-                        return;
-                      }
-                      var parentTag = parentNode.tag;
-                      if (parentTag === HostComponent || parentTag === HostText) {
-                        node = ancestorInst = parentNode;
-                        continue mainLoop;
-                      }
-                      container = container.parentNode;
-                    }
+                    node = node.return;
                   }
-                  node = node.return;
-                }
               }
             }
             batchedUpdates(function() {
@@ -9385,8 +9356,10 @@
                 } else if (typeof nextProp === "number") {
                   setTextContent(domElement, "" + nextProp);
                 }
-              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING) ;
-              else if (propKey === AUTOFOCUS) ;
+              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING)
+                ;
+              else if (propKey === AUTOFOCUS)
+                ;
               else if (registrationNameDependencies.hasOwnProperty(propKey)) {
                 if (nextProp != null) {
                   if (typeof nextProp !== "function") {
@@ -9602,9 +9575,12 @@
                     styleUpdates[styleName] = "";
                   }
                 }
-              } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) ;
-              else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING) ;
-              else if (propKey === AUTOFOCUS) ;
+              } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN)
+                ;
+              else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING)
+                ;
+              else if (propKey === AUTOFOCUS)
+                ;
               else if (registrationNameDependencies.hasOwnProperty(propKey)) {
                 if (!updatePayload) {
                   updatePayload = [];
@@ -9663,7 +9639,8 @@
                 if (typeof nextProp === "string" || typeof nextProp === "number") {
                   (updatePayload = updatePayload || []).push(propKey, "" + nextProp);
                 }
-              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING) ;
+              } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING)
+                ;
               else if (registrationNameDependencies.hasOwnProperty(propKey)) {
                 if (nextProp != null) {
                   if (typeof nextProp !== "function") {
@@ -9774,8 +9751,6 @@
               for (var _i = 0; _i < attributes.length; _i++) {
                 var name = attributes[_i].name.toLowerCase();
                 switch (name) {
-                  // Controlled attributes are not validated
-                  // TODO: Only ignore them on controlled tags.
                   case "value":
                     break;
                   case "checked":
@@ -9822,10 +9797,12 @@
               typeof isCustomComponentTag === "boolean") {
                 var serverValue = void 0;
                 var propertyInfo = isCustomComponentTag && enableCustomElementPropertySupport ? null : getPropertyInfo(propKey);
-                if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) ;
+                if (rawProps[SUPPRESS_HYDRATION_WARNING] === true)
+                  ;
                 else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING || propKey === SUPPRESS_HYDRATION_WARNING || // Controlled attributes are not validated
                 // TODO: Only ignore them on controlled tags.
-                propKey === "value" || propKey === "checked" || propKey === "selected") ;
+                propKey === "value" || propKey === "checked" || propKey === "selected")
+                  ;
                 else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
                   var serverHTML = domElement.innerHTML;
                   var nextHtml = nextProp ? nextProp[HTML$1] : void 0;
@@ -10043,37 +10020,24 @@
             };
             var isTagValidWithParent = function(tag, parentTag) {
               switch (parentTag) {
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
                 case "select":
                   return tag === "option" || tag === "optgroup" || tag === "#text";
                 case "optgroup":
                   return tag === "option" || tag === "#text";
-                // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
-                // but
                 case "option":
                   return tag === "#text";
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
-                // No special behavior since these rules fall back to "in body" mode for
-                // all except special table nodes which cause bad parsing behavior anyway.
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
                 case "tr":
                   return tag === "th" || tag === "td" || tag === "style" || tag === "script" || tag === "template";
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
                 case "tbody":
                 case "thead":
                 case "tfoot":
                   return tag === "tr" || tag === "style" || tag === "script" || tag === "template";
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
                 case "colgroup":
                   return tag === "col" || tag === "template";
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
                 case "table":
                   return tag === "caption" || tag === "colgroup" || tag === "tbody" || tag === "tfoot" || tag === "thead" || tag === "style" || tag === "script" || tag === "template";
-                // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
                 case "head":
                   return tag === "base" || tag === "basefont" || tag === "bgsound" || tag === "link" || tag === "meta" || tag === "title" || tag === "noscript" || tag === "noframes" || tag === "style" || tag === "script" || tag === "template";
-                // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
                 case "html":
                   return tag === "head" || tag === "body" || tag === "frameset";
                 case "frameset":
@@ -10634,7 +10598,8 @@
             {
               if (instance.nodeType === ELEMENT_NODE) {
                 warnForDeletedHydratableElement(parentContainer, instance);
-              } else if (instance.nodeType === COMMENT_NODE) ;
+              } else if (instance.nodeType === COMMENT_NODE)
+                ;
               else {
                 warnForDeletedHydratableText(parentContainer, instance);
               }
@@ -10646,7 +10611,8 @@
               if (parentNode !== null) {
                 if (instance.nodeType === ELEMENT_NODE) {
                   warnForDeletedHydratableElement(parentNode, instance);
-                } else if (instance.nodeType === COMMENT_NODE) ;
+                } else if (instance.nodeType === COMMENT_NODE)
+                  ;
                 else {
                   warnForDeletedHydratableText(parentNode, instance);
                 }
@@ -10658,7 +10624,8 @@
               if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING$1] !== true) {
                 if (instance.nodeType === ELEMENT_NODE) {
                   warnForDeletedHydratableElement(parentInstance, instance);
-                } else if (instance.nodeType === COMMENT_NODE) ;
+                } else if (instance.nodeType === COMMENT_NODE)
+                  ;
                 else {
                   warnForDeletedHydratableText(parentInstance, instance);
                 }
@@ -10678,13 +10645,15 @@
           function didNotFindHydratableInstanceWithinSuspenseInstance(parentInstance, type, props) {
             {
               var parentNode = parentInstance.parentNode;
-              if (parentNode !== null) warnForInsertedHydratedElement(parentNode, type);
+              if (parentNode !== null)
+                warnForInsertedHydratedElement(parentNode, type);
             }
           }
           function didNotFindHydratableTextInstanceWithinSuspenseInstance(parentInstance, text) {
             {
               var parentNode = parentInstance.parentNode;
-              if (parentNode !== null) warnForInsertedHydratedText(parentNode, text);
+              if (parentNode !== null)
+                warnForInsertedHydratedText(parentNode, text);
             }
           }
           function didNotFindHydratableInstance(parentType, parentProps, parentInstance, type, props, isConcurrentMode) {
@@ -11271,7 +11240,8 @@
                 }
                 case SuspenseComponent: {
                   var suspenseState = returnFiber.memoizedState;
-                  if (suspenseState.dehydrated !== null) didNotHydrateInstanceWithinSuspenseInstance(suspenseState.dehydrated, instance);
+                  if (suspenseState.dehydrated !== null)
+                    didNotHydrateInstanceWithinSuspenseInstance(suspenseState.dehydrated, instance);
                   break;
                 }
               }
@@ -11350,17 +11320,18 @@
                 case SuspenseComponent: {
                   var suspenseState = returnFiber.memoizedState;
                   var _parentInstance = suspenseState.dehydrated;
-                  if (_parentInstance !== null) switch (fiber.tag) {
-                    case HostComponent:
-                      var _type2 = fiber.type;
-                      var _props2 = fiber.pendingProps;
-                      didNotFindHydratableInstanceWithinSuspenseInstance(_parentInstance, _type2);
-                      break;
-                    case HostText:
-                      var _text2 = fiber.pendingProps;
-                      didNotFindHydratableTextInstanceWithinSuspenseInstance(_parentInstance, _text2);
-                      break;
-                  }
+                  if (_parentInstance !== null)
+                    switch (fiber.tag) {
+                      case HostComponent:
+                        var _type2 = fiber.type;
+                        var _props2 = fiber.pendingProps;
+                        didNotFindHydratableInstanceWithinSuspenseInstance(_parentInstance, _type2);
+                        break;
+                      case HostText:
+                        var _text2 = fiber.pendingProps;
+                        didNotFindHydratableTextInstanceWithinSuspenseInstance(_parentInstance, _text2);
+                        break;
+                    }
                   break;
                 }
                 default:
@@ -12649,7 +12620,8 @@
                       var update = createUpdate(NoTimestamp, lane);
                       update.tag = ForceUpdate;
                       var updateQueue = fiber.updateQueue;
-                      if (updateQueue === null) ;
+                      if (updateQueue === null)
+                        ;
                       else {
                         var sharedQueue = updateQueue.shared;
                         var pending = sharedQueue.pending;
@@ -12735,7 +12707,8 @@
               }
             }
             var value = context._currentValue;
-            if (lastFullyObservedContext === context) ;
+            if (lastFullyObservedContext === context)
+              ;
             else {
               var contextItem = {
                 context,
@@ -13032,7 +13005,6 @@
               case CaptureUpdate: {
                 workInProgress2.flags = workInProgress2.flags & ~ShouldCapture | DidCapture;
               }
-              // Intentional fallthrough
               case UpdateState: {
                 var _payload = update.payload;
                 var partialState;
@@ -17970,7 +17942,8 @@
               while (node !== null) {
                 if (node.tag === HostComponent || node.tag === HostText) {
                   appendInitialChild(parent, node.stateNode);
-                } else if (node.tag === HostPortal) ;
+                } else if (node.tag === HostPortal)
+                  ;
                 else if (node.child !== null) {
                   node.child.return = node;
                   node = node.child;
@@ -18924,19 +18897,20 @@
                       onPostCommit(id, phase, passiveEffectDuration, commitTime2);
                     }
                     var parentFiber = finishedWork.return;
-                    outer: while (parentFiber !== null) {
-                      switch (parentFiber.tag) {
-                        case HostRoot:
-                          var root3 = parentFiber.stateNode;
-                          root3.passiveEffectDuration += passiveEffectDuration;
-                          break outer;
-                        case Profiler:
-                          var parentStateNode = parentFiber.stateNode;
-                          parentStateNode.passiveEffectDuration += passiveEffectDuration;
-                          break outer;
+                    outer:
+                      while (parentFiber !== null) {
+                        switch (parentFiber.tag) {
+                          case HostRoot:
+                            var root3 = parentFiber.stateNode;
+                            root3.passiveEffectDuration += passiveEffectDuration;
+                            break outer;
+                          case Profiler:
+                            var parentStateNode = parentFiber.stateNode;
+                            parentStateNode.passiveEffectDuration += passiveEffectDuration;
+                            break outer;
+                        }
+                        parentFiber = parentFiber.return;
                       }
-                      parentFiber = parentFiber.return;
-                    }
                     break;
                   }
                 }
@@ -19083,19 +19057,20 @@
                       }
                       enqueuePendingPassiveProfilerEffect(finishedWork);
                       var parentFiber = finishedWork.return;
-                      outer: while (parentFiber !== null) {
-                        switch (parentFiber.tag) {
-                          case HostRoot:
-                            var root3 = parentFiber.stateNode;
-                            root3.effectDuration += effectDuration;
-                            break outer;
-                          case Profiler:
-                            var parentStateNode = parentFiber.stateNode;
-                            parentStateNode.effectDuration += effectDuration;
-                            break outer;
+                      outer:
+                        while (parentFiber !== null) {
+                          switch (parentFiber.tag) {
+                            case HostRoot:
+                              var root3 = parentFiber.stateNode;
+                              root3.effectDuration += effectDuration;
+                              break outer;
+                            case Profiler:
+                              var parentStateNode = parentFiber.stateNode;
+                              parentStateNode.effectDuration += effectDuration;
+                              break outer;
+                          }
+                          parentFiber = parentFiber.return;
                         }
-                        parentFiber = parentFiber.return;
-                      }
                     }
                   }
                   break;
@@ -19187,7 +19162,8 @@
                       captureCommitPhaseError(finishedWork, finishedWork.return, error2);
                     }
                   }
-                } else if ((node.tag === OffscreenComponent || node.tag === LegacyHiddenComponent) && node.memoizedState !== null && node !== finishedWork) ;
+                } else if ((node.tag === OffscreenComponent || node.tag === LegacyHiddenComponent) && node.memoizedState !== null && node !== finishedWork)
+                  ;
                 else if (node.child !== null) {
                   node.child.return = node;
                   node = node.child;
@@ -19305,30 +19281,31 @@
           }
           function getHostSibling(fiber) {
             var node = fiber;
-            siblings: while (true) {
-              while (node.sibling === null) {
-                if (node.return === null || isHostParent(node.return)) {
-                  return null;
+            siblings:
+              while (true) {
+                while (node.sibling === null) {
+                  if (node.return === null || isHostParent(node.return)) {
+                    return null;
+                  }
+                  node = node.return;
                 }
-                node = node.return;
-              }
-              node.sibling.return = node.return;
-              node = node.sibling;
-              while (node.tag !== HostComponent && node.tag !== HostText && node.tag !== DehydratedFragment) {
-                if (node.flags & Placement) {
-                  continue siblings;
+                node.sibling.return = node.return;
+                node = node.sibling;
+                while (node.tag !== HostComponent && node.tag !== HostText && node.tag !== DehydratedFragment) {
+                  if (node.flags & Placement) {
+                    continue siblings;
+                  }
+                  if (node.child === null || node.tag === HostPortal) {
+                    continue siblings;
+                  } else {
+                    node.child.return = node;
+                    node = node.child;
+                  }
                 }
-                if (node.child === null || node.tag === HostPortal) {
-                  continue siblings;
-                } else {
-                  node.child.return = node;
-                  node = node.child;
+                if (!(node.flags & Placement)) {
+                  return node.stateNode;
                 }
               }
-              if (!(node.flags & Placement)) {
-                return node.stateNode;
-              }
-            }
           }
           function commitPlacement(finishedWork) {
             var parentFiber = getHostParentFiber(finishedWork);
@@ -19350,7 +19327,6 @@
                 insertOrAppendPlacementNodeIntoContainer(finishedWork, _before, _parent);
                 break;
               }
-              // eslint-disable-next-line-no-fallthrough
               default:
                 throw new Error("Invalid host parent fiber. This error is likely caused by a bug in React. Please file an issue.");
             }
@@ -19365,7 +19341,8 @@
               } else {
                 appendChildToContainer(parent, stateNode);
               }
-            } else if (tag === HostPortal) ;
+            } else if (tag === HostPortal)
+              ;
             else {
               var child = node.child;
               if (child !== null) {
@@ -19388,7 +19365,8 @@
               } else {
                 appendChild(parent, stateNode);
               }
-            } else if (tag === HostPortal) ;
+            } else if (tag === HostPortal)
+              ;
             else {
               var child = node.child;
               if (child !== null) {
@@ -19406,26 +19384,27 @@
           function commitDeletionEffects(root3, returnFiber, deletedFiber) {
             {
               var parent = returnFiber;
-              findParent: while (parent !== null) {
-                switch (parent.tag) {
-                  case HostComponent: {
-                    hostParent = parent.stateNode;
-                    hostParentIsContainer = false;
-                    break findParent;
+              findParent:
+                while (parent !== null) {
+                  switch (parent.tag) {
+                    case HostComponent: {
+                      hostParent = parent.stateNode;
+                      hostParentIsContainer = false;
+                      break findParent;
+                    }
+                    case HostRoot: {
+                      hostParent = parent.stateNode.containerInfo;
+                      hostParentIsContainer = true;
+                      break findParent;
+                    }
+                    case HostPortal: {
+                      hostParent = parent.stateNode.containerInfo;
+                      hostParentIsContainer = true;
+                      break findParent;
+                    }
                   }
-                  case HostRoot: {
-                    hostParent = parent.stateNode.containerInfo;
-                    hostParentIsContainer = true;
-                    break findParent;
-                  }
-                  case HostPortal: {
-                    hostParent = parent.stateNode.containerInfo;
-                    hostParentIsContainer = true;
-                    break findParent;
-                  }
+                  parent = parent.return;
                 }
-                parent = parent.return;
-              }
               if (hostParent === null) {
                 throw new Error("Expected to find a host parent. This error is likely caused by a bug in React. Please file an issue.");
               }
@@ -19450,7 +19429,6 @@
                   safelyDetachRef(deletedFiber, nearestMountedAncestor);
                 }
               }
-              // eslint-disable-next-line-no-fallthrough
               case HostText: {
                 {
                   var prevHostParent = hostParent;
@@ -20712,9 +20690,6 @@
               case RootFatalErrored: {
                 throw new Error("Root did not complete. This is a bug in React.");
               }
-              // Flow knows about invariant, so it complains if I add a break
-              // statement, but eslint doesn't know about invariant, so it complains
-              // if I do. eslint-disable-next-line no-fallthrough
               case RootErrored: {
                 commitRoot(root3, workInProgressRootRecoverableErrors, workInProgressTransitions);
                 break;
@@ -22341,71 +22316,67 @@
             } else if (typeof type === "string") {
               fiberTag = HostComponent;
             } else {
-              getTag: switch (type) {
-                case REACT_FRAGMENT_TYPE:
-                  return createFiberFromFragment(pendingProps.children, mode, lanes, key);
-                case REACT_STRICT_MODE_TYPE:
-                  fiberTag = Mode;
-                  mode |= StrictLegacyMode;
-                  if ((mode & ConcurrentMode) !== NoMode) {
-                    mode |= StrictEffectsMode;
-                  }
-                  break;
-                case REACT_PROFILER_TYPE:
-                  return createFiberFromProfiler(pendingProps, mode, lanes, key);
-                case REACT_SUSPENSE_TYPE:
-                  return createFiberFromSuspense(pendingProps, mode, lanes, key);
-                case REACT_SUSPENSE_LIST_TYPE:
-                  return createFiberFromSuspenseList(pendingProps, mode, lanes, key);
-                case REACT_OFFSCREEN_TYPE:
-                  return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-                case REACT_LEGACY_HIDDEN_TYPE:
-                // eslint-disable-next-line no-fallthrough
-                case REACT_SCOPE_TYPE:
-                // eslint-disable-next-line no-fallthrough
-                case REACT_CACHE_TYPE:
-                // eslint-disable-next-line no-fallthrough
-                case REACT_TRACING_MARKER_TYPE:
-                // eslint-disable-next-line no-fallthrough
-                case REACT_DEBUG_TRACING_MODE_TYPE:
-                // eslint-disable-next-line no-fallthrough
-                default: {
-                  if (typeof type === "object" && type !== null) {
-                    switch (type.$$typeof) {
-                      case REACT_PROVIDER_TYPE:
-                        fiberTag = ContextProvider;
-                        break getTag;
-                      case REACT_CONTEXT_TYPE:
-                        fiberTag = ContextConsumer;
-                        break getTag;
-                      case REACT_FORWARD_REF_TYPE:
-                        fiberTag = ForwardRef;
-                        {
-                          resolvedType = resolveForwardRefForHotReloading(resolvedType);
-                        }
-                        break getTag;
-                      case REACT_MEMO_TYPE:
-                        fiberTag = MemoComponent;
-                        break getTag;
-                      case REACT_LAZY_TYPE:
-                        fiberTag = LazyComponent;
-                        resolvedType = null;
-                        break getTag;
+              getTag:
+                switch (type) {
+                  case REACT_FRAGMENT_TYPE:
+                    return createFiberFromFragment(pendingProps.children, mode, lanes, key);
+                  case REACT_STRICT_MODE_TYPE:
+                    fiberTag = Mode;
+                    mode |= StrictLegacyMode;
+                    if ((mode & ConcurrentMode) !== NoMode) {
+                      mode |= StrictEffectsMode;
                     }
-                  }
-                  var info = "";
-                  {
-                    if (type === void 0 || typeof type === "object" && type !== null && Object.keys(type).length === 0) {
-                      info += " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.";
+                    break;
+                  case REACT_PROFILER_TYPE:
+                    return createFiberFromProfiler(pendingProps, mode, lanes, key);
+                  case REACT_SUSPENSE_TYPE:
+                    return createFiberFromSuspense(pendingProps, mode, lanes, key);
+                  case REACT_SUSPENSE_LIST_TYPE:
+                    return createFiberFromSuspenseList(pendingProps, mode, lanes, key);
+                  case REACT_OFFSCREEN_TYPE:
+                    return createFiberFromOffscreen(pendingProps, mode, lanes, key);
+                  case REACT_LEGACY_HIDDEN_TYPE:
+                  case REACT_SCOPE_TYPE:
+                  case REACT_CACHE_TYPE:
+                  case REACT_TRACING_MARKER_TYPE:
+                  case REACT_DEBUG_TRACING_MODE_TYPE:
+                  default: {
+                    if (typeof type === "object" && type !== null) {
+                      switch (type.$$typeof) {
+                        case REACT_PROVIDER_TYPE:
+                          fiberTag = ContextProvider;
+                          break getTag;
+                        case REACT_CONTEXT_TYPE:
+                          fiberTag = ContextConsumer;
+                          break getTag;
+                        case REACT_FORWARD_REF_TYPE:
+                          fiberTag = ForwardRef;
+                          {
+                            resolvedType = resolveForwardRefForHotReloading(resolvedType);
+                          }
+                          break getTag;
+                        case REACT_MEMO_TYPE:
+                          fiberTag = MemoComponent;
+                          break getTag;
+                        case REACT_LAZY_TYPE:
+                          fiberTag = LazyComponent;
+                          resolvedType = null;
+                          break getTag;
+                      }
                     }
-                    var ownerName = owner ? getComponentNameFromFiber(owner) : null;
-                    if (ownerName) {
-                      info += "\n\nCheck the render method of `" + ownerName + "`.";
+                    var info = "";
+                    {
+                      if (type === void 0 || typeof type === "object" && type !== null && Object.keys(type).length === 0) {
+                        info += " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.";
+                      }
+                      var ownerName = owner ? getComponentNameFromFiber(owner) : null;
+                      if (ownerName) {
+                        info += "\n\nCheck the render method of `" + ownerName + "`.";
+                      }
                     }
+                    throw new Error("Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) " + ("but got: " + (type == null ? type : typeof type) + "." + info));
                   }
-                  throw new Error("Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) " + ("but got: " + (type == null ? type : typeof type) + "." + info));
                 }
-              }
             }
             var fiber = createFiber(fiberTag, pendingProps, key, mode);
             fiber.elementType = type;
@@ -24593,7 +24564,8 @@
       dragOverItemIndex.current = index;
     };
     const handleReorderDrop = () => {
-      if (dragItemIndex.current === null || dragOverItemIndex.current === null) return;
+      if (dragItemIndex.current === null || dragOverItemIndex.current === null)
+        return;
       const listCopy = [...componentList];
       const draggedItem = listCopy.splice(dragItemIndex.current, 1)[0];
       listCopy.splice(dragOverItemIndex.current, 0, draggedItem);
@@ -24631,8 +24603,10 @@
                       onChange: (e) => setEditText(e.target.value),
                       onBlur: handleRename,
                       onKeyDown: (e) => {
-                        if (e.key === "Enter") handleRename();
-                        if (e.key === "Escape") setEditingId(null);
+                        if (e.key === "Enter")
+                          handleRename();
+                        if (e.key === "Escape")
+                          setEditingId(null);
                       },
                       onClick: (e) => e.stopPropagation()
                     }
@@ -24705,7 +24679,8 @@
       e.stopPropagation();
       const startX = e.clientX;
       const layoutGrid = resizerRef.current?.parentElement;
-      if (!layoutGrid) return;
+      if (!layoutGrid)
+        return;
       const containerWidth = layoutGrid.getBoundingClientRect().width;
       const initialWidths = component.columnWidths || component.columns.map(() => 100 / component.columns.length);
       const leftInitialWidth = initialWidths[columnIndex];
@@ -24890,7 +24865,8 @@
       }
     };
     const DropPlaceholder = ({ componentType }) => {
-      if (!componentType) return null;
+      if (!componentType)
+        return null;
       const { label } = getComponentMeta(componentType, componentList) || { label: "Component" };
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drop-placeholder", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
         "Drop ",
@@ -25017,7 +24993,8 @@
     };
     const getContainerInlineStyles = (component) => {
       const styles = {};
-      if (!component.containerStyle) return styles;
+      if (!component.containerStyle)
+        return styles;
       const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
       if (backgroundColor && backgroundColor !== "transparent") {
         styles.backgroundColor = backgroundColor;
@@ -25405,7 +25382,8 @@
     };
     const handleVideoUrlBlur = async (e) => {
       const url = e.target.value;
-      if (!url || url === component.videoUrl) return;
+      if (!url || url === component.videoUrl)
+        return;
       handleChange("videoUrl", url);
       const fetchVideoThumbnail = async (videoUrl) => {
         const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu.be\/)([a-zA-Z0-9_-]{11})/;
@@ -26357,8 +26335,10 @@
                   onChange: (e) => setEditText(e.target.value),
                   onBlur: handleRename,
                   onKeyDown: (e) => {
-                    if (e.key === "Enter") handleRename();
-                    if (e.key === "Escape") setEditingId(null);
+                    if (e.key === "Enter")
+                      handleRename();
+                    if (e.key === "Escape")
+                      setEditingId(null);
                   }
                 }
               ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "template-name", onClick: () => {
@@ -26455,11 +26435,13 @@
   };
   var generateIcsContent = (component) => {
     const formatDate = (isoString) => {
-      if (!isoString) return "";
+      if (!isoString)
+        return "";
       return new Date(isoString).toISOString().replace(/[-:]|\.\d{3}/g, "");
     };
     const escapeText = (text) => {
-      if (!text) return "";
+      if (!text)
+        return "";
       return text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
     };
     const lines = [
@@ -26505,9 +26487,11 @@
     (0, import_react.useEffect)(() => {
       try {
         const savedFavorites = localStorage.getItem("emailEditorFavorites");
-        if (savedFavorites) setFavoriteComponents(JSON.parse(savedFavorites));
+        if (savedFavorites)
+          setFavoriteComponents(JSON.parse(savedFavorites));
         const savedTemplates = localStorage.getItem("emailEditorTemplates");
-        if (savedTemplates) setTemplates(JSON.parse(savedTemplates));
+        if (savedTemplates)
+          setTemplates(JSON.parse(savedTemplates));
         const savedOrder = localStorage.getItem("emailEditorComponentOrder");
         if (savedOrder) {
           const orderArray = JSON.parse(savedOrder);
@@ -26549,7 +26533,8 @@
     }, [componentList]);
     (0, import_react.useEffect)(() => {
       const handleKeyDown = (event) => {
-        if (isPreviewing) return;
+        if (isPreviewing)
+          return;
         const target = event.target;
         if (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) {
           return;
@@ -26576,11 +26561,13 @@
     };
     const findComponent = (id, items) => {
       for (const component of items) {
-        if (component.id === id) return component;
+        if (component.id === id)
+          return component;
         if (component.type === "layout") {
           for (const col of component.columns) {
             const found = findComponent(id, col.components);
-            if (found) return found;
+            if (found)
+              return found;
           }
         }
       }
@@ -26589,7 +26576,8 @@
     const handleUpdateComponent = (id, updatedComponent) => {
       const recursiveUpdate = (items) => {
         return items.map((c) => {
-          if (c.id === id) return { ...c, ...updatedComponent };
+          if (c.id === id)
+            return { ...c, ...updatedComponent };
           if (c.type === "layout") {
             return {
               ...c,
@@ -26723,7 +26711,8 @@
     };
     const handleImportFileSelect = (event) => {
       const file = event.target.files?.[0];
-      if (!file) return;
+      if (!file)
+        return;
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
@@ -26757,7 +26746,8 @@
     };
     const selectedComponent = findComponent(selectedId, components);
     const getContainerStyleString = (component) => {
-      if (!component.containerStyle) return "";
+      if (!component.containerStyle)
+        return "";
       const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
       let style = "";
       if (backgroundColor && backgroundColor !== "transparent") {
