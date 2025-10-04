@@ -24503,11 +24503,12 @@
     }, [canRedo, currentIndex]);
     return { state, setState, undo, redo, canUndo, canRedo };
   };
-  var COMPONENT_TYPES = [
+  var DEFAULT_COMPONENT_LIST = [
     { type: "text", label: "Text", icon: "T" },
     { type: "image", label: "Image", icon: "\u{1F5BC}\uFE0F" },
     { type: "emoji", label: "Emoji", icon: "\u{1F600}" },
     { type: "button", label: "Button", icon: "\u{1F518}" },
+    { type: "calendar", label: "Calendar", icon: "\u{1F4C5}" },
     { type: "button-group", label: "Buttons", icon: "[ B ]" },
     { type: "divider", label: "Divider", icon: "\u2014" },
     { type: "social", label: "Social", icon: "\u{1F310}" },
@@ -24519,14 +24520,17 @@
     { type: "two-column", label: "2 Columns", icon: "||", isLayout: true },
     { type: "three-column", label: "3 Columns", icon: "|||", isLayout: true }
   ];
-  var getComponentMeta = (type) => {
-    return COMPONENT_TYPES.find((c) => c.type === type) || { label: type, icon: "\u2753" };
+  var getComponentMeta = (type, list) => {
+    return list.find((c) => c.type === type) || { label: type, icon: "\u2753" };
   };
-  var ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, onRemoveFavorite, onRenameFavorite }) => {
+  var ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, onRemoveFavorite, onRenameFavorite, componentList, onReorder }) => {
     const [editingId, setEditingId] = (0, import_react.useState)(null);
     const [editText, setEditText] = (0, import_react.useState)("");
     const renameInputRef = (0, import_react.useRef)(null);
     const [isFavoritesCollapsed, setIsFavoritesCollapsed] = (0, import_react.useState)(false);
+    const [isEditingOrder, setIsEditingOrder] = (0, import_react.useState)(false);
+    const dragItemIndex = (0, import_react.useRef)(null);
+    const dragOverItemIndex = (0, import_react.useRef)(null);
     (0, import_react.useEffect)(() => {
       if (editingId && renameInputRef.current) {
         renameInputRef.current.focus();
@@ -24540,7 +24544,7 @@
       setEditingId(null);
       setEditText("");
     };
-    const onDragStart = (e, componentType) => {
+    const onDragStartCanvas = (e, componentType) => {
       e.dataTransfer.setData("application/reactflow", componentType);
       e.dataTransfer.effectAllowed = "move";
       setDraggingComponentType(componentType);
@@ -24552,6 +24556,22 @@
       setDraggingComponentType(component.type);
       setSelectedId(null);
     };
+    const handleReorderDragStart = (index) => {
+      dragItemIndex.current = index;
+    };
+    const handleReorderDragEnter = (index) => {
+      dragOverItemIndex.current = index;
+    };
+    const handleReorderDrop = () => {
+      if (dragItemIndex.current === null || dragOverItemIndex.current === null)
+        return;
+      const listCopy = [...componentList];
+      const draggedItem = listCopy.splice(dragItemIndex.current, 1)[0];
+      listCopy.splice(dragOverItemIndex.current, 0, draggedItem);
+      onReorder(listCopy);
+      dragItemIndex.current = null;
+      dragOverItemIndex.current = null;
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "components-panel", children: [
       favorites.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "favorites-section", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { onClick: () => setIsFavoritesCollapsed(!isFavoritesCollapsed), children: [
@@ -24560,7 +24580,7 @@
         ] }),
         !isFavoritesCollapsed && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "component-grid", children: favorites.map((fav) => {
           const typeToLookup = fav.component.type === "layout" ? fav.component.layoutType : fav.component.type;
-          const meta = getComponentMeta(typeToLookup);
+          const meta = getComponentMeta(typeToLookup, DEFAULT_COMPONENT_LIST);
           const isEditing = editingId === fav.id;
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
             "div",
@@ -24622,20 +24642,25 @@
         }) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Components" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "component-grid", children: COMPONENT_TYPES.map(({ type, label, icon, isLayout }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "component-grid", children: componentList.map(({ type, label, icon, isLayout }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
         "div",
         {
-          className: `component-item ${isLayout ? "layout-item" : ""}`,
+          className: `component-item ${isLayout ? "layout-item" : ""} ${isEditingOrder ? "editing-order" : ""}`,
           draggable: true,
-          onDragStart: (e) => onDragStart(e, type),
-          onDragEnd: () => setDraggingComponentType(null),
+          onDragStart: (e) => isEditingOrder ? handleReorderDragStart(index) : onDragStartCanvas(e, type),
+          onDragEnd: () => isEditingOrder ? void 0 : setDraggingComponentType(null),
+          onDragEnter: () => isEditingOrder ? handleReorderDragEnter(index) : void 0,
+          onDragOver: isEditingOrder ? (e) => e.preventDefault() : void 0,
+          onDrop: isEditingOrder ? handleReorderDrop : void 0,
           children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: icon }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "label", children: label })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "label", children: label }),
+            isEditingOrder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "reorder-handle", children: "\u283F" })
           ]
         },
         type
-      )) })
+      )) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "edit-order-button-wrapper", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "edit-order-button", onClick: () => setIsEditingOrder((prev) => !prev), children: isEditingOrder ? "Done" : "Edit Order" }) })
     ] });
   };
   var SOCIAL_ICONS = {
@@ -24693,7 +24718,7 @@
     }, [component, columnIndex, onUpdate]);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "column-resizer", ref: resizerRef, onMouseDown: handleMouseDown });
   };
-  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite }) => {
+  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite, componentList }) => {
     const [dragOverTarget, setDragOverTarget] = (0, import_react.useState)(null);
     const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const createNewComponent = (type) => {
@@ -24705,7 +24730,12 @@
         case "image":
           return { ...baseProps, type, src: "", alt: "Placeholder", borderRadius: "0", width: "100", alignment: "center" };
         case "button":
-          return { ...baseProps, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal", useGlobalAccentColor: true };
+          return { ...baseProps, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal", useGlobalAccentColor: true, fontFamily: "Arial", useGlobalFont: true };
+        case "calendar":
+          const startDate = /* @__PURE__ */ new Date();
+          const endDate = /* @__PURE__ */ new Date();
+          endDate.setHours(startDate.getHours() + 1);
+          return { ...baseProps, type, text: "Add to Calendar", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal", useGlobalAccentColor: true, fontFamily: "Arial", useGlobalFont: true, eventTitle: "My Event", startTime: startDate.toISOString().slice(0, 16), endTime: endDate.toISOString().slice(0, 16), location: "Online", description: "This is an event description." };
         case "spacer":
           return { ...baseProps, type, height: "20" };
         case "divider":
@@ -24719,13 +24749,13 @@
         case "video":
           return { ...baseProps, type, videoUrl: "#", imageUrl: "", alt: "Video thumbnail", width: "100", alignment: "center" };
         case "card":
-          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", showImage: true, imageWidth: "100", showButton: true, fontFamily: "Arial", useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: "100" };
+          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", showImage: true, imageWidth: "100", showButton: true, fontFamily: "Arial", useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: "100", buttonFontWeight: "bold", buttonFontFamily: "Arial", useGlobalButtonFont: true };
         case "logo":
           return { ...baseProps, type, src: "", alt: "Company Logo", width: "150", alignment: "center" };
         case "footer":
           return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center", useGlobalFont: true, useGlobalTextColor: true, width: "100" };
         case "button-group":
-          return { ...baseProps, type, alignment: "center", buttons: [
+          return { ...baseProps, type, alignment: "center", fontFamily: "Arial", useGlobalFont: true, buttons: [
             { id: `btn_${Date.now()}_1`, text: "Button 1", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff" },
             { id: `btn_${Date.now()}_2`, text: "Button 2", href: "#", backgroundColor: "#6c757d", textColor: "#ffffff" }
           ] };
@@ -24836,7 +24866,7 @@
     const DropPlaceholder = ({ componentType }) => {
       if (!componentType)
         return null;
-      const { label } = COMPONENT_TYPES.find((c) => c.type === componentType) || { label: "Component" };
+      const { label } = getComponentMeta(componentType, componentList) || { label: "Component" };
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drop-placeholder", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
         "Drop ",
         label,
@@ -24847,9 +24877,9 @@
       switch (component.type) {
         case "text":
         case "footer": {
-          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const finalFontFamily2 = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
-          const textContent = /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign } });
+          const textContent = /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily2, textAlign: component.textAlign } });
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: textContent });
         }
         case "image": {
@@ -24890,8 +24920,11 @@
           }
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { width: `${component.width}px`, maxWidth: "100%", display: "inline-block" } }) });
         case "button":
+        case "calendar":
           const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.href, target: "_blank", rel: "noopener noreferrer", style: {
+          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const href = component.type === "button" ? component.href : "#";
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href, target: "_blank", rel: "noopener noreferrer", style: {
             display: "inline-block",
             padding: "10px 20px",
             backgroundColor: finalButtonBgColor,
@@ -24899,9 +24932,11 @@
             textDecoration: "none",
             borderRadius: "5px",
             fontSize: `${component.fontSize}px`,
-            fontWeight: component.fontWeight
+            fontWeight: component.fontWeight,
+            fontFamily: finalFontFamily
           }, children: component.text }) });
         case "button-group":
+          const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: component.alignment }, children: component.buttons.map((btn) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: btn.href, target: "_blank", rel: "noopener noreferrer", style: {
             display: "inline-block",
             padding: "10px 20px",
@@ -24909,7 +24944,8 @@
             color: btn.textColor,
             textDecoration: "none",
             borderRadius: "5px",
-            margin: "0 5px"
+            margin: "0 5px",
+            fontFamily: finalGroupFontFamily
           }, children: btn.text }, btn.id)) });
         case "spacer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { height: `${component.height}px` } });
@@ -24936,6 +24972,7 @@
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const cardContent = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, color: finalCardTextColor, padding: "15px", borderRadius: "5px", fontFamily: finalCardFontFamily }, children: [
             component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
@@ -24943,7 +24980,7 @@
             ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block", width: `${component.imageWidth}%`, margin: "0 auto" } })),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "10px 0 5px" }, children: component.title }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 10px" }, children: component.content }),
-            component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px" }, children: component.buttonText }) })
+            component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px", fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }, children: component.buttonText }) })
           ] });
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: cardContent });
         }
@@ -25631,6 +25668,17 @@
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "URL" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.href, onChange: (e) => handleChange("href", e.target.value) })
             ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
@@ -25685,6 +25733,81 @@
               ] })
             ] })
           ] });
+        case "calendar":
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Event Details" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Event Title" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.eventTitle, onChange: (e) => handleChange("eventTitle", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Start Time" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "datetime-local", value: component.startTime, onChange: (e) => handleChange("startTime", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "End Time" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "datetime-local", value: component.endTime, onChange: (e) => handleChange("endTime", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Location" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.location, onChange: (e) => handleChange("location", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Description" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { value: component.description, onChange: (e) => handleChange("description", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Button Styles" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.text, onChange: (e) => handleChange("text", e.target.value) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "8", max: "48", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", className: "slider-value-input", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Weight" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "normal" ? "active" : "", onClick: () => handleChange("fontWeight", "normal"), children: "Normal" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
+              ] })
+            ] })
+          ] });
         case "button-group":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -25694,6 +25817,17 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "center" ? "active" : "", onClick: () => handleChange("alignment", "center"), children: "C" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
               ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Buttons" }),
@@ -25956,6 +26090,24 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.buttonHref, onChange: (e) => handleChange("buttonHref", e.target.value) })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalButtonFont, onChange: (e) => handleChange("useGlobalButtonFont", e.target.checked) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.buttonFontFamily, disabled: component.useGlobalButtonFont, onChange: (e) => handleChange("buttonFontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Font Weight" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.buttonFontWeight === "normal" ? "active" : "", onClick: () => handleChange("buttonFontWeight", "normal"), children: "Normal" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.buttonFontWeight === "bold" ? "active" : "", onClick: () => handleChange("buttonFontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Button Color" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("useGlobalButtonAccentColor", e.target.checked) }),
@@ -26079,11 +26231,31 @@
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-footer", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: handleCopy, children: copied ? "Copied!" : "Copy to Clipboard" }) })
     ] }) });
   };
-  var TemplatesModal = ({ templates, onClose, onSave, onLoad, onDelete, onRename, setConfirmation }) => {
+  var TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onRename, setConfirmation }) => {
     const [newTemplateName, setNewTemplateName] = (0, import_react.useState)("");
     const [editingId, setEditingId] = (0, import_react.useState)(null);
     const [editText, setEditText] = (0, import_react.useState)("");
     const renameInputRef = (0, import_react.useRef)(null);
+    const LIGHT_BLANK_STATE = {
+      components: [],
+      emailSettings: {
+        backgroundColor: "#f8f9fa",
+        contentBackgroundColor: "#ffffff",
+        fontFamily: "Arial",
+        accentColor: "#0d6efd",
+        textColor: "#212529"
+      }
+    };
+    const DARK_BLANK_STATE = {
+      components: [],
+      emailSettings: {
+        backgroundColor: "#1A1C1E",
+        contentBackgroundColor: "#282A2D",
+        fontFamily: "Arial",
+        accentColor: "#A8C7FA",
+        textColor: "#E2E2E6"
+      }
+    };
     (0, import_react.useEffect)(() => {
       if (editingId && renameInputRef.current) {
         renameInputRef.current.focus();
@@ -26097,11 +26269,11 @@
         setNewTemplateName("");
       }
     };
-    const handleLoad = (id) => {
+    const handleLoad = (stateToLoad) => {
       setConfirmation({
         message: "This will replace your current email design. Are you sure?",
         onConfirm: () => {
-          onLoad(id);
+          onLoadState(stateToLoad);
           onClose();
         }
       });
@@ -26137,35 +26309,48 @@
           ),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "submit", children: "Save Current Email" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { className: "template-list", children: templates.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { className: "no-templates", children: "No saved templates yet." }) : templates.map((template) => {
-          const isEditing = editingId === template.id;
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { className: "template-item", children: [
-            isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "input",
-              {
-                ref: renameInputRef,
-                type: "text",
-                className: "template-rename-input",
-                value: editText,
-                onChange: (e) => setEditText(e.target.value),
-                onBlur: handleRename,
-                onKeyDown: (e) => {
-                  if (e.key === "Enter")
-                    handleRename();
-                  if (e.key === "Escape")
-                    setEditingId(null);
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("ul", { className: "template-list", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { className: "template-section-header", children: "Starters" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { className: "template-item static-template", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "template-name", children: "Blank (light)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "template-actions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleLoad(LIGHT_BLANK_STATE), className: "load-btn", children: "Load" }) })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { className: "template-item static-template", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "template-name", children: "Blank (dark)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "template-actions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleLoad(DARK_BLANK_STATE), className: "load-btn", children: "Load" }) })
+          ] }),
+          templates.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { className: "template-section-header", children: "Your Templates" }),
+          templates.length === 0 && !newTemplateName && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { className: "no-templates", children: "You have no saved templates. Save your current design to get started." }),
+          templates.map((template) => {
+            const isEditing = editingId === template.id;
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { className: "template-item", children: [
+              isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  ref: renameInputRef,
+                  type: "text",
+                  className: "template-rename-input",
+                  value: editText,
+                  onChange: (e) => setEditText(e.target.value),
+                  onBlur: handleRename,
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter")
+                      handleRename();
+                    if (e.key === "Escape")
+                      setEditingId(null);
+                  }
                 }
-              }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "template-name", onClick: () => {
-              setEditingId(template.id);
-              setEditText(template.name);
-            }, children: template.name }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "template-actions", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleLoad(template.id), className: "load-btn", children: "Load" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleDelete(template.id), className: "delete-btn", children: "Delete" })
-            ] })
-          ] }, template.id);
-        }) })
+              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "template-name", onClick: () => {
+                setEditingId(template.id);
+                setEditText(template.name);
+              }, children: template.name }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "template-actions", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleLoad(template.state), className: "load-btn", children: "Load" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleDelete(template.id), className: "delete-btn", children: "Delete" })
+              ] })
+            ] }, template.id);
+          })
+        ] })
       ] })
     ] }) });
   };
@@ -26177,6 +26362,34 @@
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "confirm-btn-primary", onClick: onConfirm, children: "Confirm" })
       ] })
     ] }) });
+  };
+  var generateIcsContent = (component) => {
+    const formatDate = (isoString) => {
+      if (!isoString)
+        return "";
+      return new Date(isoString).toISOString().replace(/[-:]|\.\d{3}/g, "");
+    };
+    const escapeText = (text) => {
+      if (!text)
+        return "";
+      return text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+    };
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//EmailEditor//EN",
+      "BEGIN:VEVENT",
+      `UID:${component.id}@emaileditor.app`,
+      `DTSTAMP:${formatDate((/* @__PURE__ */ new Date()).toISOString())}`,
+      `DTSTART:${formatDate(component.startTime)}`,
+      `DTEND:${formatDate(component.endTime)}`,
+      `SUMMARY:${escapeText(component.eventTitle)}`,
+      `DESCRIPTION:${escapeText(component.description)}`,
+      `LOCATION:${escapeText(component.location)}`,
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ];
+    return lines.join("\r\n");
   };
   var App = () => {
     const initialState = {
@@ -26199,6 +26412,7 @@
     const [templates, setTemplates] = (0, import_react.useState)([]);
     const [confirmation, setConfirmation] = (0, import_react.useState)(null);
     const importInputRef = (0, import_react.useRef)(null);
+    const [componentList, setComponentList] = (0, import_react.useState)(DEFAULT_COMPONENT_LIST);
     (0, import_react.useEffect)(() => {
       try {
         const savedFavorites = localStorage.getItem("emailEditorFavorites");
@@ -26207,6 +26421,19 @@
         const savedTemplates = localStorage.getItem("emailEditorTemplates");
         if (savedTemplates)
           setTemplates(JSON.parse(savedTemplates));
+        const savedOrder = localStorage.getItem("emailEditorComponentOrder");
+        if (savedOrder) {
+          const orderArray = JSON.parse(savedOrder);
+          const defaultMap = new Map(DEFAULT_COMPONENT_LIST.map((item) => [item.type, item]));
+          const orderedList = orderArray.map((type) => defaultMap.get(type)).filter(Boolean);
+          const currentTypes = new Set(orderedList.map((item) => item.type));
+          DEFAULT_COMPONENT_LIST.forEach((item) => {
+            if (!currentTypes.has(item.type)) {
+              orderedList.push(item);
+            }
+          });
+          setComponentList(orderedList);
+        }
       } catch (error) {
         console.error("Failed to load from localStorage:", error);
       }
@@ -26225,6 +26452,14 @@
         console.error("Failed to save templates to localStorage:", error);
       }
     }, [templates]);
+    (0, import_react.useEffect)(() => {
+      try {
+        const orderToSave = componentList.map((item) => item.type);
+        localStorage.setItem("emailEditorComponentOrder", JSON.stringify(orderToSave));
+      } catch (error) {
+        console.error("Failed to save component order to localStorage:", error);
+      }
+    }, [componentList]);
     (0, import_react.useEffect)(() => {
       const handleKeyDown = (event) => {
         const target = event.target;
@@ -26370,12 +26605,9 @@
       };
       setTemplates((prev) => [...prev, newTemplate]);
     };
-    const handleLoadTemplate = (id) => {
-      const templateToLoad = templates.find((t) => t.id === id);
-      if (templateToLoad) {
-        setState(templateToLoad.state);
-        setSelectedId(null);
-      }
+    const handleLoadState = (newState) => {
+      setState(newState);
+      setSelectedId(null);
     };
     const handleDeleteTemplate = (id) => {
       setTemplates((prev) => prev.filter((t) => t.id !== id));
@@ -26436,6 +26668,9 @@
       };
       reader.readAsText(file);
     };
+    const handleReorderComponents = (newList) => {
+      setComponentList(newList);
+    };
     const selectedComponent = findComponent(selectedId, components);
     const getContainerStyleString = (component) => {
       if (!component.containerStyle)
@@ -26469,9 +26704,9 @@
       switch (component.type) {
         case "text":
         case "footer": {
-          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const finalFontFamily2 = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
-          const textContent = `<div style="padding:10px; font-family:${finalFontFamily}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+          const textContent = `<div style="padding:10px; font-family:${finalFontFamily2}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
           const textWrapper = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" style="width:${component.width}%;">
                 <tr><td>${textContent}</td></tr>
@@ -26502,11 +26737,20 @@
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${logoTdStyle}"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
         case "button":
           const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
-          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
+        case "calendar":
+          const finalCalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
+          const finalCalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const icsContent = generateIcsContent(component);
+          const dataUri = `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`;
+          const calButtonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalCalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${dataUri}" download="event.ics" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalCalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${calButtonContent}</td></tr></table>`;
         case "button-group":
+          const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const buttonsHtml = component.buttons.map(
-            (btn) => `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: sans-serif;">${btn.text}</a></td>`
+            (btn) => `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: ${finalGroupFontFamily}, sans-serif;">${btn.text}</a></td>`
           ).join('<td width="10">&nbsp;</td>');
           const buttonGroupTdStyle = `padding:10px; ${containerStyles}`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
@@ -26537,8 +26781,9 @@
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const imageRow = component.showImage ? `<tr><td align="center" style="font-size: 0; line-height: 0; padding-bottom: 15px;"><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="${component.imageWidth}%"></td></tr>` : "";
-          const buttonHtml = component.showButton ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>` : "";
+          const buttonHtml = component.showButton ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:${component.buttonFontWeight}; font-size: 16px; font-family: ${finalButtonFontFamily}, sans-serif;">${component.buttonText}</a></td></tr></table>` : "";
           const cardContentTable = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
                 ${imageRow}
@@ -26653,7 +26898,9 @@
             setSelectedId,
             favorites: favoriteComponents,
             onRemoveFavorite: handleRemoveFavorite,
-            onRenameFavorite: handleRenameFavorite
+            onRenameFavorite: handleRenameFavorite,
+            componentList,
+            onReorder: handleReorderComponents
           }
         ),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
@@ -26669,7 +26916,8 @@
             onUpdate: handleUpdateComponent,
             onDuplicate: handleDuplicateComponent,
             onDelete: handleDeleteComponent,
-            onFavorite: handleFavoriteComponent
+            onFavorite: handleFavoriteComponent,
+            componentList
           }
         ),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
@@ -26689,7 +26937,7 @@
           templates,
           onClose: () => setShowTemplatesModal(false),
           onSave: handleSaveTemplate,
-          onLoad: handleLoadTemplate,
+          onLoadState: handleLoadState,
           onDelete: handleDeleteTemplate,
           onRename: handleRenameTemplate,
           setConfirmation
