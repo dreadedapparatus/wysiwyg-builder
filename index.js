@@ -25042,7 +25042,7 @@
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const isEditingTitle = editingField?.componentId === component.id && editingField?.field === "title";
           const isEditingContent = editingField?.componentId === component.id && editingField?.field === "content";
-          const cardContent = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, color: finalCardTextColor, padding: "15px", borderRadius: "5px", fontFamily: finalCardFontFamily }, children: [
+          const cardContent = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, padding: "15px", borderRadius: "5px", fontFamily: finalCardFontFamily }, children: [
             component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Card Image" })
@@ -25056,14 +25056,21 @@
                   setEditingField(null);
                 },
                 tagName: "h4",
-                style: { margin: "10px 0 5px" }
+                style: { margin: "10px 0 5px", color: finalCardTextColor }
               }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "10px 0 5px" }, onDoubleClick: () => {
-              if (!component.isLocked) {
-                setSelectedId(component.id);
-                setEditingField({ componentId: component.id, field: "title" });
+            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "h4",
+              {
+                style: { margin: "10px 0 5px", color: finalCardTextColor },
+                onDoubleClick: () => {
+                  if (!component.isLocked) {
+                    setSelectedId(component.id);
+                    setEditingField({ componentId: component.id, field: "title" });
+                  }
+                },
+                dangerouslySetInnerHTML: { __html: component.title }
               }
-            }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { dangerouslySetInnerHTML: { __html: component.title } }) }),
+            ),
             isEditingContent ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
               InlineEditor,
               {
@@ -25073,14 +25080,21 @@
                   setEditingField(null);
                 },
                 tagName: "p",
-                style: { margin: "0 0 10px" }
+                style: { margin: "0 0 10px", color: finalCardTextColor }
               }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 10px" }, onDoubleClick: () => {
-              if (!component.isLocked) {
-                setSelectedId(component.id);
-                setEditingField({ componentId: component.id, field: "content" });
+            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "p",
+              {
+                style: { margin: "0 0 10px", color: finalCardTextColor },
+                onDoubleClick: () => {
+                  if (!component.isLocked) {
+                    setSelectedId(component.id);
+                    setEditingField({ componentId: component.id, field: "content" });
+                  }
+                },
+                dangerouslySetInnerHTML: { __html: component.content }
               }
-            }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { dangerouslySetInnerHTML: { __html: component.content } }) }),
+            ),
             component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px", fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }, children: component.buttonText }) })
           ] });
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: cardContent });
