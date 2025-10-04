@@ -2458,13 +2458,29 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => {
 
 const PreviewMode = ({ html, onExit }) => {
     const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     const deviceWidths = {
         desktop: '100%',
         tablet: '768px',
         mobile: '375px',
     };
+
+    // Use a Blob URL to set iframe content for better cross-origin and deployment compatibility
+    useEffect(() => {
+        if (iframeRef.current && html) {
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            iframeRef.current.src = url;
+
+            // Clean up the object URL when the component unmounts or HTML changes
+            return () => {
+                URL.revokeObjectURL(url);
+            };
+        }
+    }, [html]);
     
+    // Handle Escape key to exit preview
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
@@ -2514,7 +2530,7 @@ const PreviewMode = ({ html, onExit }) => {
             </header>
             <main className="preview-content">
                 <div className="preview-iframe-wrapper" style={{ maxWidth: deviceWidths[device] }}>
-                    <iframe srcDoc={html} title="Email Preview" frameBorder="0" />
+                    <iframe ref={iframeRef} src="about:blank" title="Email Preview" frameBorder="0" />
                 </div>
             </main>
         </div>
