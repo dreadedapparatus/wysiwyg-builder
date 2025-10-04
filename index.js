@@ -24719,7 +24719,7 @@
         case "video":
           return { ...baseProps, type, videoUrl: "#", imageUrl: "", alt: "Video thumbnail", width: "100", alignment: "center" };
         case "card":
-          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", showImage: true, fontFamily: "Arial", useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: "100" };
+          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", showImage: true, imageWidth: "100", showButton: true, fontFamily: "Arial", useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: "100" };
         case "logo":
           return { ...baseProps, type, src: "", alt: "Company Logo", width: "150", alignment: "center" };
         case "footer":
@@ -24940,10 +24940,10 @@
             component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Card Image" })
-            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block" } })),
+            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block", width: `${component.imageWidth}%`, margin: "0 auto" } })),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "10px 0 5px" }, children: component.title }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 10px" }, children: component.content }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px" }, children: component.buttonText }) })
+            component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px" }, children: component.buttonText }) })
           ] });
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: cardContent });
         }
@@ -25870,6 +25870,22 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Public URL required for final email." })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image Width (%)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "input",
+                    {
+                      type: "range",
+                      min: "10",
+                      max: "100",
+                      value: component.imageWidth,
+                      onChange: (e) => handleChange("imageWidth", e.target.value)
+                    }
+                  ),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.imageWidth, onChange: (e) => handleChange("imageWidth", e.target.value) })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
               ] })
@@ -25924,32 +25940,41 @@
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { value: component.content, onChange: (e) => handleChange("content", e.target.value) })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonText, onChange: (e) => handleChange("buttonText", e.target.value) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Show Button" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.showButton, onChange: (e) => handleChange("showButton", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button URL" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.buttonHref, onChange: (e) => handleChange("buttonHref", e.target.value) })
+            component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonText, onChange: (e) => handleChange("buttonText", e.target.value) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button URL" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.buttonHref, onChange: (e) => handleChange("buttonHref", e.target.value) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Button Color" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("useGlobalButtonAccentColor", e.target.checked) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Background" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.buttonBackgroundColor, disabled: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonBackgroundColor, disabled: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) })
+                ] })
+              ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Card Background" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Button Color" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("useGlobalButtonAccentColor", e.target.checked) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Background" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.buttonBackgroundColor, disabled: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonBackgroundColor, disabled: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) })
               ] })
             ] })
           ] });
@@ -26054,6 +26079,105 @@
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-footer", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: handleCopy, children: copied ? "Copied!" : "Copy to Clipboard" }) })
     ] }) });
   };
+  var TemplatesModal = ({ templates, onClose, onSave, onLoad, onDelete, onRename, setConfirmation }) => {
+    const [newTemplateName, setNewTemplateName] = (0, import_react.useState)("");
+    const [editingId, setEditingId] = (0, import_react.useState)(null);
+    const [editText, setEditText] = (0, import_react.useState)("");
+    const renameInputRef = (0, import_react.useRef)(null);
+    (0, import_react.useEffect)(() => {
+      if (editingId && renameInputRef.current) {
+        renameInputRef.current.focus();
+        renameInputRef.current.select();
+      }
+    }, [editingId]);
+    const handleSave = (e) => {
+      e.preventDefault();
+      if (newTemplateName.trim()) {
+        onSave(newTemplateName.trim());
+        setNewTemplateName("");
+      }
+    };
+    const handleLoad = (id) => {
+      setConfirmation({
+        message: "This will replace your current email design. Are you sure?",
+        onConfirm: () => {
+          onLoad(id);
+          onClose();
+        }
+      });
+    };
+    const handleDelete = (id) => {
+      setConfirmation({
+        message: "Are you sure you want to delete this template?",
+        onConfirm: () => onDelete(id)
+      });
+    };
+    const handleRename = () => {
+      if (editingId && editText.trim()) {
+        onRename(editingId, editText.trim());
+      }
+      setEditingId(null);
+      setEditText("");
+    };
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-overlay", onClick: onClose, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-content template-modal", onClick: (e) => e.stopPropagation(), children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-header", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Email Templates" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: onClose, children: "\xD7" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-body", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: handleSave, className: "template-save-form", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "input",
+            {
+              type: "text",
+              value: newTemplateName,
+              onChange: (e) => setNewTemplateName(e.target.value),
+              placeholder: "Enter new template name"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "submit", children: "Save Current Email" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { className: "template-list", children: templates.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { className: "no-templates", children: "No saved templates yet." }) : templates.map((template) => {
+          const isEditing = editingId === template.id;
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { className: "template-item", children: [
+            isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "input",
+              {
+                ref: renameInputRef,
+                type: "text",
+                className: "template-rename-input",
+                value: editText,
+                onChange: (e) => setEditText(e.target.value),
+                onBlur: handleRename,
+                onKeyDown: (e) => {
+                  if (e.key === "Enter")
+                    handleRename();
+                  if (e.key === "Escape")
+                    setEditingId(null);
+                }
+              }
+            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "template-name", onClick: () => {
+              setEditingId(template.id);
+              setEditText(template.name);
+            }, children: template.name }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "template-actions", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleLoad(template.id), className: "load-btn", children: "Load" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleDelete(template.id), className: "delete-btn", children: "Delete" })
+            ] })
+          ] }, template.id);
+        }) })
+      ] })
+    ] }) });
+  };
+  var ConfirmationModal = ({ message, onConfirm, onCancel }) => {
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-overlay", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-content confirmation-modal", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-body", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: message }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-footer", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "confirm-btn-secondary", onClick: onCancel, children: "Cancel" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "confirm-btn-primary", onClick: onConfirm, children: "Confirm" })
+      ] })
+    ] }) });
+  };
   var App = () => {
     const initialState = {
       components: [],
@@ -26069,17 +26193,22 @@
     const { components, emailSettings } = state;
     const [selectedId, setSelectedId] = (0, import_react.useState)(null);
     const [showExportModal, setShowExportModal] = (0, import_react.useState)(false);
+    const [showTemplatesModal, setShowTemplatesModal] = (0, import_react.useState)(false);
     const [draggingComponentType, setDraggingComponentType] = (0, import_react.useState)(null);
     const [favoriteComponents, setFavoriteComponents] = (0, import_react.useState)([]);
+    const [templates, setTemplates] = (0, import_react.useState)([]);
+    const [confirmation, setConfirmation] = (0, import_react.useState)(null);
+    const importInputRef = (0, import_react.useRef)(null);
     (0, import_react.useEffect)(() => {
       try {
         const savedFavorites = localStorage.getItem("emailEditorFavorites");
-        if (savedFavorites) {
+        if (savedFavorites)
           setFavoriteComponents(JSON.parse(savedFavorites));
-        }
+        const savedTemplates = localStorage.getItem("emailEditorTemplates");
+        if (savedTemplates)
+          setTemplates(JSON.parse(savedTemplates));
       } catch (error) {
-        console.error("Failed to load favorites from localStorage:", error);
-        localStorage.removeItem("emailEditorFavorites");
+        console.error("Failed to load from localStorage:", error);
       }
     }, []);
     (0, import_react.useEffect)(() => {
@@ -26089,6 +26218,13 @@
         console.error("Failed to save favorites to localStorage:", error);
       }
     }, [favoriteComponents]);
+    (0, import_react.useEffect)(() => {
+      try {
+        localStorage.setItem("emailEditorTemplates", JSON.stringify(templates));
+      } catch (error) {
+        console.error("Failed to save templates to localStorage:", error);
+      }
+    }, [templates]);
     (0, import_react.useEffect)(() => {
       const handleKeyDown = (event) => {
         const target = event.target;
@@ -26223,6 +26359,83 @@
     const handleRenameFavorite = (idToRename, newName) => {
       setFavoriteComponents((prev) => prev.map((fav) => fav.id === idToRename ? { ...fav, name: newName } : fav));
     };
+    const handleSaveTemplate = (name) => {
+      const newTemplate = {
+        id: `tpl_${Date.now()}`,
+        name,
+        state: {
+          components: JSON.parse(JSON.stringify(components)),
+          emailSettings: JSON.parse(JSON.stringify(emailSettings))
+        }
+      };
+      setTemplates((prev) => [...prev, newTemplate]);
+    };
+    const handleLoadTemplate = (id) => {
+      const templateToLoad = templates.find((t) => t.id === id);
+      if (templateToLoad) {
+        setState(templateToLoad.state);
+        setSelectedId(null);
+      }
+    };
+    const handleDeleteTemplate = (id) => {
+      setTemplates((prev) => prev.filter((t) => t.id !== id));
+    };
+    const handleRenameTemplate = (id, newName) => {
+      setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, name: newName } : t));
+    };
+    const handleExportData = () => {
+      try {
+        const backupData = {
+          favorites: favoriteComponents,
+          templates
+        };
+        const jsonString = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const href = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = "email-editor-backup.json";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(href);
+      } catch (error) {
+        console.error("Failed to export data:", error);
+        alert("An error occurred while exporting your data.");
+      }
+    };
+    const handleImportFileSelect = (event) => {
+      const file = event.target.files?.[0];
+      if (!file)
+        return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result;
+          const data = JSON.parse(text);
+          if (Array.isArray(data.favorites) && Array.isArray(data.templates)) {
+            setConfirmation({
+              message: "This will overwrite your current favorites and templates. Are you sure you want to proceed?",
+              onConfirm: () => {
+                setFavoriteComponents(data.favorites);
+                setTemplates(data.templates);
+                alert("Data imported successfully!");
+              }
+            });
+          } else {
+            throw new Error("Invalid backup file format.");
+          }
+        } catch (error) {
+          console.error("Failed to import data:", error);
+          alert(`Error importing file: ${error.message}`);
+        } finally {
+          if (importInputRef.current) {
+            importInputRef.current.value = "";
+          }
+        }
+      };
+      reader.readAsText(file);
+    };
     const selectedComponent = findComponent(selectedId, components);
     const getContainerStyleString = (component) => {
       if (!component.containerStyle)
@@ -26324,14 +26537,15 @@
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
-          const imageRow = component.showImage ? `<tr><td><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>` : "";
+          const imageRow = component.showImage ? `<tr><td align="center" style="font-size: 0; line-height: 0; padding-bottom: 15px;"><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="${component.imageWidth}%"></td></tr>` : "";
+          const buttonHtml = component.showButton ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>` : "";
           const cardContentTable = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
                 ${imageRow}
                 <tr><td style="padding: 15px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">
                     <h4 style="margin:0 0 5px; font-size: 18px;">${component.title}</h4>
                     <p style="margin:0 0 15px; font-size: 14px;">${component.content}</p>
-                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>
+                    ${buttonHtml}
                 </td></tr>
             </table>
         `;
@@ -26413,6 +26627,21 @@
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: undo, disabled: !canUndo, children: "Undo" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: redo, disabled: !canRedo, children: "Redo" })
           ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "data-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => importInputRef.current?.click(), children: "Import" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: handleExportData, children: "Export" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "input",
+              {
+                type: "file",
+                ref: importInputRef,
+                style: { display: "none" },
+                accept: "application/json",
+                onChange: handleImportFileSelect
+              }
+            )
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "header-button", onClick: () => setShowTemplatesModal(true), children: "Templates" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowExportModal(true), children: "Export HTML" })
         ] })
       ] }),
@@ -26453,7 +26682,30 @@
           }
         )
       ] }),
-      showExportModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExportModal, { html: generateEmailHtml(), onClose: () => setShowExportModal(false) })
+      showExportModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExportModal, { html: generateEmailHtml(), onClose: () => setShowExportModal(false) }),
+      showTemplatesModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        TemplatesModal,
+        {
+          templates,
+          onClose: () => setShowTemplatesModal(false),
+          onSave: handleSaveTemplate,
+          onLoad: handleLoadTemplate,
+          onDelete: handleDeleteTemplate,
+          onRename: handleRenameTemplate,
+          setConfirmation
+        }
+      ),
+      confirmation && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        ConfirmationModal,
+        {
+          message: confirmation.message,
+          onConfirm: () => {
+            confirmation.onConfirm();
+            setConfirmation(null);
+          },
+          onCancel: () => setConfirmation(null)
+        }
+      )
     ] });
   };
   var root = (0, import_client.createRoot)(document.getElementById("root"));
