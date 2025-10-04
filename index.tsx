@@ -1413,7 +1413,7 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
         handleChange('videoUrl', url);
 
         const fetchVideoThumbnail = async (videoUrl: string): Promise<{ thumbnailUrl: string | null, title: string | null }> => {
-            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu.be\/)([a-zA-Z0-9_-]{11})/;
             const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)/;
 
             const isYoutube = youtubeRegex.test(videoUrl);
@@ -2456,6 +2456,72 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => {
     );
 };
 
+const PreviewMode = ({ html, onExit }) => {
+    const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+
+    const deviceWidths = {
+        desktop: '100%',
+        tablet: '768px',
+        mobile: '375px',
+    };
+    
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onExit();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onExit]);
+
+
+    return (
+        <div className="preview-overlay">
+            <header className="preview-header">
+                <div className="preview-header-left">
+                    <h2>Preview</h2>
+                </div>
+                <div className="device-toggle-buttons">
+                    <button 
+                        className={device === 'desktop' ? 'active' : ''} 
+                        onClick={() => setDevice('desktop')}
+                        title="Desktop"
+                    >
+                        🖥️
+                    </button>
+                    <button 
+                        className={device === 'tablet' ? 'active' : ''} 
+                        onClick={() => setDevice('tablet')}
+                        title="Tablet"
+                    >
+                        💻
+                    </button>
+                    <button 
+                        className={device === 'mobile' ? 'active' : ''} 
+                        onClick={() => setDevice('mobile')}
+                        title="Mobile"
+                    >
+                        📱
+                    </button>
+                </div>
+                <div className="preview-header-right">
+                    <button onClick={onExit}>Back to Editor</button>
+                </div>
+            </header>
+            <main className="preview-content">
+                <div className="preview-iframe-wrapper" style={{ maxWidth: deviceWidths[device] }}>
+                    <iframe srcDoc={html} title="Email Preview" frameBorder="0" />
+                </div>
+            </main>
+        </div>
+    );
+};
+
+
 const generateIcsContent = (component: CalendarButtonComponent): string => {
     const formatDate = (isoString: string) => {
         if (!isoString) return '';
@@ -2511,6 +2577,7 @@ const App = () => {
   const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const [componentList, setComponentList] = useState<ComponentListItem[]>(DEFAULT_COMPONENT_LIST);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   
   // Load favorites and templates from localStorage on initial mount
   useEffect(() => {
@@ -2571,6 +2638,8 @@ const App = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+        if (isPreviewing) return; // Disable shortcuts in preview mode
+        
         const target = event.target as HTMLElement;
         if (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
             return;
@@ -2593,7 +2662,7 @@ const App = () => {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [undo, redo]);
+  }, [undo, redo, isPreviewing]);
 
 
   const setComponents = (updater: (prev: EmailComponent[]) => EmailComponent[]) => {
@@ -2888,7 +2957,7 @@ const App = () => {
       case 'button':
         const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
         const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
-        const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+        const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px; display: block;">${component.text}</a></td></tr></table>`;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
 
       case 'calendar':
@@ -2899,13 +2968,22 @@ const App = () => {
         const calButtonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalCalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${dataUri}" download="event.ics" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalCalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${calButtonContent}</td></tr></table>`;
       
-      case 'button-group':
+      case 'button-group': {
         const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
         const buttonsHtml = component.buttons.map(btn => 
-            `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: ${finalGroupFontFamily}, sans-serif;">${btn.text}</a></td>`
-        ).join('<td width="10">&nbsp;</td>'); // Spacer cell
+            `<td class="button-group-cell" align="center" style="padding: 5px;">
+                <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+                    <tr>
+                        <td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;">
+                            <a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: ${finalGroupFontFamily}, sans-serif; font-weight: bold; display: block;">${btn.text}</a>
+                        </td>
+                    </tr>
+                </table>
+            </td>`
+        ).join('');
         const buttonGroupTdStyle = `padding:10px; ${containerStyles}`;
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="button-group-inner-table" style="margin: 0 auto;"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
+      }
       case 'spacer':
         const spacerContent = `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${spacerContent}</td></tr></table>`;
@@ -2985,34 +3063,82 @@ const App = () => {
     
     return `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-<meta charSet="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
 <title>Your Email</title>
+<!--[if mso]>
 <style>
+  table {border-collapse:collapse;border-spacing:0;border:none;margin:0;}
+  div, td {padding:0;}
+  div {margin:0 !important;}
+</style>
+<noscript>
+  <xml>
+    <o:OfficeDocumentSettings>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+  </xml>
+</noscript>
+<![endif]-->
+<style>
+body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; word-spacing: normal; }
+table, td { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+
 @media screen and (max-width: 600px) {
+    .email-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
     .column-wrapper {
         display: block !important;
         width: 100% !important;
+        padding: 10px 0 !important;
+        box-sizing: border-box !important;
+    }
+    .button-group-inner-table {
+        width: 100% !important;
+    }
+    .button-group-inner-table tr,
+    .button-group-cell {
+        display: block !important;
+        width: 100% !important;
+    }
+    .button-group-cell {
+        padding: 5px 0 !important;
     }
 }
 </style>
 </head>
 <body style="margin:0; padding:0; background-color:${emailSettings.backgroundColor};">
-  <table border="0" cellpadding="0" cellspacing="0" width="100%">
-    <tr>
-      <td>
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse:collapse; background-color:${emailSettings.contentBackgroundColor};">
+  <div role="article" aria-roledescription="email" lang="en" style="background-color:${emailSettings.backgroundColor};">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td align="center" style="padding: 0;">
+          <!--[if (gte mso 9)|(IE)]>
+          <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
           <tr>
-            <td style="padding: 20px;">
-              ${body}
-            </td>
+          <td>
+          <![endif]-->
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="background-color:${emailSettings.contentBackgroundColor}; max-width: 600px;">
+            <tr>
+              <td style="padding: 20px;">
+                ${body}
+              </td>
+            </tr>
+          </table>
+          <!--[if (gte mso 9)|(IE)]>
+          </td>
           </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+          </table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+  </div>
 </body>
 </html>
     `;
@@ -3040,6 +3166,7 @@ const App = () => {
             />
           </div>
           <button className="header-button" onClick={() => setShowTemplatesModal(true)}>Templates</button>
+          <button className="header-button" onClick={() => setIsPreviewing(true)}>Preview</button>
           <button onClick={() => setShowExportModal(true)}>Export HTML</button>
         </div>
       </header>
@@ -3074,6 +3201,7 @@ const App = () => {
           onUpdateSettings={handleUpdateEmailSettings}
         />
       </main>
+      {isPreviewing && <PreviewMode html={generateEmailHtml()} onExit={() => setIsPreviewing(false)} />}
       {showExportModal && <ExportModal html={generateEmailHtml()} onClose={() => setShowExportModal(false)} />}
       {showTemplatesModal && 
         <TemplatesModal 
