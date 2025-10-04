@@ -311,9 +311,9 @@ const useHistory = <T,>(initialState: T) => {
 
   const redo = useCallback(() => {
     if (canRedo) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(currentIndex - 1);
     }
-  }, [canRedo, currentIndex]);
+  }, [canUndo, currentIndex]);
 
   return { state, setState, undo, redo, canUndo, canRedo };
 };
@@ -2300,7 +2300,7 @@ interface EmailTemplate {
     state: AppState;
 }
 
-const TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onRename, setConfirmation }) => {
+const TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onRename, onOverwrite, setConfirmation }) => {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
@@ -2357,6 +2357,13 @@ const TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onR
     setConfirmation({
         message: 'Are you sure you want to delete this template?',
         onConfirm: () => onDelete(id)
+    });
+  };
+
+  const handleOverwrite = (id: string) => {
+    setConfirmation({
+        message: 'This will overwrite the template with your current design. Are you sure?',
+        onConfirm: () => onOverwrite(id)
     });
   };
 
@@ -2429,6 +2436,7 @@ const TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onR
                   )}
                   <div className="template-actions">
                     <button onClick={() => handleLoad(template.state)} className="load-btn">Load</button>
+                    <button onClick={() => handleOverwrite(template.id)} className="overwrite-btn">Overwrite</button>
                     <button onClick={() => handleDelete(template.id)} className="delete-btn">Delete</button>
                   </div>
                 </li>
@@ -2571,19 +2579,36 @@ const generateIcsContent = (component: CalendarButtonComponent): string => {
     return lines.join('\r\n');
 };
 
-const App = () => {
-  const initialState: AppState = {
-      components: [],
-      emailSettings: {
-        backgroundColor: '#f8f9fa',
-        contentBackgroundColor: '#ffffff',
-        fontFamily: 'Arial',
-        accentColor: '#0d6efd',
-        textColor: '#212529',
+const defaultAppState: AppState = {
+    components: [],
+    emailSettings: {
+      backgroundColor: '#f8f9fa',
+      contentBackgroundColor: '#ffffff',
+      fontFamily: 'Arial',
+      accentColor: '#0d6efd',
+      textColor: '#212529',
+    }
+};
+
+const getInitialState = (): AppState => {
+    try {
+      const autosavedStateJSON = localStorage.getItem('emailEditorAutosave');
+      if (autosavedStateJSON) {
+        const parsedState = JSON.parse(autosavedStateJSON);
+        // Basic validation to ensure the loaded state has the expected structure
+        if (parsedState && Array.isArray(parsedState.components) && parsedState.emailSettings) {
+             return parsedState;
+        }
       }
-  };
-  
-  const { state, setState, undo, redo, canUndo, canRedo } = useHistory<AppState>(initialState);
+    } catch (e) {
+      console.error("Failed to parse autosaved state from localStorage", e);
+    }
+    return defaultAppState;
+};
+
+
+const App = () => {
+  const { state, setState, undo, redo, canUndo, canRedo } = useHistory<AppState>(getInitialState());
   const { components, emailSettings } = state;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -2642,6 +2667,40 @@ const App = () => {
       console.error("Failed to save templates to localStorage:", error);
     }
   }, [templates]);
+
+  // Autosave current state to localStorage with a debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      try {
+        // Prevent saving the initial blank state on first load
+        if (state.components.length > 0 || JSON.stringify(state.emailSettings) !== JSON.stringify(defaultAppState.emailSettings)) {
+          localStorage.setItem('emailEditorAutosave', JSON.stringify(state));
+        }
+      } catch (error) {
+        console.error("Failed to autosave state to localStorage:", error);
+      }
+    }, 500); // Debounce time in ms
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [state]);
+
+  // Prompt user before leaving if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (state.components.length > 0) {
+        event.preventDefault();
+        event.returnValue = ''; // Required for legacy browsers
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [state.components]);
 
   // Save component order to localStorage whenever it changes
   useEffect(() => {
@@ -2838,6 +2897,14 @@ const App = () => {
 
   const handleRenameTemplate = (id: string, newName: string) => {
     setTemplates(prev => prev.map(t => t.id === id ? { ...t, name: newName } : t));
+  };
+
+  const handleOverwriteTemplate = (id: string) => {
+    const currentAppState = {
+      components: JSON.parse(JSON.stringify(components)),
+      emailSettings: JSON.parse(JSON.stringify(emailSettings)),
+    };
+    setTemplates(prev => prev.map(t => (t.id === id ? { ...t, state: currentAppState } : t)));
   };
 
   const handleExportData = () => {
@@ -3229,6 +3296,7 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
             onLoadState={handleLoadState}
             onDelete={handleDeleteTemplate}
             onRename={handleRenameTemplate}
+            onOverwrite={handleOverwriteTemplate}
             setConfirmation={setConfirmation}
         />
       }
