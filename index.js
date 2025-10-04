@@ -24719,7 +24719,48 @@
     }, [component, columnIndex, onUpdate]);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "column-resizer", ref: resizerRef, onMouseDown: handleMouseDown });
   };
-  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite, componentList }) => {
+  var InlineEditor = ({ html, onUpdate, tagName = "div", style, className }) => {
+    const editorRef = (0, import_react.useRef)(null);
+    const initialHtml = (0, import_react.useRef)(html);
+    (0, import_react.useEffect)(() => {
+      if (editorRef.current) {
+        editorRef.current.focus();
+        document.execCommand("selectAll", false, null);
+      }
+    }, []);
+    const handleBlur = () => {
+      if (editorRef.current) {
+        onUpdate(editorRef.current.innerHTML);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (editorRef.current) {
+          editorRef.current.innerHTML = initialHtml.current;
+          editorRef.current.blur();
+        }
+      }
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        editorRef.current?.blur();
+      }
+    };
+    const Tag = tagName;
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      Tag,
+      {
+        ref: editorRef,
+        contentEditable: true,
+        suppressContentEditableWarning: true,
+        dangerouslySetInnerHTML: { __html: html },
+        onBlur: handleBlur,
+        onKeyDown: handleKeyDown,
+        style,
+        className: `inline-editor ${className || ""}`
+      }
+    );
+  };
+  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite, componentList, editingField, setEditingField }) => {
     const [dragOverTarget, setDragOverTarget] = (0, import_react.useState)(null);
     const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const createNewComponent = (type) => {
@@ -24880,7 +24921,32 @@
         case "footer": {
           const finalFontFamily2 = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
-          const textContent = /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily2, textAlign: component.textAlign } });
+          const isEditing = editingField?.componentId === component.id && editingField?.field === "content";
+          const textStyles = { padding: "10px", fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily2, textAlign: component.textAlign, width: "100%" };
+          const textContent = isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            InlineEditor,
+            {
+              html: component.content,
+              onUpdate: (newHtml) => {
+                onUpdate(component.id, { ...component, content: newHtml });
+                setEditingField(null);
+              },
+              style: textStyles,
+              tagName: "div"
+            }
+          ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "div",
+            {
+              dangerouslySetInnerHTML: { __html: component.content },
+              style: textStyles,
+              onDoubleClick: () => {
+                if (!component.isLocked) {
+                  setSelectedId(component.id);
+                  setEditingField({ componentId: component.id, field: "content" });
+                }
+              }
+            }
+          );
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: textContent });
         }
         case "image": {
@@ -24974,13 +25040,47 @@
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
+          const isEditingTitle = editingField?.componentId === component.id && editingField?.field === "title";
+          const isEditingContent = editingField?.componentId === component.id && editingField?.field === "content";
           const cardContent = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, color: finalCardTextColor, padding: "15px", borderRadius: "5px", fontFamily: finalCardFontFamily }, children: [
             component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Card Image" })
             ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block", width: `${component.imageWidth}%`, margin: "0 auto" } })),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "10px 0 5px" }, children: component.title }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 10px" }, children: component.content }),
+            isEditingTitle ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              InlineEditor,
+              {
+                html: component.title,
+                onUpdate: (newHtml) => {
+                  onUpdate(component.id, { ...component, title: newHtml });
+                  setEditingField(null);
+                },
+                tagName: "h4",
+                style: { margin: "10px 0 5px" }
+              }
+            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "10px 0 5px" }, onDoubleClick: () => {
+              if (!component.isLocked) {
+                setSelectedId(component.id);
+                setEditingField({ componentId: component.id, field: "title" });
+              }
+            }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { dangerouslySetInnerHTML: { __html: component.title } }) }),
+            isEditingContent ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              InlineEditor,
+              {
+                html: component.content,
+                onUpdate: (newHtml) => {
+                  onUpdate(component.id, { ...component, content: newHtml });
+                  setEditingField(null);
+                },
+                tagName: "p",
+                style: { margin: "0 0 10px" }
+              }
+            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 10px" }, onDoubleClick: () => {
+              if (!component.isLocked) {
+                setSelectedId(component.id);
+                setEditingField({ componentId: component.id, field: "content" });
+              }
+            }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { dangerouslySetInnerHTML: { __html: component.content } }) }),
             component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px", fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }, children: component.buttonText }) })
           ] });
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: cardContent });
@@ -25015,6 +25115,7 @@
     };
     const RenderItem = ({ component, targetPath, onUpdate: onUpdate2, onDuplicate: onDuplicate2, onDelete: onDelete2, onFavorite: onFavorite2 }) => {
       const isLayout = component.type === "layout";
+      const isEditingInline = editingField?.componentId === component.id;
       const clickHandler = (e) => {
         e.stopPropagation();
         setSelectedId(component.id);
@@ -25151,7 +25252,7 @@
                 }
               )
             ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-              selectedId === component.id && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
+              selectedId === component.id && !isEditingInline && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
                 !component.isLocked && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.type.charAt(0).toUpperCase() + component.type.slice(1) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button favorite", title: "Favorite", onClick: (e) => {
@@ -26505,6 +26606,7 @@
     const importInputRef = (0, import_react.useRef)(null);
     const [componentList, setComponentList] = (0, import_react.useState)(DEFAULT_COMPONENT_LIST);
     const [isPreviewing, setIsPreviewing] = (0, import_react.useState)(false);
+    const [editingField, setEditingField] = (0, import_react.useState)(null);
     (0, import_react.useEffect)(() => {
       try {
         const savedFavorites = localStorage.getItem("emailEditorFavorites");
@@ -26602,6 +26704,9 @@
         window.removeEventListener("keydown", handleKeyDown);
       };
     }, [undo, redo, isPreviewing]);
+    (0, import_react.useEffect)(() => {
+      setEditingField(null);
+    }, [selectedId]);
     const setComponents = (updater) => {
       const newComponents = updater(components);
       setState({ ...state, components: newComponents });
@@ -27102,7 +27207,9 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
             onDuplicate: handleDuplicateComponent,
             onDelete: handleDeleteComponent,
             onFavorite: handleFavoriteComponent,
-            componentList
+            componentList,
+            editingField,
+            setEditingField
           }
         ),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
