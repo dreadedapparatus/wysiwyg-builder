@@ -22580,7 +22580,7 @@
             return root3;
           }
           var ReactVersion = "18.3.1";
-          function createPortal(children, containerInfo, implementation) {
+          function createPortal2(children, containerInfo, implementation) {
             var key = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
             {
               checkKeyStringCoercion(key);
@@ -23437,7 +23437,7 @@
             if (!isValidContainer(container)) {
               throw new Error("Target container is not a DOM element.");
             }
-            return createPortal(children, container, null, key);
+            return createPortal2(children, container, null, key);
           }
           function renderSubtreeIntoContainer(parentComponent, element, containerNode, callback) {
             return unstable_renderSubtreeIntoContainer(parentComponent, element, containerNode, callback);
@@ -24459,6 +24459,7 @@
 
   // index.tsx
   var import_react = __toESM(require_react());
+  var import_react_dom = __toESM(require_react_dom());
   var import_client = __toESM(require_client());
   var import_jsx_runtime = __toESM(require_jsx_runtime());
   var recursiveDelete = (items, idToDelete) => {
@@ -26392,42 +26393,45 @@
         window.removeEventListener("keydown", handleKeyDown);
       };
     }, [onExit]);
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "preview-overlay", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "preview-header", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-header-left", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Preview" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "device-toggle-buttons", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-            "button",
-            {
-              className: device === "desktop" ? "active" : "",
-              onClick: () => setDevice("desktop"),
-              title: "Desktop",
-              children: "\u{1F5A5}\uFE0F"
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-            "button",
-            {
-              className: device === "tablet" ? "active" : "",
-              onClick: () => setDevice("tablet"),
-              title: "Tablet",
-              children: "\u{1F4BB}"
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-            "button",
-            {
-              className: device === "mobile" ? "active" : "",
-              onClick: () => setDevice("mobile"),
-              title: "Mobile",
-              children: "\u{1F4F1}"
-            }
-          )
+    return (0, import_react_dom.createPortal)(
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "preview-overlay", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "preview-header", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-header-left", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Preview" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "device-toggle-buttons", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                className: device === "desktop" ? "active" : "",
+                onClick: () => setDevice("desktop"),
+                title: "Desktop",
+                children: "\u{1F5A5}\uFE0F"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                className: device === "tablet" ? "active" : "",
+                onClick: () => setDevice("tablet"),
+                title: "Tablet",
+                children: "\u{1F4BB}"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "button",
+              {
+                className: device === "mobile" ? "active" : "",
+                onClick: () => setDevice("mobile"),
+                title: "Mobile",
+                children: "\u{1F4F1}"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-header-right", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: onExit, children: "Back to Editor" }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-header-right", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: onExit, children: "Back to Editor" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", { className: "preview-content", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-iframe-wrapper", style: { maxWidth: deviceWidths[device] }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", { ref: iframeRef, src: "about:blank", title: "Email Preview", frameBorder: "0" }) }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", { className: "preview-content", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-iframe-wrapper", style: { maxWidth: deviceWidths[device] }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", { ref: iframeRef, src: "about:blank", title: "Email Preview", frameBorder: "0" }) }) })
-    ] });
+      document.body
+    );
   };
   var generateIcsContent = (component) => {
     const formatDate = (isoString) => {
