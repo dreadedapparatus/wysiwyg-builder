@@ -26365,11 +26365,22 @@
   };
   var PreviewMode = ({ html, onExit }) => {
     const [device, setDevice] = (0, import_react.useState)("desktop");
+    const iframeRef = (0, import_react.useRef)(null);
     const deviceWidths = {
       desktop: "100%",
       tablet: "768px",
       mobile: "375px"
     };
+    (0, import_react.useEffect)(() => {
+      if (iframeRef.current && html) {
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        iframeRef.current.src = url;
+        return () => {
+          URL.revokeObjectURL(url);
+        };
+      }
+    }, [html]);
     (0, import_react.useEffect)(() => {
       const handleKeyDown = (event) => {
         if (event.key === "Escape") {
@@ -26415,7 +26426,7 @@
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-header-right", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: onExit, children: "Back to Editor" }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", { className: "preview-content", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-iframe-wrapper", style: { maxWidth: deviceWidths[device] }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", { srcDoc: html, title: "Email Preview", frameBorder: "0" }) }) })
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", { className: "preview-content", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-iframe-wrapper", style: { maxWidth: deviceWidths[device] }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", { ref: iframeRef, src: "about:blank", title: "Email Preview", frameBorder: "0" }) }) })
     ] });
   };
   var generateIcsContent = (component) => {
