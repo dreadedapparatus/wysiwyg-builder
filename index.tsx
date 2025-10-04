@@ -1,12 +1,18 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
 // --- TYPES ---
-type ComponentType = 'text' | 'image' | 'button' | 'spacer' | 'layout' | 'card' | 'divider' | 'social' | 'video' | 'logo' | 'footer' | 'button-group' | 'emoji';
+type ComponentType = 'text' | 'image' | 'button' | 'spacer' | 'layout' | 'card' | 'divider' | 'social' | 'video' | 'logo' | 'footer' | 'button-group' | 'emoji' | 'calendar';
 
 // Define a new type for component creation that includes layout types.
 type CreationComponentType = ComponentType | 'two-column' | 'three-column';
+
+interface ComponentListItem {
+    type: CreationComponentType;
+    label: string;
+    icon: string;
+    isLayout?: boolean;
+}
 
 interface BorderSide {
   width: string;
@@ -87,6 +93,27 @@ interface ButtonComponent extends BaseComponent {
   fontSize: string;
   fontWeight: 'normal' | 'bold';
   useGlobalAccentColor: boolean;
+  fontFamily: string;
+  useGlobalFont: boolean;
+}
+
+interface CalendarButtonComponent extends BaseComponent {
+    type: 'calendar';
+    // Button Fields
+    text: string;
+    backgroundColor: string;
+    textColor: string;
+    fontSize: string;
+    fontWeight: 'normal' | 'bold';
+    useGlobalAccentColor: boolean;
+    fontFamily: string;
+    useGlobalFont: boolean;
+    // Event Fields
+    eventTitle: string;
+    startTime: string; // ISO String
+    endTime: string; // ISO String
+    location: string;
+    description: string;
 }
 
 interface SubButton {
@@ -101,6 +128,8 @@ interface ButtonGroupComponent extends BaseComponent {
     type: 'button-group';
     buttons: SubButton[];
     alignment: 'left' | 'center' | 'right';
+    fontFamily: string;
+    useGlobalFont: boolean;
 }
 
 interface SpacerComponent extends BaseComponent {
@@ -163,6 +192,9 @@ interface CardComponent extends BaseComponent {
   useGlobalTextColor: boolean;
   useGlobalButtonAccentColor: boolean;
   width: string;
+  buttonFontWeight: 'normal' | 'bold';
+  buttonFontFamily: string;
+  useGlobalButtonFont: boolean;
 }
 
 interface EmojiComponent extends BaseComponent {
@@ -185,7 +217,8 @@ type ContentComponent =
     | LogoComponent
     | FooterComponent
     | ButtonGroupComponent
-    | EmojiComponent;
+    | EmojiComponent
+    | CalendarButtonComponent;
 
 // --- Layout Component ---
 interface Column {
@@ -286,11 +319,12 @@ const useHistory = <T,>(initialState: T) => {
 
 // --- UI COMPONENTS ---
 
-const COMPONENT_TYPES: { type: CreationComponentType, label: string, icon: string, isLayout?: boolean }[] = [
+const DEFAULT_COMPONENT_LIST: ComponentListItem[] = [
   { type: 'text', label: 'Text', icon: 'T' },
   { type: 'image', label: 'Image', icon: '🖼️' },
   { type: 'emoji', label: 'Emoji', icon: '😀' },
   { type: 'button', label: 'Button', icon: '🔘' },
+  { type: 'calendar', label: 'Calendar', icon: '📅' },
   { type: 'button-group', label: 'Buttons', icon: '[ B ]' },
   { type: 'divider', label: 'Divider', icon: '—' },
   { type: 'social', label: 'Social', icon: '🌐' },
@@ -303,15 +337,18 @@ const COMPONENT_TYPES: { type: CreationComponentType, label: string, icon: strin
   { type: 'three-column', label: '3 Columns', icon: '|||', isLayout: true },
 ];
 
-const getComponentMeta = (type: ComponentType | CreationComponentType) => {
-    return COMPONENT_TYPES.find(c => c.type === type) || { label: type, icon: '❓' };
+const getComponentMeta = (type: ComponentType | CreationComponentType, list: ComponentListItem[]) => {
+    return list.find(c => c.type === type) || { label: type, icon: '❓' };
 };
 
-const ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, onRemoveFavorite, onRenameFavorite }) => {
+const ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, onRemoveFavorite, onRenameFavorite, componentList, onReorder }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
   const [isFavoritesCollapsed, setIsFavoritesCollapsed] = useState(false);
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const dragItemIndex = useRef<number | null>(null);
+  const dragOverItemIndex = useRef<number | null>(null);
 
   useEffect(() => {
     if (editingId && renameInputRef.current) {
@@ -328,7 +365,7 @@ const ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, o
     setEditText('');
   };
 
-  const onDragStart = (e: React.DragEvent, componentType: CreationComponentType) => {
+  const onDragStartCanvas = (e: React.DragEvent, componentType: CreationComponentType) => {
     e.dataTransfer.setData('application/reactflow', componentType);
     e.dataTransfer.effectAllowed = 'move';
     setDraggingComponentType(componentType);
@@ -340,6 +377,24 @@ const ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, o
     e.dataTransfer.effectAllowed = 'move';
     setDraggingComponentType(component.type);
     setSelectedId(null);
+  };
+  
+  const handleReorderDragStart = (index: number) => {
+    dragItemIndex.current = index;
+  };
+  
+  const handleReorderDragEnter = (index: number) => {
+    dragOverItemIndex.current = index;
+  };
+
+  const handleReorderDrop = () => {
+    if (dragItemIndex.current === null || dragOverItemIndex.current === null) return;
+    const listCopy = [...componentList];
+    const draggedItem = listCopy.splice(dragItemIndex.current, 1)[0];
+    listCopy.splice(dragOverItemIndex.current, 0, draggedItem);
+    onReorder(listCopy);
+    dragItemIndex.current = null;
+    dragOverItemIndex.current = null;
   };
 
   return (
@@ -354,7 +409,7 @@ const ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, o
                   <div className="component-grid">
                       {favorites.map((fav) => {
                           const typeToLookup = fav.component.type === 'layout' ? fav.component.layoutType : fav.component.type;
-                          const meta = getComponentMeta(typeToLookup);
+                          const meta = getComponentMeta(typeToLookup, DEFAULT_COMPONENT_LIST);
                           const isEditing = editingId === fav.id;
 
                           return (
@@ -405,18 +460,27 @@ const ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, o
 
       <h3>Components</h3>
       <div className="component-grid">
-        {COMPONENT_TYPES.map(({ type, label, icon, isLayout }) => (
+        {componentList.map(({ type, label, icon, isLayout }, index) => (
           <div
             key={type}
-            className={`component-item ${isLayout ? 'layout-item' : ''}`}
+            className={`component-item ${isLayout ? 'layout-item' : ''} ${isEditingOrder ? 'editing-order' : ''}`}
             draggable
-            onDragStart={(e) => onDragStart(e, type)}
-            onDragEnd={() => setDraggingComponentType(null)}
+            onDragStart={(e) => isEditingOrder ? handleReorderDragStart(index) : onDragStartCanvas(e, type)}
+            onDragEnd={() => isEditingOrder ? undefined : setDraggingComponentType(null)}
+            onDragEnter={() => isEditingOrder ? handleReorderDragEnter(index) : undefined}
+            onDragOver={isEditingOrder ? (e) => e.preventDefault() : undefined}
+            onDrop={isEditingOrder ? handleReorderDrop : undefined}
           >
             <div className="icon">{icon}</div>
             <div className="label">{label}</div>
+            {isEditingOrder && <div className="reorder-handle">⠿</div>}
           </div>
         ))}
+      </div>
+       <div className="edit-order-button-wrapper">
+        <button className="edit-order-button" onClick={() => setIsEditingOrder(prev => !prev)}>
+          {isEditingOrder ? 'Done' : 'Edit Order'}
+        </button>
       </div>
     </div>
   );
@@ -498,7 +562,7 @@ const ColumnResizer: React.FC<{
 };
 
 
-const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite }) => {
+const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite, componentList }) => {
   const [dragOverTarget, setDragOverTarget] = useState<DropTarget | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   
@@ -511,7 +575,12 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'image':
         return { ...baseProps, type, src: '', alt: 'Placeholder', borderRadius: '0', width: '100', alignment: 'center' };
       case 'button':
-        return { ...baseProps, type, text: 'Click Me', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal', useGlobalAccentColor: true };
+        return { ...baseProps, type, text: 'Click Me', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal', useGlobalAccentColor: true, fontFamily: 'Arial', useGlobalFont: true };
+      case 'calendar':
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setHours(startDate.getHours() + 1);
+        return { ...baseProps, type, text: 'Add to Calendar', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal', useGlobalAccentColor: true, fontFamily: 'Arial', useGlobalFont: true, eventTitle: 'My Event', startTime: startDate.toISOString().slice(0, 16), endTime: endDate.toISOString().slice(0, 16), location: 'Online', description: 'This is an event description.' };
       case 'spacer':
         return { ...baseProps, type, height: '20' };
       case 'divider':
@@ -525,13 +594,13 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'video':
         return { ...baseProps, type, videoUrl: '#', imageUrl: '', alt: 'Video thumbnail', width: '100', alignment: 'center' };
       case 'card':
-        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, imageWidth: '100', showButton: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: '100' };
+        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, imageWidth: '100', showButton: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: '100', buttonFontWeight: 'bold', buttonFontFamily: 'Arial', useGlobalButtonFont: true };
       case 'logo':
         return { ...baseProps, type, src: '', alt: 'Company Logo', width: '150', alignment: 'center' };
       case 'footer':
         return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: '12', color: '#888888', fontFamily: 'Arial', textAlign: 'center', useGlobalFont: true, useGlobalTextColor: true, width: '100' };
       case 'button-group':
-        return { ...baseProps, type, alignment: 'center', buttons: [
+        return { ...baseProps, type, alignment: 'center', fontFamily: 'Arial', useGlobalFont: true, buttons: [
             { id: `btn_${Date.now()}_1`, text: 'Button 1', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff' },
             { id: `btn_${Date.now()}_2`, text: 'Button 2', href: '#', backgroundColor: '#6c757d', textColor: '#ffffff' },
         ]};
@@ -659,7 +728,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
 
   const DropPlaceholder = ({ componentType }: { componentType: CreationComponentType | null }) => {
     if (!componentType) return null;
-    const { label } = COMPONENT_TYPES.find(c => c.type === componentType) || { label: 'Component' };
+    const { label } = getComponentMeta(componentType, componentList) || { label: 'Component' };
     return (
         <div className="drop-placeholder">
             <span>Drop {label} here</span>
@@ -731,10 +800,13 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           }
           return <div style={{ textAlign: component.alignment, padding: '10px' }}><img src={component.previewSrc || component.src} alt={component.alt} style={{ width: `${component.width}px`, maxWidth: '100%', display: 'inline-block' }} /></div>;
       case 'button':
+      case 'calendar':
           const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
+          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const href = component.type === 'button' ? component.href : '#'; // Calendar link is handled in export
           return (
           <div style={{ padding: '10px', textAlign: 'center' }}>
-              <a href={component.href} target="_blank" rel="noopener noreferrer" style={{
+              <a href={href} target="_blank" rel="noopener noreferrer" style={{
               display: 'inline-block',
               padding: '10px 20px',
               backgroundColor: finalButtonBgColor,
@@ -743,12 +815,14 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
               borderRadius: '5px',
               fontSize: `${component.fontSize}px`,
               fontWeight: component.fontWeight,
+              fontFamily: finalFontFamily,
               }}>
               {component.text}
               </a>
           </div>
           );
       case 'button-group':
+          const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           return (
             <div style={{ padding: '10px', textAlign: component.alignment }}>
                 {component.buttons.map(btn => (
@@ -759,7 +833,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                         color: btn.textColor,
                         textDecoration: 'none',
                         borderRadius: '5px',
-                        margin: '0 5px'
+                        margin: '0 5px',
+                        fontFamily: finalGroupFontFamily,
                      }}>
                         {btn.text}
                      </a>
@@ -815,6 +890,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const cardContent = (
               <div style={{ backgroundColor: component.backgroundColor, color: finalCardTextColor, padding: '15px', borderRadius: '5px', fontFamily: finalCardFontFamily }}>
                   {component.showImage && (
@@ -831,7 +907,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                   <p style={{ margin: '0 0 10px' }}>{component.content}</p>
                   {component.showButton && (
                     <div style={{ textAlign: 'center' }}>
-                         <a href={component.buttonHref} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: 'none', borderRadius: '5px' }}>{component.buttonText}</a>
+                         <a href={component.buttonHref} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: 'none', borderRadius: '5px', fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }}>{component.buttonText}</a>
                     </div>
                   )}
               </div>
@@ -1634,6 +1710,19 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         <label>URL</label>
                         <input type="url" value={component.href} onChange={(e) => handleChange('href', e.target.value)} />
                     </div>
+                    <div className="global-toggle-group">
+                        <label>Use Global Font</label>
+                        <label className="switch">
+                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
+                    <div className="form-group">
+                        <label>Font Family</label>
+                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                        </select>
+                    </div>
                     <div className="form-group">
                         <label>Font Size</label>
                         <div className="slider-group">
@@ -1683,6 +1772,84 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                     </div>
                 </>
             );
+            case 'calendar': return (
+                <>
+                    <h4>Event Details</h4>
+                    <div className="form-group">
+                        <label>Event Title</label>
+                        <input type="text" value={component.eventTitle} onChange={(e) => handleChange('eventTitle', e.target.value)} />
+                    </div>
+                     <div className="form-group">
+                        <label>Start Time</label>
+                        <input type="datetime-local" value={component.startTime} onChange={(e) => handleChange('startTime', e.target.value)} />
+                    </div>
+                     <div className="form-group">
+                        <label>End Time</label>
+                        <input type="datetime-local" value={component.endTime} onChange={(e) => handleChange('endTime', e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>Location</label>
+                        <input type="text" value={component.location} onChange={(e) => handleChange('location', e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                        <label>Description</label>
+                        <textarea value={component.description} onChange={(e) => handleChange('description', e.target.value)} />
+                    </div>
+                    <h4>Button Styles</h4>
+                    <div className="form-group">
+                        <label>Button Text</label>
+                        <input type="text" value={component.text} onChange={(e) => handleChange('text', e.target.value)} />
+                    </div>
+                     <div className="global-toggle-group">
+                        <label>Use Global Font</label>
+                        <label className="switch">
+                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
+                    <div className="form-group">
+                        <label>Font Family</label>
+                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Font Size</label>
+                        <div className="slider-group">
+                            <input type="range" min="8" max="48" value={component.fontSize} onChange={(e) => handleChange('fontSize', e.target.value)} />
+                            <input type="number" min="1" className="slider-value-input" value={component.fontSize} onChange={(e) => handleChange('fontSize', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label>Font Weight</label>
+                        <div className="button-toggle-group">
+                            <button className={component.fontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'normal')}>Normal</button>
+                            <button className={component.fontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'bold')}><b>Bold</b></button>
+                        </div>
+                    </div>
+                     <div className="global-toggle-group">
+                        <label>Use Global Accent Color</label>
+                        <label className="switch">
+                            <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
+                    <div className="form-group">
+                        <label>Background Color</label>
+                         <div className="color-input-group">
+                             <input type="color" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                             <input type="text" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label>Text Color</label>
+                        <div className="color-input-group">
+                            <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                             <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                        </div>
+                    </div>
+                </>
+            );
             case 'button-group': return (
                 <>
                     <div className="form-group">
@@ -1692,6 +1859,19 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
                             <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
                         </div>
+                    </div>
+                    <div className="global-toggle-group">
+                        <label>Use Global Font</label>
+                        <label className="switch">
+                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
+                    <div className="form-group">
+                        <label>Font Family</label>
+                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                        </select>
                     </div>
                      <div className="form-group">
                         <label>Buttons</label>
@@ -1952,6 +2132,26 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                 <label>Button URL</label>
                                 <input type="url" value={component.buttonHref} onChange={(e) => handleChange('buttonHref', e.target.value)} />
                             </div>
+                            <div className="global-toggle-group">
+                                <label>Use Global Font</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalButtonFont} onChange={(e) => handleChange('useGlobalButtonFont', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
+                            <div className="form-group">
+                                <label>Font Family</label>
+                                <select value={component.buttonFontFamily} disabled={component.useGlobalButtonFont} onChange={(e) => handleChange('buttonFontFamily', e.target.value)}>
+                                    {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Button Font Weight</label>
+                                <div className="button-toggle-group">
+                                    <button className={component.buttonFontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('buttonFontWeight', 'normal')}>Normal</button>
+                                    <button className={component.buttonFontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('buttonFontWeight', 'bold')}><b>Bold</b></button>
+                                </div>
+                            </div>
                              <div className="global-toggle-group">
                                 <label>Use Global Button Color</label>
                                 <label className="switch">
@@ -2099,11 +2299,33 @@ interface EmailTemplate {
     state: AppState;
 }
 
-const TemplatesModal = ({ templates, onClose, onSave, onLoad, onDelete, onRename, setConfirmation }) => {
+const TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onRename, setConfirmation }) => {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
+
+  const LIGHT_BLANK_STATE: AppState = {
+      components: [],
+      emailSettings: {
+        backgroundColor: '#f8f9fa',
+        contentBackgroundColor: '#ffffff',
+        fontFamily: 'Arial',
+        accentColor: '#0d6efd',
+        textColor: '#212529',
+      }
+  };
+  const DARK_BLANK_STATE: AppState = {
+      components: [],
+      emailSettings: {
+        backgroundColor: '#1A1C1E',
+        contentBackgroundColor: '#282A2D',
+        fontFamily: 'Arial',
+        accentColor: '#A8C7FA',
+        textColor: '#E2E2E6',
+      }
+  };
+
 
   useEffect(() => {
     if (editingId && renameInputRef.current) {
@@ -2120,11 +2342,11 @@ const TemplatesModal = ({ templates, onClose, onSave, onLoad, onDelete, onRename
     }
   };
 
-  const handleLoad = (id: string) => {
+  const handleLoad = (stateToLoad: AppState) => {
     setConfirmation({
       message: 'This will replace your current email design. Are you sure?',
       onConfirm: () => {
-        onLoad(id);
+        onLoadState(stateToLoad);
         onClose();
       }
     });
@@ -2163,36 +2385,54 @@ const TemplatesModal = ({ templates, onClose, onSave, onLoad, onDelete, onRename
             <button type="submit">Save Current Email</button>
           </form>
           <ul className="template-list">
-            {templates.length === 0 ? (
-              <li className="no-templates">No saved templates yet.</li>
-            ) : (
-              templates.map(template => {
-                const isEditing = editingId === template.id;
-                return (
-                  <li key={template.id} className="template-item">
-                    {isEditing ? (
-                      <input 
-                         ref={renameInputRef}
-                         type="text"
-                         className="template-rename-input"
-                         value={editText}
-                         onChange={e => setEditText(e.target.value)}
-                         onBlur={handleRename}
-                         onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditingId(null); }}
-                      />
-                    ) : (
-                      <span className="template-name" onClick={() => { setEditingId(template.id); setEditText(template.name); }}>
-                        {template.name}
-                      </span>
-                    )}
-                    <div className="template-actions">
-                      <button onClick={() => handleLoad(template.id)} className="load-btn">Load</button>
-                      <button onClick={() => handleDelete(template.id)} className="delete-btn">Delete</button>
-                    </div>
-                  </li>
-                )
-              })
+             {/* FIX: Changed <div> to <li> for valid HTML structure within a <ul>. */}
+             <li className="template-section-header">Starters</li>
+             <li className="template-item static-template">
+                <span className="template-name">Blank (light)</span>
+                <div className="template-actions">
+                    <button onClick={() => handleLoad(LIGHT_BLANK_STATE)} className="load-btn">Load</button>
+                </div>
+             </li>
+             <li className="template-item static-template">
+                <span className="template-name">Blank (dark)</span>
+                <div className="template-actions">
+                    <button onClick={() => handleLoad(DARK_BLANK_STATE)} className="load-btn">Load</button>
+                </div>
+             </li>
+
+            {/* FIX: Changed <div> to <li> for valid HTML structure within a <ul>. */}
+            {templates.length > 0 && <li className="template-section-header">Your Templates</li>}
+
+            {templates.length === 0 && !newTemplateName && (
+              <li className="no-templates">You have no saved templates. Save your current design to get started.</li>
             )}
+            
+            {templates.map(template => {
+              const isEditing = editingId === template.id;
+              return (
+                <li key={template.id} className="template-item">
+                  {isEditing ? (
+                    <input 
+                       ref={renameInputRef}
+                       type="text"
+                       className="template-rename-input"
+                       value={editText}
+                       onChange={e => setEditText(e.target.value)}
+                       onBlur={handleRename}
+                       onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditingId(null); }}
+                    />
+                  ) : (
+                    <span className="template-name" onClick={() => { setEditingId(template.id); setEditText(template.name); }}>
+                      {template.name}
+                    </span>
+                  )}
+                  <div className="template-actions">
+                    <button onClick={() => handleLoad(template.state)} className="load-btn">Load</button>
+                    <button onClick={() => handleDelete(template.id)} className="delete-btn">Delete</button>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       </div>
@@ -2216,6 +2456,36 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => {
     );
 };
 
+const generateIcsContent = (component: CalendarButtonComponent): string => {
+    const formatDate = (isoString: string) => {
+        if (!isoString) return '';
+        // Format to YYYYMMDDTHHMMSSZ, required by iCalendar spec
+        return new Date(isoString).toISOString().replace(/[-:]|\.\d{3}/g, '');
+    };
+
+    const escapeText = (text: string) => {
+        if (!text) return '';
+        return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    };
+
+    const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//EmailEditor//EN',
+        'BEGIN:VEVENT',
+        `UID:${component.id}@emaileditor.app`,
+        `DTSTAMP:${formatDate(new Date().toISOString())}`,
+        `DTSTART:${formatDate(component.startTime)}`,
+        `DTEND:${formatDate(component.endTime)}`,
+        `SUMMARY:${escapeText(component.eventTitle)}`,
+        `DESCRIPTION:${escapeText(component.description)}`,
+        `LOCATION:${escapeText(component.location)}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ];
+
+    return lines.join('\r\n');
+};
 
 const App = () => {
   const initialState: AppState = {
@@ -2240,6 +2510,7 @@ const App = () => {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const [componentList, setComponentList] = useState<ComponentListItem[]>(DEFAULT_COMPONENT_LIST);
   
   // Load favorites and templates from localStorage on initial mount
   useEffect(() => {
@@ -2249,6 +2520,20 @@ const App = () => {
 
       const savedTemplates = localStorage.getItem('emailEditorTemplates');
       if (savedTemplates) setTemplates(JSON.parse(savedTemplates));
+
+      const savedOrder = localStorage.getItem('emailEditorComponentOrder');
+      if (savedOrder) {
+        const orderArray: CreationComponentType[] = JSON.parse(savedOrder);
+        const defaultMap = new Map(DEFAULT_COMPONENT_LIST.map(item => [item.type, item]));
+        const orderedList = orderArray.map(type => defaultMap.get(type)).filter(Boolean) as ComponentListItem[];
+        const currentTypes = new Set(orderedList.map(item => item.type));
+        DEFAULT_COMPONENT_LIST.forEach(item => {
+            if (!currentTypes.has(item.type)) {
+                orderedList.push(item);
+            }
+        });
+        setComponentList(orderedList);
+      }
 
     } catch (error) {
       console.error("Failed to load from localStorage:", error);
@@ -2272,6 +2557,16 @@ const App = () => {
       console.error("Failed to save templates to localStorage:", error);
     }
   }, [templates]);
+
+  // Save component order to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      const orderToSave = componentList.map(item => item.type);
+      localStorage.setItem('emailEditorComponentOrder', JSON.stringify(orderToSave));
+    } catch (error) {
+      console.error("Failed to save component order to localStorage:", error);
+    }
+  }, [componentList]);
 
 
   useEffect(() => {
@@ -2445,12 +2740,9 @@ const App = () => {
     setTemplates(prev => [...prev, newTemplate]);
   };
 
-  const handleLoadTemplate = (id: string) => {
-    const templateToLoad = templates.find(t => t.id === id);
-    if (templateToLoad) {
-      setState(templateToLoad.state);
-      setSelectedId(null);
-    }
+  const handleLoadState = (newState: AppState) => {
+    setState(newState);
+    setSelectedId(null);
   };
 
   const handleDeleteTemplate = (id: string) => {
@@ -2515,6 +2807,10 @@ const App = () => {
         }
     };
     reader.readAsText(file);
+  };
+
+  const handleReorderComponents = (newList: ComponentListItem[]) => {
+    setComponentList(newList);
   };
 
 
@@ -2591,12 +2887,22 @@ const App = () => {
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${logoTdStyle}"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
       case 'button':
         const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
-        const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+        const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+        const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
 
+      case 'calendar':
+        const finalCalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
+        const finalCalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+        const icsContent = generateIcsContent(component);
+        const dataUri = `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`;
+        const calButtonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalCalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${dataUri}" download="event.ics" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalCalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${calButtonContent}</td></tr></table>`;
+      
       case 'button-group':
+        const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
         const buttonsHtml = component.buttons.map(btn => 
-            `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: sans-serif;">${btn.text}</a></td>`
+            `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: ${finalGroupFontFamily}, sans-serif;">${btn.text}</a></td>`
         ).join('<td width="10">&nbsp;</td>'); // Spacer cell
         const buttonGroupTdStyle = `padding:10px; ${containerStyles}`;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
@@ -2627,8 +2933,9 @@ const App = () => {
         const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
         const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
         const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+        const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
         const imageRow = component.showImage ? `<tr><td align="center" style="font-size: 0; line-height: 0; padding-bottom: 15px;"><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="${component.imageWidth}%"></td></tr>` : '';
-        const buttonHtml = component.showButton ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>` : '';
+        const buttonHtml = component.showButton ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:${component.buttonFontWeight}; font-size: 16px; font-family: ${finalButtonFontFamily}, sans-serif;">${component.buttonText}</a></td></tr></table>` : '';
         const cardContentTable = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
                 ${imageRow}
@@ -2743,6 +3050,8 @@ const App = () => {
             favorites={favoriteComponents}
             onRemoveFavorite={handleRemoveFavorite}
             onRenameFavorite={handleRenameFavorite}
+            componentList={componentList}
+            onReorder={handleReorderComponents}
         />
         <Canvas
           components={components}
@@ -2756,6 +3065,7 @@ const App = () => {
           onDuplicate={handleDuplicateComponent}
           onDelete={handleDeleteComponent}
           onFavorite={handleFavoriteComponent}
+          componentList={componentList}
         />
         <PropertiesPanel
           component={selectedComponent}
@@ -2770,7 +3080,7 @@ const App = () => {
             templates={templates}
             onClose={() => setShowTemplatesModal(false)}
             onSave={handleSaveTemplate}
-            onLoad={handleLoadTemplate}
+            onLoadState={handleLoadState}
             onDelete={handleDeleteTemplate}
             onRename={handleRenameTemplate}
             setConfirmation={setConfirmation}
