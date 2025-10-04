@@ -112,6 +112,7 @@ interface DividerComponent extends BaseComponent {
     color: string;
     height: string;
     padding: string;
+    width: string;
     containerStyle?: ContainerStyle;
 }
 
@@ -265,7 +266,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'spacer':
         return { ...baseProps, type, height: '20' };
       case 'divider':
-        return { ...baseProps, type, color: '#cccccc', height: '1', padding: '10' };
+        return { ...baseProps, type, color: '#cccccc', height: '1', padding: '10', width: '100' };
       case 'social':
         return { ...baseProps, type, alignment: 'center', links: [
             { id: `social_${Date.now()}_1`, platform: 'facebook', url: '#' },
@@ -466,7 +467,13 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'spacer':
           return <div style={{ height: `${component.height}px` }} />;
       case 'divider':
-          return <div style={{ padding: `${component.padding}px 0` }}><hr style={{ border: 'none', borderTop: `${component.height}px solid ${component.color}` }} /></div>;
+          return (
+            <div style={{ padding: `${component.padding}px 0` }}>
+                <div style={{ width: `${component.width}%`, margin: '0 auto' }}>
+                    <hr style={{ border: 'none', borderTop: `${component.height}px solid ${component.color}`, margin: 0, width: '100%' }} />
+                </div>
+            </div>
+          );
       case 'social':
           return (
             <div style={{ padding: '10px', textAlign: component.alignment }}>
@@ -527,7 +534,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
     return styles;
   };
 
-  const RenderItem = ({ component, targetPath }: { component: EmailComponent, targetPath: DropTarget }) => {
+  // FIX: Explicitly type RenderItem as a React Functional Component to solve type errors with the `key` prop.
+  const RenderItem: React.FC<{ component: EmailComponent, targetPath: DropTarget }> = ({ component, targetPath }) => {
     const isLayout = component.type === 'layout';
     
     const clickHandler = isLayout
@@ -1115,6 +1123,19 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         <label>Vertical Padding (px)</label>
                         <input type="text" value={component.padding} onChange={(e) => handleChange('padding', e.target.value)} />
                     </div>
+                    <div className="form-group">
+                        <label>Width (%)</label>
+                        <div className="slider-group">
+                            <input
+                                type="range"
+                                min="10"
+                                max="100"
+                                value={component.width}
+                                onChange={(e) => handleChange('width', e.target.value)}
+                            />
+                            <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                        </div>
+                    </div>
                 </>
             );
              case 'social': return (
@@ -1403,8 +1424,15 @@ const App = () => {
         const spacerContent = `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${spacerContent}</td></tr></table>`;
        case 'divider':
-        const dividerContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="padding:${component.padding}px 0;"><hr style="border:none; border-top:${component.height}px solid ${component.color};"></td></tr></table>`;
-        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${dividerContent}</td></tr></table>`;
+        const dividerItself = `
+            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:${component.width}%;">
+                <tr>
+                    <td style="font-size: 0; line-height: 0; border-top: ${component.height}px solid ${component.color};">&nbsp;</td>
+                </tr>
+            </table>
+        `;
+        const wrapperTdStyle = `padding:${component.padding}px 0; ${containerStyles}`;
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${wrapperTdStyle}">${dividerItself}</td></tr></table>`;
       case 'social':
         const linksHtml = component.links.map(link => 
             `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank"><img src="${SOCIAL_ICONS[link.platform]}" alt="${link.platform}" width="32" height="32" style="display: block;"></a></td>`
