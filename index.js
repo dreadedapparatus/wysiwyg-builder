@@ -1096,7 +1096,7 @@
             var dispatcher = resolveDispatcher();
             return dispatcher.useRef(initialValue);
           }
-          function useEffect(create, deps) {
+          function useEffect2(create, deps) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useEffect(create, deps);
           }
@@ -1879,7 +1879,7 @@
           exports.useContext = useContext;
           exports.useDebugValue = useDebugValue;
           exports.useDeferredValue = useDeferredValue;
-          exports.useEffect = useEffect;
+          exports.useEffect = useEffect2;
           exports.useId = useId;
           exports.useImperativeHandle = useImperativeHandle;
           exports.useInsertionEffect = useInsertionEffect;
@@ -24461,9 +24461,52 @@
   var import_react = __toESM(require_react());
   var import_client = __toESM(require_client());
   var import_jsx_runtime = __toESM(require_jsx_runtime());
+  var recursiveDelete = (items, idToDelete) => {
+    const filtered = items.filter((c) => c.id !== idToDelete);
+    return filtered.map((c) => {
+      if (c.type === "layout") {
+        return {
+          ...c,
+          columns: c.columns.map((col) => ({
+            ...col,
+            components: recursiveDelete(col.components, idToDelete)
+          }))
+        };
+      }
+      return c;
+    });
+  };
+  var useHistory = (initialState) => {
+    const [history, setHistory] = (0, import_react.useState)([initialState]);
+    const [currentIndex, setCurrentIndex] = (0, import_react.useState)(0);
+    const state = history[currentIndex];
+    const canUndo = currentIndex > 0;
+    const canRedo = currentIndex < history.length - 1;
+    const setState = (0, import_react.useCallback)((newState) => {
+      if (JSON.stringify(newState) === JSON.stringify(history[currentIndex])) {
+        return;
+      }
+      const newHistory = history.slice(0, currentIndex + 1);
+      newHistory.push(newState);
+      setHistory(newHistory);
+      setCurrentIndex(newHistory.length - 1);
+    }, [currentIndex, history]);
+    const undo = (0, import_react.useCallback)(() => {
+      if (canUndo) {
+        setCurrentIndex(currentIndex - 1);
+      }
+    }, [canUndo, currentIndex]);
+    const redo = (0, import_react.useCallback)(() => {
+      if (canRedo) {
+        setCurrentIndex(currentIndex + 1);
+      }
+    }, [canRedo, currentIndex]);
+    return { state, setState, undo, redo, canUndo, canRedo };
+  };
   var COMPONENT_TYPES = [
     { type: "text", label: "Text", icon: "T" },
     { type: "image", label: "Image", icon: "\u{1F5BC}\uFE0F" },
+    { type: "emoji", label: "Emoji", icon: "\u{1F600}" },
     { type: "button", label: "Button", icon: "\u{1F518}" },
     { type: "button-group", label: "Buttons", icon: "[ B ]" },
     { type: "divider", label: "Divider", icon: "\u2014" },
@@ -24476,13 +24519,108 @@
     { type: "two-column", label: "2 Columns", icon: "||", isLayout: true },
     { type: "three-column", label: "3 Columns", icon: "|||", isLayout: true }
   ];
-  var ComponentsPanel = ({ setDraggingComponentType }) => {
+  var getComponentMeta = (type) => {
+    return COMPONENT_TYPES.find((c) => c.type === type) || { label: type, icon: "\u2753" };
+  };
+  var ComponentsPanel = ({ setDraggingComponentType, setSelectedId, favorites, onRemoveFavorite, onRenameFavorite }) => {
+    const [editingId, setEditingId] = (0, import_react.useState)(null);
+    const [editText, setEditText] = (0, import_react.useState)("");
+    const renameInputRef = (0, import_react.useRef)(null);
+    const [isFavoritesCollapsed, setIsFavoritesCollapsed] = (0, import_react.useState)(false);
+    (0, import_react.useEffect)(() => {
+      if (editingId && renameInputRef.current) {
+        renameInputRef.current.focus();
+        renameInputRef.current.select();
+      }
+    }, [editingId]);
+    const handleRename = () => {
+      if (editingId && editText.trim()) {
+        onRenameFavorite(editingId, editText.trim());
+      }
+      setEditingId(null);
+      setEditText("");
+    };
     const onDragStart = (e, componentType) => {
       e.dataTransfer.setData("application/reactflow", componentType);
       e.dataTransfer.effectAllowed = "move";
       setDraggingComponentType(componentType);
+      setSelectedId(null);
+    };
+    const onFavoriteDragStart = (e, component) => {
+      e.dataTransfer.setData("application/json-favorite", JSON.stringify(component));
+      e.dataTransfer.effectAllowed = "move";
+      setDraggingComponentType(component.type);
+      setSelectedId(null);
     };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "components-panel", children: [
+      favorites.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "favorites-section", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { onClick: () => setIsFavoritesCollapsed(!isFavoritesCollapsed), children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Favorites" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "collapse-icon", children: isFavoritesCollapsed ? "\u25B6" : "\u25BC" })
+        ] }),
+        !isFavoritesCollapsed && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "component-grid", children: favorites.map((fav) => {
+          const typeToLookup = fav.component.type === "layout" ? fav.component.layoutType : fav.component.type;
+          const meta = getComponentMeta(typeToLookup);
+          const isEditing = editingId === fav.id;
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+            "div",
+            {
+              className: "favorite-item",
+              draggable: !isEditing,
+              onDragStart: (e) => onFavoriteDragStart(e, fav.component),
+              onDragEnd: () => setDraggingComponentType(null),
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-item-content", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: meta.icon }),
+                  isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "input",
+                    {
+                      ref: renameInputRef,
+                      type: "text",
+                      className: "favorite-rename-input",
+                      value: editText,
+                      onChange: (e) => setEditText(e.target.value),
+                      onBlur: handleRename,
+                      onKeyDown: (e) => {
+                        if (e.key === "Enter")
+                          handleRename();
+                        if (e.key === "Escape")
+                          setEditingId(null);
+                      },
+                      onClick: (e) => e.stopPropagation()
+                    }
+                  ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "div",
+                    {
+                      className: "label",
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        setEditingId(fav.id);
+                        setEditText(fav.name);
+                      },
+                      title: "Click to rename",
+                      children: fav.name
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "button",
+                  {
+                    className: "remove-favorite-btn",
+                    onClick: (e) => {
+                      e.stopPropagation();
+                      onRemoveFavorite(fav.id);
+                    },
+                    title: "Remove from Favorites",
+                    children: "\xD7"
+                  }
+                )
+              ]
+            },
+            fav.id
+          );
+        }) })
+      ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Components" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "component-grid", children: COMPONENT_TYPES.map(({ type, label, icon, isLayout }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
         "div",
@@ -24508,23 +24646,70 @@
     youtube: "https://img.icons8.com/fluent/48/000000/youtube-play.png",
     website: "https://img.icons8.com/fluent/48/000000/domain.png"
   };
-  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType }) => {
+  var ColumnResizer = ({ columnIndex, component, onUpdate }) => {
+    const resizerRef = (0, import_react.useRef)(null);
+    const handleMouseDown = (0, import_react.useCallback)((e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.clientX;
+      const layoutGrid = resizerRef.current?.parentElement;
+      if (!layoutGrid)
+        return;
+      const containerWidth = layoutGrid.getBoundingClientRect().width;
+      const initialWidths = component.columnWidths || component.columns.map(() => 100 / component.columns.length);
+      const leftInitialWidth = initialWidths[columnIndex];
+      const rightInitialWidth = initialWidths[columnIndex + 1];
+      document.body.classList.add("resizing");
+      const handleMouseMove = (moveEvent) => {
+        const dx = moveEvent.clientX - startX;
+        let deltaPercent = dx / containerWidth * 100;
+        let newLeftWidth = leftInitialWidth + deltaPercent;
+        let newRightWidth = rightInitialWidth - deltaPercent;
+        const minWidth = 10;
+        if (newLeftWidth < minWidth || newRightWidth < minWidth) {
+          return;
+        }
+        const sum = leftInitialWidth + rightInitialWidth;
+        if (deltaPercent > 0) {
+          newLeftWidth = Math.min(sum - minWidth, newLeftWidth);
+          newRightWidth = sum - newLeftWidth;
+        } else {
+          newLeftWidth = Math.max(minWidth, newLeftWidth);
+          newRightWidth = sum - newLeftWidth;
+        }
+        const newWidths = [...initialWidths];
+        newWidths[columnIndex] = newLeftWidth;
+        newWidths[columnIndex + 1] = newRightWidth;
+        const roundedWidths = newWidths.map((w) => parseFloat(w.toFixed(2)));
+        onUpdate(component.id, { ...component, columnWidths: roundedWidths });
+      };
+      const handleMouseUp = () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+        document.body.classList.remove("resizing");
+      };
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }, [component, columnIndex, onUpdate]);
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "column-resizer", ref: resizerRef, onMouseDown: handleMouseDown });
+  };
+  var Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSettings, draggingComponentType, setDraggingComponentType, onUpdate, onDuplicate, onDelete, onFavorite }) => {
     const [dragOverTarget, setDragOverTarget] = (0, import_react.useState)(null);
     const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const createNewComponent = (type) => {
       const id = `comp_${Date.now()}`;
-      const baseProps = { id, containerStyle: { backgroundColor: "transparent" } };
+      const baseProps = { id, containerStyle: { backgroundColor: "transparent" }, isLocked: false };
       switch (type) {
         case "text":
-          return { ...baseProps, type, content: "This is a new text block. Click to edit!", fontSize: "16", color: "#000000", fontFamily: "Arial", textAlign: "left" };
+          return { ...baseProps, type, content: "This is a new text block. Click to edit!", fontSize: "16", color: "#000000", fontFamily: "Arial", textAlign: "left", useGlobalFont: true, useGlobalTextColor: true, width: "100" };
         case "image":
           return { ...baseProps, type, src: "", alt: "Placeholder", borderRadius: "0", width: "100", alignment: "center" };
         case "button":
-          return { ...baseProps, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal" };
+          return { ...baseProps, type, text: "Click Me", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff", fontSize: "16", fontWeight: "normal", useGlobalAccentColor: true };
         case "spacer":
           return { ...baseProps, type, height: "20" };
         case "divider":
-          return { ...baseProps, type, color: "#cccccc", height: "1", padding: "10", width: "100" };
+          return { ...baseProps, type, color: "#cccccc", height: "1", padding: "10", width: "100", useGlobalAccentColor: true };
         case "social":
           return { ...baseProps, type, alignment: "center", links: [
             { id: `social_${Date.now()}_1`, platform: "facebook", url: "#" },
@@ -24534,45 +24719,33 @@
         case "video":
           return { ...baseProps, type, videoUrl: "#", imageUrl: "", alt: "Video thumbnail", width: "100", alignment: "center" };
         case "card":
-          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff" };
+          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", showImage: true, fontFamily: "Arial", useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: "100" };
         case "logo":
           return { ...baseProps, type, src: "", alt: "Company Logo", width: "150", alignment: "center" };
         case "footer":
-          return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center" };
+          return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center", useGlobalFont: true, useGlobalTextColor: true, width: "100" };
         case "button-group":
           return { ...baseProps, type, alignment: "center", buttons: [
             { id: `btn_${Date.now()}_1`, text: "Button 1", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff" },
             { id: `btn_${Date.now()}_2`, text: "Button 2", href: "#", backgroundColor: "#6c757d", textColor: "#ffffff" }
           ] };
+        case "emoji":
+          return { ...baseProps, type, character: "\u{1F389}", fontSize: "48", alignment: "center" };
         case "two-column":
-          return { id, type: "layout", layoutType: "two-column", columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }] };
+          return { ...baseProps, id, type: "layout", layoutType: "two-column", columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }] };
         case "three-column":
-          return { id, type: "layout", layoutType: "three-column", columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }, { id: `col_${Date.now()}_3`, components: [] }] };
+          return { ...baseProps, id, type: "layout", layoutType: "three-column", columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }, { id: `col_${Date.now()}_3`, components: [] }] };
         default:
           throw new Error("Unknown component type");
       }
-    };
-    const recursiveDelete = (items, idToDelete) => {
-      const filtered = items.filter((c) => c.id !== idToDelete);
-      return filtered.map((c) => {
-        if (c.type === "layout") {
-          return {
-            ...c,
-            columns: c.columns.map((col) => ({
-              ...col,
-              components: recursiveDelete(col.components, idToDelete)
-            }))
-          };
-        }
-        return c;
-      });
     };
     const insertComponent = (items, target, componentToAdd) => {
       if (target.type === "root") {
         const newItems = [...items];
         newItems.splice(target.index, 0, componentToAdd);
         return newItems;
-      } else if (target.type === "column") {
+      }
+      if (target.type === "column") {
         return items.map((c) => {
           if (c.id === target.layoutId && c.type === "layout") {
             const newColumns = c.columns.map((col, index) => {
@@ -24594,11 +24767,22 @@
       setComponents((prev) => insertComponent(prev, target, newComponent));
       setSelectedId(newComponent.id);
     };
-    const handleDeleteComponent = (idToDelete) => {
-      if (selectedId === idToDelete) {
-        setSelectedId(null);
+    const regenerateIds = (component) => {
+      const newComponent = JSON.parse(JSON.stringify(component));
+      const newId = (prefix) => `${prefix}_${Date.now()}_${Math.round(Math.random() * 1e6)}`;
+      newComponent.id = newId("comp");
+      newComponent.isLocked = false;
+      if (newComponent.type === "layout") {
+        newComponent.columns.forEach((col) => {
+          col.id = newId("col");
+          col.components = col.components.map((c) => regenerateIds(c));
+        });
+      } else if (newComponent.type === "social") {
+        newComponent.links.forEach((link) => link.id = newId("social"));
+      } else if (newComponent.type === "button-group") {
+        newComponent.buttons.forEach((btn) => btn.id = newId("btn"));
       }
-      setComponents((prev) => recursiveDelete(prev, idToDelete));
+      return newComponent;
     };
     const handleDrop = (e, target) => {
       e.preventDefault();
@@ -24607,9 +24791,14 @@
       setDraggingComponentType(null);
       const newComponentType = e.dataTransfer.getData("application/reactflow");
       const movedComponentData = e.dataTransfer.getData("application/json-component");
+      const favoriteComponentData = e.dataTransfer.getData("application/json-favorite");
       const finalIndex = target.position === "after" ? target.index + 1 : target.index;
-      const finalDropTarget = { ...target, index: finalIndex };
-      delete finalDropTarget.position;
+      let finalDropTarget;
+      if (target.type === "root") {
+        finalDropTarget = { type: "root", index: finalIndex };
+      } else {
+        finalDropTarget = { type: "column", layoutId: target.layoutId, columnIndex: target.columnIndex, index: finalIndex };
+      }
       if (movedComponentData) {
         const movedComponent = JSON.parse(movedComponentData);
         setComponents((prev) => {
@@ -24617,6 +24806,10 @@
           return insertComponent(componentsAfterDelete, finalDropTarget, movedComponent);
         });
         setSelectedId(movedComponent.id);
+      } else if (favoriteComponentData) {
+        const favoriteComponent = JSON.parse(favoriteComponentData);
+        const newComponent = regenerateIds(favoriteComponent);
+        handleAddComponent(finalDropTarget, newComponent);
       } else if (newComponentType) {
         const newComponent = createNewComponent(newComponentType);
         handleAddComponent(finalDropTarget, newComponent);
@@ -24653,8 +24846,12 @@
     const renderContentComponent = (component) => {
       switch (component.type) {
         case "text":
-        case "footer":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: component.color, fontFamily: component.fontFamily, textAlign: component.textAlign } });
+        case "footer": {
+          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
+          const textContent = /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { dangerouslySetInnerHTML: { __html: component.content }, style: { padding: "10px", fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign } });
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: textContent });
+        }
         case "image": {
           const imageContainerStyle = {
             textAlign: component.alignment,
@@ -24693,10 +24890,11 @@
           }
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: component.alignment, padding: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { width: `${component.width}px`, maxWidth: "100%", display: "inline-block" } }) });
         case "button":
+          const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.href, target: "_blank", rel: "noopener noreferrer", style: {
             display: "inline-block",
             padding: "10px 20px",
-            backgroundColor: component.backgroundColor,
+            backgroundColor: finalButtonBgColor,
             color: component.textColor,
             textDecoration: "none",
             borderRadius: "5px",
@@ -24716,7 +24914,8 @@
         case "spacer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { height: `${component.height}px` } });
         case "divider":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: `${component.padding}px 0` }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", { style: { border: "none", borderTop: `${component.height}px solid ${component.color}`, margin: 0, width: "100%" } }) }) });
+          const finalDividerColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.color;
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: `${component.padding}px 0` }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", { style: { border: "none", borderTop: `${component.height}px solid ${finalDividerColor}`, margin: 0, width: "100%" } }) }) });
         case "social":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: component.alignment }, children: component.links.map((link) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: link.url, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "0 5px" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: SOCIAL_ICONS[link.platform], alt: link.platform, width: "32", height: "32" }) }, link.id)) });
         case "video": {
@@ -24733,16 +24932,23 @@
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "video-play-button", children: "\u25B6" })
           ] }) });
         }
-        case "card":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, color: component.textColor, padding: "15px", borderRadius: "5px" }, children: [
-            !component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
+        case "card": {
+          const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
+          const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const cardContent = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, color: finalCardTextColor, padding: "15px", borderRadius: "5px", fontFamily: finalCardFontFamily }, children: [
+            component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Card Image" })
-            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block" } }),
+            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block" } })),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { style: { margin: "10px 0 5px" }, children: component.title }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 10px" }, children: component.content }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: component.buttonBackgroundColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px" }, children: component.buttonText }) })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px" }, children: component.buttonText }) })
           ] });
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: cardContent });
+        }
+        case "emoji":
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: component.alignment }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { fontSize: `${component.fontSize}px`, lineHeight: 1 }, children: component.character }) });
         default:
           return null;
       }
@@ -24769,9 +24975,9 @@
       }
       return styles;
     };
-    const RenderItem = ({ component, targetPath }) => {
+    const RenderItem = ({ component, targetPath, onUpdate: onUpdate2, onDuplicate: onDuplicate2, onDelete: onDelete2, onFavorite: onFavorite2 }) => {
       const isLayout = component.type === "layout";
-      const clickHandler = isLayout ? void 0 : (e) => {
+      const clickHandler = (e) => {
         e.stopPropagation();
         setSelectedId(component.id);
       };
@@ -24788,88 +24994,183 @@
         setDraggingComponentType(null);
       };
       const handleItemDragOver = (e) => {
-        if (isLayout)
-          return;
         e.preventDefault();
         e.stopPropagation();
         const rect = e.currentTarget.getBoundingClientRect();
         const isTopHalf = e.clientY < rect.top + rect.height / 2;
-        const newTarget = targetPath.type === "column" ? { type: "column", layoutId: targetPath.layoutId, columnIndex: targetPath.columnIndex, index: targetPath.index, position: isTopHalf ? "before" : "after" } : { type: "root", index: targetPath.index, position: isTopHalf ? "before" : "after" };
+        let newTarget;
+        if (targetPath.type === "column") {
+          newTarget = { type: "column", layoutId: targetPath.layoutId, columnIndex: targetPath.columnIndex, index: targetPath.index, position: isTopHalf ? "before" : "after" };
+        } else {
+          newTarget = { type: "root", index: targetPath.index, position: isTopHalf ? "before" : "after" };
+        }
         handleDragOver(e, newTarget);
       };
-      const isMyTargetForDrop = dragOverTarget && dragOverTarget.index === targetPath.index && (dragOverTarget.type === "root" && targetPath.type === "root" || dragOverTarget.type === "column" && targetPath.type === "column" && dragOverTarget.layoutId === targetPath.layoutId && dragOverTarget.columnIndex === targetPath.columnIndex);
+      const isMyTargetForDrop = (() => {
+        if (!dragOverTarget || dragOverTarget.index !== targetPath.index) {
+          return false;
+        }
+        if (dragOverTarget.type === "root" && targetPath.type === "root") {
+          return true;
+        }
+        if (dragOverTarget.type === "column" && targetPath.type === "column") {
+          return dragOverTarget.layoutId === targetPath.layoutId && dragOverTarget.columnIndex === targetPath.columnIndex;
+        }
+        return false;
+      })();
       const isDropTargetBefore = isMyTargetForDrop && dragOverTarget.position === "before";
       const isDropTargetAfter = isMyTargetForDrop && dragOverTarget.position === "after";
       const classNames = [
         "canvas-component",
+        isLayout ? "layout-component-wrapper" : "",
         selectedId === component.id ? "selected" : "",
         draggingId === component.id ? "dragging" : ""
       ].filter(Boolean).join(" ");
-      const containerStyles = isLayout ? {} : getContainerInlineStyles(component);
+      const containerStyles = getContainerInlineStyles(component);
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.default.Fragment, { children: [
         isDropTargetBefore && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
           "div",
           {
             className: classNames,
-            onClick: clickHandler,
-            draggable: !isLayout,
-            onDragStart: isLayout ? void 0 : handleDragStart,
-            onDragEnd: isLayout ? void 0 : handleDragEnd,
-            onDragOver: handleItemDragOver,
-            onDrop: (e) => handleDrop(e, dragOverTarget),
-            children: [
-              selectedId === component.id && !isLayout && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.type.charAt(0).toUpperCase() + component.type.slice(1) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button delete", onClick: (e) => {
-                  e.stopPropagation();
-                  handleDeleteComponent(component.id);
-                }, children: "\u{1F5D1}\uFE0F" })
+            onClick: !isLayout ? clickHandler : void 0,
+            draggable: !isLayout && !component.isLocked,
+            onDragStart: !isLayout && !component.isLocked ? handleDragStart : void 0,
+            onDragEnd: !isLayout ? handleDragEnd : void 0,
+            onDragOver: !isLayout ? handleItemDragOver : void 0,
+            onDrop: !isLayout ? (e) => handleDrop(e, dragOverTarget) : void 0,
+            children: isLayout ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-component-content", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "div",
+                {
+                  className: "layout-outer-dropzone layout-outer-dropzone-top",
+                  onDragOver: (e) => targetPath.type === "root" && handleDragOver(e, { type: "root", index: targetPath.index, position: "before" }),
+                  onDrop: (e) => targetPath.type === "root" && handleDrop(e, { type: "root", index: targetPath.index, position: "before" })
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-toolbar", onClick: clickHandler, draggable: !component.isLocked, onDragStart: !component.isLocked ? handleDragStart : void 0, onDragEnd: handleDragEnd, children: [
+                !component.isLocked && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.layoutType.replace("-", " ") }),
+                selectedId === component.id && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button favorite", title: "Favorite", onClick: (e) => {
+                    e.stopPropagation();
+                    onFavorite2(component.id);
+                  }, children: "\u2B50" }),
+                  !component.isLocked && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button duplicate", title: "Duplicate", onClick: (e) => {
+                    e.stopPropagation();
+                    onDuplicate2(component.id);
+                  }, children: "\u{1F4CB}" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button lock", title: component.isLocked ? "Unlock" : "Lock", onClick: (e) => {
+                    e.stopPropagation();
+                    onUpdate2(component.id, { ...component, isLocked: !component.isLocked });
+                  }, children: component.isLocked ? "\u{1F512}" : "\u{1F513}" }),
+                  !component.isLocked && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button delete", title: "Delete", onClick: (e) => {
+                    e.stopPropagation();
+                    onDelete2(component.id);
+                  }, children: "\u{1F5D1}\uFE0F" })
+                ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerStyles, children: component.type === "layout" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `layout-grid ${component.layoutType}`, children: component.columns.map((col, colIndex) => {
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerStyles, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "layout-grid-wrapper", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `layout-grid ${component.layoutType}`, children: component.columns.map((col, colIndex) => {
+                const widths = component.columnWidths || component.columns.map(() => 100 / component.columns.length);
                 const targetForEmpty = { type: "column", layoutId: component.id, columnIndex: colIndex, index: 0 };
                 const isEmptyColumnActive = JSON.stringify(dragOverTarget) === JSON.stringify(targetForEmpty);
-                return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "layout-column", children: col.components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "div",
-                  {
-                    className: `empty-column-dropzone ${isEmptyColumnActive ? "active" : ""}`,
-                    onDragOver: (e) => handleDragOver(e, targetForEmpty),
-                    onDrop: (e) => handleDrop(e, targetForEmpty),
-                    children: isEmptyColumnActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "icon", children: "\u2795" }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Drop Here" })
-                    ] })
-                  }
-                ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: col.components.map((innerComp, innerIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  RenderItem,
-                  {
-                    component: innerComp,
-                    targetPath: { type: "column", layoutId: component.id, columnIndex: colIndex, index: innerIndex }
-                  },
-                  innerComp.id
-                )) }) }, col.id);
-              }) }) : renderContentComponent(component) })
-            ]
+                return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.default.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "layout-column", style: { width: `${widths[colIndex]}%` }, children: col.components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "div",
+                    {
+                      className: `empty-column-dropzone ${isEmptyColumnActive ? "active" : ""}`,
+                      onDragOver: (e) => handleDragOver(e, targetForEmpty),
+                      onDrop: (e) => handleDrop(e, targetForEmpty),
+                      children: isEmptyColumnActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "icon", children: "\u2795" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Drop Here" })
+                      ] })
+                    }
+                  ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: col.components.map((innerComp, innerIndex) => {
+                    const innerTargetPath = { type: "column", layoutId: component.id, columnIndex: colIndex, index: innerIndex };
+                    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                      RenderItem,
+                      {
+                        component: innerComp,
+                        targetPath: innerTargetPath,
+                        onUpdate: onUpdate2,
+                        onDuplicate: onDuplicate2,
+                        onDelete: onDelete2,
+                        onFavorite: onFavorite2
+                      },
+                      innerComp.id
+                    );
+                  }) }) }),
+                  !component.isLocked && colIndex < component.columns.length - 1 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ColumnResizer, { columnIndex: colIndex, component, onUpdate: onUpdate2 })
+                ] }, col.id);
+              }) }) }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "div",
+                {
+                  className: "layout-outer-dropzone layout-outer-dropzone-bottom",
+                  onDragOver: (e) => targetPath.type === "root" && handleDragOver(e, { type: "root", index: targetPath.index, position: "after" }),
+                  onDrop: (e) => targetPath.type === "root" && handleDrop(e, { type: "root", index: targetPath.index, position: "after" })
+                }
+              )
+            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              selectedId === component.id && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "component-toolbar", children: [
+                !component.isLocked && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "drag-handle", children: "\u2725" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: component.type.charAt(0).toUpperCase() + component.type.slice(1) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button favorite", title: "Favorite", onClick: (e) => {
+                  e.stopPropagation();
+                  onFavorite2(component.id);
+                }, children: "\u2B50" }),
+                !component.isLocked && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button duplicate", title: "Duplicate", onClick: (e) => {
+                  e.stopPropagation();
+                  onDuplicate2(component.id);
+                }, children: "\u{1F4CB}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button lock", title: component.isLocked ? "Unlock" : "Lock", onClick: (e) => {
+                  e.stopPropagation();
+                  onUpdate2(component.id, { ...component, isLocked: !component.isLocked });
+                }, children: component.isLocked ? "\u{1F512}" : "\u{1F513}" }),
+                !component.isLocked && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "toolbar-button delete", title: "Delete", onClick: (e) => {
+                  e.stopPropagation();
+                  onDelete2(component.id);
+                }, children: "\u{1F5D1}\uFE0F" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerStyles, children: renderContentComponent(component) })
+            ] })
           }
         ),
         isDropTargetAfter && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType })
       ] });
     };
     const isInitialDropActive = dragOverTarget && dragOverTarget.type === "root" && dragOverTarget.index === 0;
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas-container", onDragLeave: handleDragLeave, style: { backgroundColor: emailSettings.backgroundColor }, onClick: handleBackgroundClick, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas", style: { backgroundColor: emailSettings.contentBackgroundColor }, children: components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+    const handleCanvasAreaDragOver = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    const handleCanvasAreaDrop = (e) => {
+      if (dragOverTarget) {
+        handleDrop(e, dragOverTarget);
+      }
+    };
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "canvas-container", onDragLeave: handleDragLeave, style: { backgroundColor: emailSettings.backgroundColor }, onClick: handleBackgroundClick, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
       "div",
       {
-        className: "empty-canvas",
-        onDragOver: (e) => handleDragOver(e, { type: "root", index: 0 }),
-        onDrop: (e) => handleDrop(e, { type: "root", index: 0 }),
-        children: isInitialDropActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u2728" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Let's build an email" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Drag a component from the left panel to get started." })
-        ] })
+        className: "canvas",
+        style: { backgroundColor: emailSettings.contentBackgroundColor },
+        onDragOver: handleCanvasAreaDragOver,
+        onDrop: handleCanvasAreaDrop,
+        children: components.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          "div",
+          {
+            className: "empty-canvas",
+            onDragOver: (e) => handleDragOver(e, { type: "root", index: 0 }),
+            children: isInitialDropActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u2728" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Let's build an email" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Drag a component from the left panel to get started." })
+            ] })
+          }
+        ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: components.map((component, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RenderItem, { component, targetPath: { type: "root", index }, onUpdate, onDuplicate, onDelete, onFavorite }, component.id)) })
       }
-    ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: components.map((component, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RenderItem, { component, targetPath: { type: "root", index } }, component.id)) }) }) });
+    ) });
   };
   var ContainerStyleEditor = ({ component, onUpdate }) => {
     const { containerStyle = {} } = component;
@@ -24929,6 +25230,17 @@
     const FONT_FAMILIES = ["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
     const SOCIAL_PLATFORMS = Object.keys(SOCIAL_ICONS);
     const fileInputRef = (0, import_react.useRef)(null);
+    const [isEditingEmoji, setIsEditingEmoji] = (0, import_react.useState)(false);
+    const emojiInputRef = (0, import_react.useRef)(null);
+    (0, import_react.useEffect)(() => {
+      setIsEditingEmoji(false);
+    }, [component?.id]);
+    (0, import_react.useEffect)(() => {
+      if (isEditingEmoji && emojiInputRef.current) {
+        emojiInputRef.current.focus();
+        emojiInputRef.current.select();
+      }
+    }, [isEditingEmoji]);
     if (!component) {
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "properties-panel", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Email Settings" }),
@@ -24945,7 +25257,33 @@
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: emailSettings.contentBackgroundColor, onChange: (e) => onUpdateSettings({ contentBackgroundColor: e.target.value }) }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: emailSettings.contentBackgroundColor, onChange: (e) => onUpdateSettings({ contentBackgroundColor: e.target.value }) })
           ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Global Styles" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Global Font Family" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: emailSettings.fontFamily, onChange: (e) => onUpdateSettings({ fontFamily: e.target.value }), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Global Text Color" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: emailSettings.textColor, onChange: (e) => onUpdateSettings({ textColor: e.target.value }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: emailSettings.textColor, onChange: (e) => onUpdateSettings({ textColor: e.target.value }) })
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Global Accent Color" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: emailSettings.accentColor, onChange: (e) => onUpdateSettings({ accentColor: e.target.value }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: emailSettings.accentColor, onChange: (e) => onUpdateSettings({ accentColor: e.target.value }) })
+          ] })
         ] })
+      ] });
+    }
+    if (component.isLocked) {
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "properties-panel locked-panel", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u{1F512} Component Locked" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Unlock this component to make changes." }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "unlock-button", onClick: () => onUpdate(component.id, { ...component, isLocked: false }), children: "Unlock Component" })
       ] });
     }
     const handleChange = (prop, value) => {
@@ -25004,6 +25342,62 @@
         }
       }
     };
+    const handleVideoUrlBlur = async (e) => {
+      const url = e.target.value;
+      if (!url || url === component.videoUrl)
+        return;
+      handleChange("videoUrl", url);
+      const fetchVideoThumbnail = async (videoUrl) => {
+        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)/;
+        const isYoutube = youtubeRegex.test(videoUrl);
+        const isVimeo = vimeoRegex.test(videoUrl);
+        if (!isYoutube && !isVimeo) {
+          return { thumbnailUrl: null, title: null };
+        }
+        try {
+          const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`);
+          if (!response.ok) {
+            throw new Error(`noembed.com fetch failed with status: ${response.status}`);
+          }
+          const data = await response.json();
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          return { thumbnailUrl: data.thumbnail_url || null, title: data.title || null };
+        } catch (error) {
+          console.error("Thumbnail fetch error:", error);
+          if (isYoutube) {
+            const youtubeMatch = videoUrl.match(youtubeRegex);
+            const videoId = youtubeMatch?.[1];
+            if (videoId) {
+              console.log("Using YouTube fallback thumbnail.");
+              return { thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`, title: "YouTube Video" };
+            }
+          }
+          return { thumbnailUrl: null, title: null };
+        }
+      };
+      const { thumbnailUrl, title } = await fetchVideoThumbnail(url);
+      if (thumbnailUrl) {
+        try {
+          const { width, height } = await getImageDimensions(thumbnailUrl);
+          onUpdate(component.id, {
+            ...component,
+            videoUrl: url,
+            imageUrl: thumbnailUrl,
+            previewSrc: thumbnailUrl,
+            // Use it for preview as well
+            alt: title || component.alt,
+            naturalWidth: width,
+            naturalHeight: height
+          });
+        } catch (error) {
+          console.error("Error getting image dimensions from fetched thumbnail:", error);
+          onUpdate(component.id, { ...component, videoUrl: url, imageUrl: thumbnailUrl, previewSrc: thumbnailUrl, alt: title || component.alt });
+        }
+      }
+    };
     const handleSocialLinkChange = (index, prop, value) => {
       const newLinks = [...component.links];
       newLinks[index] = { ...newLinks[index], [prop]: value };
@@ -25037,9 +25431,16 @@
         case "text":
         case "footer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
@@ -25069,9 +25470,16 @@
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Color" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalTextColor, onChange: (e) => handleChange("useGlobalTextColor", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, onChange: (e) => handleChange("color", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, onChange: (e) => handleChange("color", e.target.value) })
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("color", e.target.value) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("color", e.target.value) })
                 ] })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -25081,6 +25489,22 @@
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "center" ? "active" : "", onClick: () => handleChange("textAlign", "center"), children: "C" }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "right" ? "active" : "", onClick: () => handleChange("textAlign", "right"), children: "R" })
                 ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Content Width (%)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "10",
+                    max: "100",
+                    value: component.width,
+                    onChange: (e) => handleChange("width", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -25239,11 +25663,18 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
               ] })
             ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -25281,15 +25712,43 @@
         case "spacer":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Height (px)" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.height, onChange: (e) => handleChange("height", e.target.value) })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  type: "range",
+                  min: "10",
+                  max: "200",
+                  value: component.height,
+                  onChange: (e) => handleChange("height", e.target.value)
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  type: "number",
+                  min: "1",
+                  className: "slider-value-input",
+                  value: component.height,
+                  onChange: (e) => handleChange("height", e.target.value)
+                }
+              )
+            ] })
           ] });
         case "divider":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Color" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, onChange: (e) => handleChange("color", e.target.value) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, onChange: (e) => handleChange("color", e.target.value) })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("color", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("color", e.target.value) })
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -25341,8 +25800,17 @@
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Video URL" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.videoUrl, onChange: (e) => handleChange("videoUrl", e.target.value), placeholder: "https://youtube.com/watch?v=..." }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "The URL the user will be sent to when they click the image." })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  type: "url",
+                  value: component.videoUrl,
+                  onChange: (e) => handleChange("videoUrl", e.target.value),
+                  onBlur: handleVideoUrlBlur,
+                  placeholder: "https://youtube.com/watch?v=..."
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Enter a YouTube or Vimeo URL to fetch the thumbnail automatically." })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", ref: fileInputRef, onChange: handleImageUpload, accept: "image/*", style: { display: "none" } }),
@@ -25385,17 +25853,67 @@
         case "card":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", ref: fileInputRef, onChange: handleImageUpload, accept: "image/*", style: { display: "none" } }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "upload-button", onClick: () => fileInputRef.current?.click(), children: "Upload Preview Image" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Show Image" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.showImage, onChange: (e) => handleChange("showImage", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
+            component.showImage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", ref: fileInputRef, onChange: handleImageUpload, accept: "image/*", style: { display: "none" } }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "upload-button", onClick: () => fileInputRef.current?.click(), children: "Upload Preview Image" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Public URL required for final email." })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Public URL required for final email." })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Text Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalTextColor, onChange: (e) => handleChange("useGlobalTextColor", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "10",
+                    max: "100",
+                    value: component.width,
+                    onChange: (e) => handleChange("width", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+              ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Title" }),
@@ -25420,28 +25938,104 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
               ] })
             ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Button Color" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("useGlobalButtonAccentColor", e.target.checked) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+              ] })
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Background" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.buttonBackgroundColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonBackgroundColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.buttonBackgroundColor, disabled: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonBackgroundColor, disabled: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) })
+              ] })
+            ] })
+          ] });
+        case "emoji":
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Emoji Character" }),
+              isEditingEmoji ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "input",
+                {
+                  ref: emojiInputRef,
+                  type: "text",
+                  value: component.character,
+                  onChange: (e) => handleChange("character", e.target.value),
+                  onBlur: () => setIsEditingEmoji(false),
+                  maxLength: 2
+                }
+              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "button",
+                {
+                  className: "emoji-picker-button",
+                  onClick: () => setIsEditingEmoji(true),
+                  children: component.character
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Click to edit. Press Cmd+Ctrl+Space (Mac) or Win+. (Windows) for system emoji picker." })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Size (px)" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "range",
+                    min: "16",
+                    max: "200",
+                    value: component.fontSize,
+                    onChange: (e) => handleChange("fontSize", e.target.value)
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "number",
+                    min: "1",
+                    className: "slider-value-input",
+                    value: component.fontSize,
+                    onChange: (e) => handleChange("fontSize", e.target.value)
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "left" ? "active" : "", onClick: () => handleChange("alignment", "left"), children: "L" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "center" ? "active" : "", onClick: () => handleChange("alignment", "center"), children: "C" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
               ] })
             ] })
           ] });
         case "layout":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Select an element inside a column to edit its properties." });
+          const layoutComponent = component;
+          const widths = layoutComponent.columnWidths || layoutComponent.columns.map(() => 100 / layoutComponent.columns.length);
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "You have selected a layout container. You can move or delete it, or style its background and borders below." }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "column-widths-info", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Column Widths" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "column-widths-display", children: [
+                widths.map((w) => w.toFixed(1)).join("% / "),
+                "%"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleChange("columnWidths", void 0), className: "reset-button", children: "Reset Column Sizes" })
+            ] })
+          ] });
         default:
           return null;
       }
     };
-    const showContainerEditor = component.type !== "layout";
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "properties-panel", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
         component.type.charAt(0).toUpperCase() + component.type.slice(1),
         " Properties"
       ] }),
       renderProperties(),
-      showContainerEditor && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
+      component && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
     ] });
   };
   var ExportModal = ({ html, onClose }) => {
@@ -25461,35 +26055,65 @@
     ] }) });
   };
   var App = () => {
-    const [components, setComponents] = (0, import_react.useState)([]);
+    const initialState = {
+      components: [],
+      emailSettings: {
+        backgroundColor: "#f8f9fa",
+        contentBackgroundColor: "#ffffff",
+        fontFamily: "Arial",
+        accentColor: "#0d6efd",
+        textColor: "#212529"
+      }
+    };
+    const { state, setState, undo, redo, canUndo, canRedo } = useHistory(initialState);
+    const { components, emailSettings } = state;
     const [selectedId, setSelectedId] = (0, import_react.useState)(null);
     const [showExportModal, setShowExportModal] = (0, import_react.useState)(false);
     const [draggingComponentType, setDraggingComponentType] = (0, import_react.useState)(null);
-    const [emailSettings, setEmailSettings] = (0, import_react.useState)({
-      backgroundColor: "#f8f9fa",
-      contentBackgroundColor: "#ffffff"
-    });
-    const handleUpdateComponent = (id, updatedComponent) => {
-      const recursiveUpdate = (items) => {
-        return items.map((c) => {
-          if (c.id === id)
-            return updatedComponent;
-          if (c.type === "layout") {
-            return {
-              ...c,
-              columns: c.columns.map((col) => ({
-                ...col,
-                components: recursiveUpdate(col.components)
-              }))
-            };
-          }
-          return c;
-        });
+    const [favoriteComponents, setFavoriteComponents] = (0, import_react.useState)([]);
+    (0, import_react.useEffect)(() => {
+      try {
+        const savedFavorites = localStorage.getItem("emailEditorFavorites");
+        if (savedFavorites) {
+          setFavoriteComponents(JSON.parse(savedFavorites));
+        }
+      } catch (error) {
+        console.error("Failed to load favorites from localStorage:", error);
+        localStorage.removeItem("emailEditorFavorites");
+      }
+    }, []);
+    (0, import_react.useEffect)(() => {
+      try {
+        localStorage.setItem("emailEditorFavorites", JSON.stringify(favoriteComponents));
+      } catch (error) {
+        console.error("Failed to save favorites to localStorage:", error);
+      }
+    }, [favoriteComponents]);
+    (0, import_react.useEffect)(() => {
+      const handleKeyDown = (event) => {
+        const target = event.target;
+        if (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) {
+          return;
+        }
+        const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+        const undoKeyPressed = (isMac ? event.metaKey : event.ctrlKey) && !event.shiftKey && event.key === "z";
+        const redoKeyPressed = isMac ? event.metaKey && event.shiftKey && event.key === "z" || event.metaKey && event.key === "y" : event.ctrlKey && event.key === "y";
+        if (undoKeyPressed) {
+          event.preventDefault();
+          undo();
+        } else if (redoKeyPressed) {
+          event.preventDefault();
+          redo();
+        }
       };
-      setComponents((prev) => recursiveUpdate(prev));
-    };
-    const handleUpdateEmailSettings = (updatedSettings) => {
-      setEmailSettings((prev) => ({ ...prev, ...updatedSettings }));
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [undo, redo]);
+    const setComponents = (updater) => {
+      const newComponents = updater(components);
+      setState({ ...state, components: newComponents });
     };
     const findComponent = (id, items) => {
       for (const component of items) {
@@ -25504,6 +26128,100 @@
         }
       }
       return null;
+    };
+    const handleUpdateComponent = (id, updatedComponent) => {
+      const recursiveUpdate = (items) => {
+        return items.map((c) => {
+          if (c.id === id)
+            return { ...c, ...updatedComponent };
+          if (c.type === "layout") {
+            return {
+              ...c,
+              columns: c.columns.map((col) => ({
+                ...col,
+                components: recursiveUpdate(col.components)
+              }))
+            };
+          }
+          return c;
+        });
+      };
+      setComponents((prev) => recursiveUpdate(prev));
+    };
+    const handleDeleteComponent = (idToDelete) => {
+      if (selectedId === idToDelete) {
+        setSelectedId(null);
+      }
+      setComponents((prev) => recursiveDelete(prev, idToDelete));
+    };
+    const handleUpdateEmailSettings = (updatedSettings) => {
+      setState({ ...state, emailSettings: { ...emailSettings, ...updatedSettings } });
+    };
+    const handleDuplicateComponent = (idToDuplicate) => {
+      const regenerateIds = (component) => {
+        const newComponent = JSON.parse(JSON.stringify(component));
+        const newId = (prefix) => `${prefix}_${Date.now()}_${Math.round(Math.random() * 1e6)}`;
+        newComponent.id = newId("comp");
+        newComponent.isLocked = false;
+        if (newComponent.type === "layout") {
+          newComponent.columns.forEach((col) => {
+            col.id = newId("col");
+            col.components = col.components.map((c) => regenerateIds(c));
+          });
+        } else if (newComponent.type === "social") {
+          newComponent.links.forEach((link) => link.id = newId("social"));
+        } else if (newComponent.type === "button-group") {
+          newComponent.buttons.forEach((btn) => btn.id = newId("btn"));
+        }
+        return newComponent;
+      };
+      const findAndInsertDuplicate = (items) => {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.id === idToDuplicate) {
+            const duplicate = regenerateIds(item);
+            const newItems = [...items];
+            newItems.splice(i + 1, 0, duplicate);
+            return newItems;
+          }
+          if (item.type === "layout") {
+            for (let j = 0; j < item.columns.length; j++) {
+              const col = item.columns[j];
+              const updatedComponents = findAndInsertDuplicate(col.components);
+              if (updatedComponents !== col.components) {
+                const newLayout = { ...item };
+                newLayout.columns = [...item.columns];
+                newLayout.columns[j] = { ...col, components: updatedComponents };
+                const newItems = [...items];
+                newItems[i] = newLayout;
+                return newItems;
+              }
+            }
+          }
+        }
+        return items;
+      };
+      setComponents((prev) => findAndInsertDuplicate(prev));
+    };
+    const handleFavoriteComponent = (idToFavorite) => {
+      const componentToFavorite = findComponent(idToFavorite, components);
+      if (componentToFavorite) {
+        const defaultName = componentToFavorite.type === "layout" ? componentToFavorite.layoutType.replace("-", " ") : componentToFavorite.type;
+        const favoriteCopy = JSON.parse(JSON.stringify(componentToFavorite));
+        const newFavorite = {
+          id: `fav_${Date.now()}`,
+          name: defaultName.charAt(0).toUpperCase() + defaultName.slice(1),
+          // Use the component type as the default name
+          component: favoriteCopy
+        };
+        setFavoriteComponents((prev) => [...prev, newFavorite]);
+      }
+    };
+    const handleRemoveFavorite = (idToRemove) => {
+      setFavoriteComponents((prev) => prev.filter((fav) => fav.id !== idToRemove));
+    };
+    const handleRenameFavorite = (idToRename, newName) => {
+      setFavoriteComponents((prev) => prev.map((fav) => fav.id === idToRename ? { ...fav, name: newName } : fav));
     };
     const selectedComponent = findComponent(selectedId, components);
     const getContainerStyleString = (component) => {
@@ -25534,12 +26252,20 @@
         const h = imgComponent.naturalHeight || defaultH;
         return `https://via.placeholder.com/${Math.round(w)}x${Math.round(h)}.png?text=Image`;
       };
-      const containerStyles = component.type !== "layout" && component.containerStyle ? getContainerStyleString(component) : "";
+      const containerStyles = getContainerStyleString(component);
       switch (component.type) {
         case "text":
-        case "footer":
-          const textContent = `<div style="padding:10px; font-family:${component.fontFamily}, sans-serif; font-size:${component.fontSize}px; color:${component.color}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${textContent}</td></tr></table>`;
+        case "footer": {
+          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
+          const textContent = `<div style="padding:10px; font-family:${finalFontFamily}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+          const textWrapper = `
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" style="width:${component.width}%;">
+                <tr><td>${textContent}</td></tr>
+            </table>
+        `;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${textWrapper}</td></tr></table>`;
+        }
         case "image":
           const imgTag = `<img src="${component.src || getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
           const imageTdStyle = `padding: 10px 0; ${containerStyles}`;
@@ -25562,7 +26288,8 @@
           const logoTdStyle = `padding: 10px; ${containerStyles}`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${logoTdStyle}"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
         case "button":
-          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${component.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+          const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
+          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
         case "button-group":
           const buttonsHtml = component.buttons.map(
@@ -25574,10 +26301,11 @@
           const spacerContent = `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${spacerContent}</td></tr></table>`;
         case "divider":
+          const finalDividerColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.color;
           const dividerItself = `
             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:${component.width}%;">
                 <tr>
-                    <td style="font-size: 0; line-height: 0; border-top: ${component.height}px solid ${component.color};">&nbsp;</td>
+                    <td style="font-size: 0; line-height: 0; border-top: ${component.height}px solid ${finalDividerColor};">&nbsp;</td>
                 </tr>
             </table>
         `;
@@ -25592,28 +26320,49 @@
         case "video":
           const videoTdStyle = `padding:10px 0; ${containerStyles}`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${videoTdStyle}"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${component.imageUrl || getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
-        case "card":
-          const cardContent = `
+        case "card": {
+          const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
+          const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const imageRow = component.showImage ? `<tr><td><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>` : "";
+          const cardContentTable = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
-                <tr><td><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="100%"></td></tr>
-                <tr><td style="padding: 15px; color: ${component.textColor}; font-family: sans-serif;">
+                ${imageRow}
+                <tr><td style="padding: 15px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">
                     <h4 style="margin:0 0 5px; font-size: 18px;">${component.title}</h4>
                     <p style="margin:0 0 15px; font-size: 14px;">${component.content}</p>
-                    <table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" bgcolor="${component.buttonBackgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>
+                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:bold; font-size: 16px;">${component.buttonText}</a></td></tr></table>
                 </td></tr>
             </table>
         `;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${cardContent}</td></tr></table>`;
+          const cardWrapper = `
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" style="width:${component.width}%;">
+              <tr>
+                <td>${cardContentTable}</td>
+              </tr>
+            </table>
+        `;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${cardWrapper}</td></tr></table>`;
+        }
+        case "emoji":
+          const emojiTdStyle = `padding: 10px; font-size: ${component.fontSize}px; line-height: 1; text-align: ${component.alignment}; ${containerStyles}`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${emojiTdStyle}"><span style="font-size: ${component.fontSize}px; line-height: 1;">${component.character}</span></td></tr></table>`;
         case "layout":
           const columnCount = component.columns.length;
-          const columnWidth = `${100 / columnCount}%`;
-          const columnsHtml = component.columns.map((col) => {
+          const columnWidths = component.columnWidths || Array(columnCount).fill(100 / columnCount);
+          const columnsHtml = component.columns.map((col, index) => {
             const content = col.components.map((c) => generateComponentHtml(c)).join("\n");
-            return `<td valign="top" width="${columnWidth}" class="column-wrapper" style="padding: 5px;">${content}</td>`;
+            return `<td valign="top" width="${columnWidths[index]}%" class="column-wrapper" style="padding: 5px;">${content}</td>`;
           }).join("");
           return `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                <tr>${columnsHtml}</tr>
+              <tr>
+                <td style="${containerStyles}">
+                  <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                      <tr>${columnsHtml}</tr>
+                  </table>
+                </td>
+              </tr>
             </table>
         `;
         default:
@@ -25626,7 +26375,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
+<meta charSet="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Your Email</title>
 <style>
@@ -25659,10 +26408,25 @@
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "header", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "Email Editor" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "header-actions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowExportModal(true), children: "Export HTML" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "history-controls", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: undo, disabled: !canUndo, children: "Undo" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: redo, disabled: !canRedo, children: "Redo" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowExportModal(true), children: "Export HTML" })
+        ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { className: "main-container", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ComponentsPanel, { setDraggingComponentType }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+          ComponentsPanel,
+          {
+            setDraggingComponentType,
+            setSelectedId,
+            favorites: favoriteComponents,
+            onRemoveFavorite: handleRemoveFavorite,
+            onRenameFavorite: handleRenameFavorite
+          }
+        ),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
           Canvas,
           {
@@ -25672,7 +26436,11 @@
             setSelectedId,
             emailSettings,
             draggingComponentType,
-            setDraggingComponentType
+            setDraggingComponentType,
+            onUpdate: handleUpdateComponent,
+            onDuplicate: handleDuplicateComponent,
+            onDelete: handleDeleteComponent,
+            onFavorite: handleFavoriteComponent
           }
         ),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
