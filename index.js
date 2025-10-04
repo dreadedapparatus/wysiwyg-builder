@@ -24499,9 +24499,9 @@
     }, [canUndo, currentIndex]);
     const redo = (0, import_react.useCallback)(() => {
       if (canRedo) {
-        setCurrentIndex(currentIndex + 1);
+        setCurrentIndex(currentIndex - 1);
       }
-    }, [canRedo, currentIndex]);
+    }, [canUndo, currentIndex]);
     return { state, setState, undo, redo, canUndo, canRedo };
   };
   var DEFAULT_COMPONENT_LIST = [
@@ -26232,7 +26232,7 @@
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-footer", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: handleCopy, children: copied ? "Copied!" : "Copy to Clipboard" }) })
     ] }) });
   };
-  var TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onRename, setConfirmation }) => {
+  var TemplatesModal = ({ templates, onClose, onSave, onLoadState, onDelete, onRename, onOverwrite, setConfirmation }) => {
     const [newTemplateName, setNewTemplateName] = (0, import_react.useState)("");
     const [editingId, setEditingId] = (0, import_react.useState)(null);
     const [editText, setEditText] = (0, import_react.useState)("");
@@ -26283,6 +26283,12 @@
       setConfirmation({
         message: "Are you sure you want to delete this template?",
         onConfirm: () => onDelete(id)
+      });
+    };
+    const handleOverwrite = (id) => {
+      setConfirmation({
+        message: "This will overwrite the template with your current design. Are you sure?",
+        onConfirm: () => onOverwrite(id)
       });
     };
     const handleRename = () => {
@@ -26347,6 +26353,7 @@
               }, children: template.name }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "template-actions", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleLoad(template.state), className: "load-btn", children: "Load" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleOverwrite(template.id), className: "overwrite-btn", children: "Overwrite" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleDelete(template.id), className: "delete-btn", children: "Delete" })
               ] })
             ] }, template.id);
@@ -26461,18 +26468,32 @@
     ];
     return lines.join("\r\n");
   };
-  var App = () => {
-    const initialState = {
-      components: [],
-      emailSettings: {
-        backgroundColor: "#f8f9fa",
-        contentBackgroundColor: "#ffffff",
-        fontFamily: "Arial",
-        accentColor: "#0d6efd",
-        textColor: "#212529"
+  var defaultAppState = {
+    components: [],
+    emailSettings: {
+      backgroundColor: "#f8f9fa",
+      contentBackgroundColor: "#ffffff",
+      fontFamily: "Arial",
+      accentColor: "#0d6efd",
+      textColor: "#212529"
+    }
+  };
+  var getInitialState = () => {
+    try {
+      const autosavedStateJSON = localStorage.getItem("emailEditorAutosave");
+      if (autosavedStateJSON) {
+        const parsedState = JSON.parse(autosavedStateJSON);
+        if (parsedState && Array.isArray(parsedState.components) && parsedState.emailSettings) {
+          return parsedState;
+        }
       }
-    };
-    const { state, setState, undo, redo, canUndo, canRedo } = useHistory(initialState);
+    } catch (e) {
+      console.error("Failed to parse autosaved state from localStorage", e);
+    }
+    return defaultAppState;
+  };
+  var App = () => {
+    const { state, setState, undo, redo, canUndo, canRedo } = useHistory(getInitialState());
     const { components, emailSettings } = state;
     const [selectedId, setSelectedId] = (0, import_react.useState)(null);
     const [showExportModal, setShowExportModal] = (0, import_react.useState)(false);
@@ -26523,6 +26544,32 @@
         console.error("Failed to save templates to localStorage:", error);
       }
     }, [templates]);
+    (0, import_react.useEffect)(() => {
+      const handler = setTimeout(() => {
+        try {
+          if (state.components.length > 0 || JSON.stringify(state.emailSettings) !== JSON.stringify(defaultAppState.emailSettings)) {
+            localStorage.setItem("emailEditorAutosave", JSON.stringify(state));
+          }
+        } catch (error) {
+          console.error("Failed to autosave state to localStorage:", error);
+        }
+      }, 500);
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [state]);
+    (0, import_react.useEffect)(() => {
+      const handleBeforeUnload = (event) => {
+        if (state.components.length > 0) {
+          event.preventDefault();
+          event.returnValue = "";
+        }
+      };
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      };
+    }, [state.components]);
     (0, import_react.useEffect)(() => {
       try {
         const orderToSave = componentList.map((item) => item.type);
@@ -26687,6 +26734,13 @@
     };
     const handleRenameTemplate = (id, newName) => {
       setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, name: newName } : t));
+    };
+    const handleOverwriteTemplate = (id) => {
+      const currentAppState = {
+        components: JSON.parse(JSON.stringify(components)),
+        emailSettings: JSON.parse(JSON.stringify(emailSettings))
+      };
+      setTemplates((prev) => prev.map((t) => t.id === id ? { ...t, state: currentAppState } : t));
     };
     const handleExportData = () => {
       try {
@@ -27072,6 +27126,7 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
           onLoadState: handleLoadState,
           onDelete: handleDeleteTemplate,
           onRename: handleRenameTemplate,
+          onOverwrite: handleOverwriteTemplate,
           setConfirmation
         }
       ),

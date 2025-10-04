@@ -1335,7 +1335,8 @@ input:checked + .slider:before {
     color: var(--md-sys-color-on-surface-variant);
 }
 
-.template-actions button.load-btn {
+.template-actions button.load-btn,
+.template-actions button.overwrite-btn {
     background-color: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
     border-color: var(--md-sys-color-secondary-container);
