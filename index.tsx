@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 // --- TYPES ---
@@ -2495,7 +2496,7 @@ const PreviewMode = ({ html, onExit }) => {
     }, [onExit]);
 
 
-    return (
+    return createPortal(
         <div className="preview-overlay">
             <header className="preview-header">
                 <div className="preview-header-left">
@@ -2533,7 +2534,8 @@ const PreviewMode = ({ html, onExit }) => {
                     <iframe ref={iframeRef} src="about:blank" title="Email Preview" frameBorder="0" />
                 </div>
             </main>
-        </div>
+        </div>,
+        document.body
     );
 };
 
