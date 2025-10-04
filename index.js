@@ -25385,7 +25385,7 @@
         return;
       handleChange("videoUrl", url);
       const fetchVideoThumbnail = async (videoUrl) => {
-        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu.be\/)([a-zA-Z0-9_-]{11})/;
         const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)/;
         const isYoutube = youtubeRegex.test(videoUrl);
         const isVimeo = vimeoRegex.test(videoUrl);
@@ -26363,6 +26363,61 @@
       ] })
     ] }) });
   };
+  var PreviewMode = ({ html, onExit }) => {
+    const [device, setDevice] = (0, import_react.useState)("desktop");
+    const deviceWidths = {
+      desktop: "100%",
+      tablet: "768px",
+      mobile: "375px"
+    };
+    (0, import_react.useEffect)(() => {
+      const handleKeyDown = (event) => {
+        if (event.key === "Escape") {
+          onExit();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [onExit]);
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "preview-overlay", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "preview-header", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-header-left", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Preview" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "device-toggle-buttons", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              className: device === "desktop" ? "active" : "",
+              onClick: () => setDevice("desktop"),
+              title: "Desktop",
+              children: "\u{1F5A5}\uFE0F"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              className: device === "tablet" ? "active" : "",
+              onClick: () => setDevice("tablet"),
+              title: "Tablet",
+              children: "\u{1F4BB}"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              className: device === "mobile" ? "active" : "",
+              onClick: () => setDevice("mobile"),
+              title: "Mobile",
+              children: "\u{1F4F1}"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-header-right", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: onExit, children: "Back to Editor" }) })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", { className: "preview-content", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-iframe-wrapper", style: { maxWidth: deviceWidths[device] }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", { srcDoc: html, title: "Email Preview", frameBorder: "0" }) }) })
+    ] });
+  };
   var generateIcsContent = (component) => {
     const formatDate = (isoString) => {
       if (!isoString)
@@ -26413,6 +26468,7 @@
     const [confirmation, setConfirmation] = (0, import_react.useState)(null);
     const importInputRef = (0, import_react.useRef)(null);
     const [componentList, setComponentList] = (0, import_react.useState)(DEFAULT_COMPONENT_LIST);
+    const [isPreviewing, setIsPreviewing] = (0, import_react.useState)(false);
     (0, import_react.useEffect)(() => {
       try {
         const savedFavorites = localStorage.getItem("emailEditorFavorites");
@@ -26462,6 +26518,8 @@
     }, [componentList]);
     (0, import_react.useEffect)(() => {
       const handleKeyDown = (event) => {
+        if (isPreviewing)
+          return;
         const target = event.target;
         if (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) {
           return;
@@ -26481,7 +26539,7 @@
       return () => {
         window.removeEventListener("keydown", handleKeyDown);
       };
-    }, [undo, redo]);
+    }, [undo, redo, isPreviewing]);
     const setComponents = (updater) => {
       const newComponents = updater(components);
       setState({ ...state, components: newComponents });
@@ -26738,7 +26796,7 @@
         case "button":
           const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
           const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
-          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px; display: block;">${component.text}</a></td></tr></table>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
         case "calendar":
           const finalCalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
@@ -26747,13 +26805,22 @@
           const dataUri = `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`;
           const calButtonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalCalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${dataUri}" download="event.ics" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalCalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${calButtonContent}</td></tr></table>`;
-        case "button-group":
+        case "button-group": {
           const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const buttonsHtml = component.buttons.map(
-            (btn) => `<td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;"><a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: ${finalGroupFontFamily}, sans-serif;">${btn.text}</a></td>`
-          ).join('<td width="10">&nbsp;</td>');
+            (btn) => `<td class="button-group-cell" align="center" style="padding: 5px;">
+                <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+                    <tr>
+                        <td align="center" bgcolor="${btn.backgroundColor}" style="padding:10px 20px; border-radius:5px;">
+                            <a href="${btn.href}" target="_blank" style="color:${btn.textColor}; text-decoration:none; font-family: ${finalGroupFontFamily}, sans-serif; font-weight: bold; display: block;">${btn.text}</a>
+                        </td>
+                    </tr>
+                </table>
+            </td>`
+          ).join("");
           const buttonGroupTdStyle = `padding:10px; ${containerStyles}`;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="button-group-inner-table" style="margin: 0 auto;"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
+        }
         case "spacer":
           const spacerContent = `<div style="height:${component.height}px; line-height:${component.height}px; font-size:1px;">&nbsp;</div>`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${spacerContent}</td></tr></table>`;
@@ -26832,34 +26899,82 @@
       const body = components.map(generateComponentHtml).join("\n");
       return `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-<meta charSet="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
 <title>Your Email</title>
+<!--[if mso]>
 <style>
+  table {border-collapse:collapse;border-spacing:0;border:none;margin:0;}
+  div, td {padding:0;}
+  div {margin:0 !important;}
+</style>
+<noscript>
+  <xml>
+    <o:OfficeDocumentSettings>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+  </xml>
+</noscript>
+<![endif]-->
+<style>
+body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; word-spacing: normal; }
+table, td { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+
 @media screen and (max-width: 600px) {
+    .email-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
     .column-wrapper {
         display: block !important;
         width: 100% !important;
+        padding: 10px 0 !important;
+        box-sizing: border-box !important;
+    }
+    .button-group-inner-table {
+        width: 100% !important;
+    }
+    .button-group-inner-table tr,
+    .button-group-cell {
+        display: block !important;
+        width: 100% !important;
+    }
+    .button-group-cell {
+        padding: 5px 0 !important;
     }
 }
 </style>
 </head>
 <body style="margin:0; padding:0; background-color:${emailSettings.backgroundColor};">
-  <table border="0" cellpadding="0" cellspacing="0" width="100%">
-    <tr>
-      <td>
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse:collapse; background-color:${emailSettings.contentBackgroundColor};">
+  <div role="article" aria-roledescription="email" lang="en" style="background-color:${emailSettings.backgroundColor};">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td align="center" style="padding: 0;">
+          <!--[if (gte mso 9)|(IE)]>
+          <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
           <tr>
-            <td style="padding: 20px;">
-              ${body}
-            </td>
+          <td>
+          <![endif]-->
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="background-color:${emailSettings.contentBackgroundColor}; max-width: 600px;">
+            <tr>
+              <td style="padding: 20px;">
+                ${body}
+              </td>
+            </tr>
+          </table>
+          <!--[if (gte mso 9)|(IE)]>
+          </td>
           </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+          </table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+  </div>
 </body>
 </html>
     `;
@@ -26887,6 +27002,7 @@
             )
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "header-button", onClick: () => setShowTemplatesModal(true), children: "Templates" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "header-button", onClick: () => setIsPreviewing(true), children: "Preview" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowExportModal(true), children: "Export HTML" })
         ] })
       ] }),
@@ -26930,6 +27046,7 @@
           }
         )
       ] }),
+      isPreviewing && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PreviewMode, { html: generateEmailHtml(), onExit: () => setIsPreviewing(false) }),
       showExportModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExportModal, { html: generateEmailHtml(), onClose: () => setShowExportModal(false) }),
       showTemplatesModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
         TemplatesModal,
