@@ -25042,62 +25042,103 @@
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const isEditingTitle = editingField?.componentId === component.id && editingField?.field === "title";
           const isEditingContent = editingField?.componentId === component.id && editingField?.field === "content";
-          const cardContent = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { backgroundColor: component.backgroundColor, padding: "15px", borderRadius: "5px", fontFamily: finalCardFontFamily }, children: [
-            component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { display: "flex", width: "100%", minHeight: "200px" }, children: [
+          const cardOuterStyle = {
+            width: `${component.width}%`,
+            margin: "0 auto",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column"
+          };
+          const cardInnerStyle = {
+            backgroundColor: component.backgroundColor,
+            padding: "15px",
+            borderRadius: "5px",
+            fontFamily: finalCardFontFamily,
+            display: "flex",
+            flexDirection: "column",
+            flexGrow: 1
+          };
+          const imageWrapperStyle = {
+            position: "relative",
+            width: `${component.imageWidth}%`,
+            paddingTop: "75%",
+            // Aspect Ratio 4:3
+            margin: "0 auto 15px",
+            overflow: "hidden",
+            backgroundColor: "#f0f0f0",
+            borderRadius: "4px"
+          };
+          const imageStyle = {
+            position: "absolute",
+            top: "0",
+            left: "0",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block"
+          };
+          const titleWrapperStyle = {
+            minHeight: "3em",
+            // Reserve space for ~2 lines of title text
+            margin: "0 0 5px"
+          };
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: cardOuterStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: cardInnerStyle, children: [
+            component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageWrapperStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", margin: 0, minHeight: 0, borderRadius: 0, border: "none" }, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Card Image" })
-            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: { maxWidth: "100%", display: "block", width: `${component.imageWidth}%`, margin: "0 auto" } })),
-            isEditingTitle ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              InlineEditor,
-              {
-                html: component.title,
-                onUpdate: (newHtml) => {
-                  onUpdate(component.id, { ...component, title: newHtml });
-                  setEditingField(null);
-                },
-                tagName: "h4",
-                style: { margin: "10px 0 5px", color: finalCardTextColor }
-              }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "h4",
-              {
-                style: { margin: "10px 0 5px", color: finalCardTextColor },
-                onDoubleClick: () => {
-                  if (!component.isLocked) {
-                    setSelectedId(component.id);
-                    setEditingField({ componentId: component.id, field: "title" });
-                  }
-                },
-                dangerouslySetInnerHTML: { __html: component.title }
-              }
-            ),
-            isEditingContent ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              InlineEditor,
-              {
-                html: component.content,
-                onUpdate: (newHtml) => {
-                  onUpdate(component.id, { ...component, content: newHtml });
-                  setEditingField(null);
-                },
-                tagName: "p",
-                style: { margin: "0 0 10px", color: finalCardTextColor }
-              }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-              "p",
-              {
-                style: { margin: "0 0 10px", color: finalCardTextColor },
-                onDoubleClick: () => {
-                  if (!component.isLocked) {
-                    setSelectedId(component.id);
-                    setEditingField({ componentId: component.id, field: "content" });
-                  }
-                },
-                dangerouslySetInnerHTML: { __html: component.content }
-              }
-            ),
-            component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px", fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }, children: component.buttonText }) })
-          ] });
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.width}%`, margin: "0 auto" }, children: cardContent });
+            ] }) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageWrapperStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: imageStyle }) })),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { flexGrow: 1, color: finalCardTextColor, display: "flex", flexDirection: "column" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: titleWrapperStyle, children: isEditingTitle ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                InlineEditor,
+                {
+                  html: component.title,
+                  onUpdate: (newHtml) => {
+                    onUpdate(component.id, { ...component, title: newHtml });
+                    setEditingField(null);
+                  },
+                  tagName: "h4",
+                  style: { margin: 0, fontSize: "1.2em" }
+                }
+              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "h4",
+                {
+                  style: { margin: 0, fontSize: "1.2em" },
+                  onDoubleClick: () => {
+                    if (!component.isLocked) {
+                      setSelectedId(component.id);
+                      setEditingField({ componentId: component.id, field: "title" });
+                    }
+                  },
+                  dangerouslySetInnerHTML: { __html: component.title }
+                }
+              ) }),
+              isEditingContent ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                InlineEditor,
+                {
+                  html: component.content,
+                  onUpdate: (newHtml) => {
+                    onUpdate(component.id, { ...component, content: newHtml });
+                    setEditingField(null);
+                  },
+                  tagName: "p",
+                  style: { margin: "0 0 10px", flexGrow: 1 }
+                }
+              ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "p",
+                {
+                  style: { margin: "0 0 10px", flexGrow: 1 },
+                  onDoubleClick: () => {
+                    if (!component.isLocked) {
+                      setSelectedId(component.id);
+                      setEditingField({ componentId: component.id, field: "content" });
+                    }
+                  },
+                  dangerouslySetInnerHTML: { __html: component.content }
+                }
+              )
+            ] }),
+            component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { textAlign: "center", marginTop: "auto" }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: component.buttonHref, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", padding: "10px 20px", backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: "none", borderRadius: "5px", fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }, children: component.buttonText }) })
+          ] }) });
         }
         case "emoji":
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { padding: "10px", textAlign: component.alignment }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { style: { fontSize: `${component.fontSize}px`, lineHeight: 1 }, children: component.character }) });
@@ -25173,13 +25214,26 @@
       })();
       const isDropTargetBefore = isMyTargetForDrop && dragOverTarget.position === "before";
       const isDropTargetAfter = isMyTargetForDrop && dragOverTarget.position === "after";
+      const isCardInColumn = targetPath.type === "column" && component.type === "card";
       const classNames = [
         "canvas-component",
         isLayout ? "layout-component-wrapper" : "",
         selectedId === component.id ? "selected" : "",
         draggingId === component.id ? "dragging" : ""
       ].filter(Boolean).join(" ");
+      const renderItemStyles = {};
+      if (isCardInColumn) {
+        renderItemStyles.display = "flex";
+        renderItemStyles.flexDirection = "column";
+        renderItemStyles.flexGrow = 1;
+      }
       const containerStyles = getContainerInlineStyles(component);
+      const containerWrapperStyles = { ...containerStyles };
+      if (isCardInColumn) {
+        containerWrapperStyles.display = "flex";
+        containerWrapperStyles.flexDirection = "column";
+        containerWrapperStyles.flexGrow = 1;
+      }
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.default.Fragment, { children: [
         isDropTargetBefore && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DropPlaceholder, { componentType: draggingComponentType }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
@@ -25192,6 +25246,7 @@
             onDragEnd: !isLayout ? handleDragEnd : void 0,
             onDragOver: !isLayout ? handleItemDragOver : void 0,
             onDrop: !isLayout ? (e) => handleDrop(e, dragOverTarget) : void 0,
+            style: renderItemStyles,
             children: isLayout ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-component-content", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 "div",
@@ -25286,7 +25341,7 @@
                   onDelete2(component.id);
                 }, children: "\u{1F5D1}\uFE0F" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerStyles, children: renderContentComponent(component) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerWrapperStyles, children: renderContentComponent(component) })
             ] })
           }
         ),
