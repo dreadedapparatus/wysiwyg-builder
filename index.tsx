@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -570,12 +569,16 @@ const ColumnResizer: React.FC<{
 const InlineEditor = ({ html, onUpdate, tagName = 'div', style, className }: {
     html: string;
     onUpdate: (newHtml: string) => void;
-    // FIX: The type `keyof React.JSX.IntrinsicElements` was too broad, including SVG elements which are incompatible with the component's props (e.g., `contentEditable`). Constraining it to `keyof HTMLElementTagNameMap` resolves the type errors.
-    tagName?: keyof HTMLElementTagNameMap;
+    // FIX: The type `keyof HTMLElementTagNameMap` is too broad, causing a "union type too complex" error from TypeScript.
+    // Constraining it to only the tags used in this component (`div`, `p`, `h4`) resolves the issue.
+    tagName?: 'div' | 'p' | 'h4';
     style?: React.CSSProperties;
     className?: string;
 }) => {
-    const editorRef = useRef<HTMLElement>(null);
+    // FIX: Changed ref type from HTMLElement to HTMLDivElement to resolve type incompatibility with the default 'div' tag.
+    // The error `Type 'RefObject<HTMLElement>' is not assignable to type 'Ref<HTMLDivElement>'` occurs because
+    // the dynamic <Tag /> defaults to 'div', which expects a more specific ref type.
+    const editorRef = useRef<HTMLDivElement>(null);
     const initialHtml = useRef(html); // Store initial value for Escape key
 
     useEffect(() => {
@@ -980,54 +983,107 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const isEditingTitle = editingField?.componentId === component.id && editingField?.field === 'title';
           const isEditingContent = editingField?.componentId === component.id && editingField?.field === 'content';
 
-          const cardContent = (
-              <div style={{ backgroundColor: component.backgroundColor, padding: '15px', borderRadius: '5px', fontFamily: finalCardFontFamily }}>
-                  {component.showImage && (
-                    (!component.previewSrc && !component.src) ? (
-                        <div className="empty-image-placeholder" style={{ display: 'flex', width: '100%', minHeight: '200px' }}>
-                            <div className="icon">🃏</div>
-                            <span>Card Image</span>
-                        </div>
-                    ) : (
-                        <img src={component.previewSrc || component.src} alt={component.alt} style={{ maxWidth: '100%', display: 'block', width: `${component.imageWidth}%`, margin: '0 auto' }} />
-                    )
-                  )}
-                  {isEditingTitle ? (
-                    <InlineEditor
-                      html={component.title}
-                      onUpdate={(newHtml) => { onUpdate(component.id, { ...component, title: newHtml }); setEditingField(null); }}
-                      tagName="h4"
-                      style={{ margin: '10px 0 5px', color: finalCardTextColor }}
-                    />
-                  ) : (
-                    <h4
-                      style={{ margin: '10px 0 5px', color: finalCardTextColor }}
-                      onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title' }); }}}
-                      dangerouslySetInnerHTML={{__html: component.title }}
-                    />
-                  )}
-                  {isEditingContent ? (
-                    <InlineEditor
-                      html={component.content}
-                      onUpdate={(newHtml) => { onUpdate(component.id, { ...component, content: newHtml }); setEditingField(null); }}
-                      tagName="p"
-                      style={{ margin: '0 0 10px', color: finalCardTextColor }}
-                    />
-                  ) : (
-                     <p
-                       style={{ margin: '0 0 10px', color: finalCardTextColor }}
-                       onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content' }); }}}
-                       dangerouslySetInnerHTML={{__html: component.content }}
-                     />
-                  )}
-                  {component.showButton && (
-                    <div style={{ textAlign: 'center' }}>
-                         <a href={component.buttonHref} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: 'none', borderRadius: '5px', fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }}>{component.buttonText}</a>
-                    </div>
-                  )}
+          const cardOuterStyle: React.CSSProperties = {
+              width: `${component.width}%`,
+              margin: '0 auto',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+          };
+
+          const cardInnerStyle: React.CSSProperties = {
+              backgroundColor: component.backgroundColor,
+              padding: '15px',
+              borderRadius: '5px',
+              fontFamily: finalCardFontFamily,
+              display: 'flex',
+              flexDirection: 'column',
+              flexGrow: 1,
+          };
+
+          const imageWrapperStyle: React.CSSProperties = {
+              position: 'relative',
+              width: `${component.imageWidth}%`,
+              paddingTop: '75%', // Aspect Ratio 4:3
+              margin: '0 auto 15px',
+              overflow: 'hidden',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '4px',
+          };
+
+          const imageStyle: React.CSSProperties = {
+              position: 'absolute',
+              top: '0',
+              left: '0',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+          };
+
+          const titleWrapperStyle: React.CSSProperties = {
+              minHeight: '3em', // Reserve space for ~2 lines of title text
+              margin: '0 0 5px',
+          };
+
+
+          return (
+              <div style={cardOuterStyle}>
+                  <div style={cardInnerStyle}>
+                      {component.showImage && (
+                          (!component.previewSrc && !component.src) ? (
+                              <div style={imageWrapperStyle}>
+                                  <div className="empty-image-placeholder" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', margin: 0, minHeight: 0, borderRadius: 0, border: 'none' }}>
+                                      <div className="icon">🃏</div>
+                                      <span>Card Image</span>
+                                  </div>
+                              </div>
+                          ) : (
+                              <div style={imageWrapperStyle}>
+                                  <img src={component.previewSrc || component.src} alt={component.alt} style={imageStyle} />
+                              </div>
+                          )
+                      )}
+                      <div style={{ flexGrow: 1, color: finalCardTextColor, display: 'flex', flexDirection: 'column' }}>
+                          <div style={titleWrapperStyle}>
+                              {isEditingTitle ? (
+                                  <InlineEditor
+                                      html={component.title}
+                                      onUpdate={(newHtml) => { onUpdate(component.id, { ...component, title: newHtml }); setEditingField(null); }}
+                                      tagName="h4"
+                                      style={{ margin: 0, fontSize: '1.2em' }}
+                                  />
+                              ) : (
+                                  <h4
+                                      style={{ margin: 0, fontSize: '1.2em' }}
+                                      onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title' }); } }}
+                                      dangerouslySetInnerHTML={{ __html: component.title }}
+                                  />
+                              )}
+                          </div>
+                          {isEditingContent ? (
+                              <InlineEditor
+                                  html={component.content}
+                                  onUpdate={(newHtml) => { onUpdate(component.id, { ...component, content: newHtml }); setEditingField(null); }}
+                                  tagName="p"
+                                  style={{ margin: '0 0 10px', flexGrow: 1 }}
+                              />
+                          ) : (
+                              <p
+                                  style={{ margin: '0 0 10px', flexGrow: 1 }}
+                                  onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content' }); } }}
+                                  dangerouslySetInnerHTML={{ __html: component.content }}
+                              />
+                          )}
+                      </div>
+                      {component.showButton && (
+                          <div style={{ textAlign: 'center', marginTop: 'auto' }}>
+                              <a href={component.buttonHref} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: finalCardButtonBgColor, color: component.buttonTextColor, textDecoration: 'none', borderRadius: '5px', fontWeight: component.buttonFontWeight, fontFamily: finalButtonFontFamily }}>{component.buttonText}</a>
+                          </div>
+                      )}
+                  </div>
               </div>
           );
-          return <div style={{ width: `${component.width}%`, margin: '0 auto' }}>{cardContent}</div>;
       }
       case 'emoji':
           return (
@@ -1130,6 +1186,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
 
     const isDropTargetBefore = isMyTargetForDrop && dragOverTarget.position === 'before';
     const isDropTargetAfter = isMyTargetForDrop && dragOverTarget.position === 'after';
+    
+    const isCardInColumn = targetPath.type === 'column' && component.type === 'card';
 
     const classNames = [
         'canvas-component',
@@ -1138,7 +1196,20 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
         draggingId === component.id ? 'dragging' : '',
     ].filter(Boolean).join(' ');
     
+    const renderItemStyles: React.CSSProperties = {};
+    if (isCardInColumn) {
+        renderItemStyles.display = 'flex';
+        renderItemStyles.flexDirection = 'column';
+        renderItemStyles.flexGrow = 1;
+    }
+    
     const containerStyles = getContainerInlineStyles(component);
+    const containerWrapperStyles: React.CSSProperties = { ...containerStyles };
+    if (isCardInColumn) {
+        containerWrapperStyles.display = 'flex';
+        containerWrapperStyles.flexDirection = 'column';
+        containerWrapperStyles.flexGrow = 1;
+    }
     
     return (
         <React.Fragment>
@@ -1151,6 +1222,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                 onDragEnd={!isLayout ? handleDragEnd : undefined}
                 onDragOver={!isLayout ? handleItemDragOver : undefined}
                 onDrop={!isLayout ? (e) => handleDrop(e, dragOverTarget!) : undefined}
+                style={renderItemStyles}
             >
               {isLayout ? (
                  <div className="layout-component-content">
@@ -1269,7 +1341,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                        }
                      </div>
                     )}
-                    <div style={containerStyles}>
+                    <div style={containerWrapperStyles}>
                         {renderContentComponent(component as ContentComponent)}
                     </div>
                 </>
