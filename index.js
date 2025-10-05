@@ -24791,7 +24791,7 @@
         case "video":
           return { ...baseProps, type, videoUrl: "#", imageUrl: "", alt: "Video thumbnail", width: "100", alignment: "center" };
         case "card":
-          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", showImage: true, imageWidth: "100", showButton: true, fontFamily: "Arial", useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: "100", buttonFontWeight: "bold", buttonFontFamily: "Arial", useGlobalButtonFont: true };
+          return { ...baseProps, type, src: "", alt: "Card Image", title: "Card Title", content: "This is some card content. Describe the item or feature here.", buttonText: "Learn More", buttonHref: "#", backgroundColor: "#f8f9fa", textColor: "#212529", buttonBackgroundColor: "#0d6efd", buttonTextColor: "#ffffff", showImage: true, imageWidth: "100", showButton: true, fontFamily: "Arial", useGlobalFont: true, useGlobalButtonAccentColor: true, width: "100", buttonFontWeight: "bold", buttonFontFamily: "Arial", useGlobalButtonFont: true };
         case "logo":
           return { ...baseProps, type, src: "", alt: "Company Logo", width: "150", alignment: "center" };
         case "footer":
@@ -25039,7 +25039,7 @@
           const isInColumn = targetPath?.type === "column";
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
-          const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const finalCardTextColor = component.textColor;
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const isEditingTitle = editingField?.componentId === component.id && editingField?.field === "title";
           const isEditingContent = editingField?.componentId === component.id && editingField?.field === "content";
@@ -26211,18 +26211,11 @@
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Text Color" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalTextColor, onChange: (e) => handleChange("useGlobalTextColor", e.target.checked) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-              ] })
-            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
               ] })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
@@ -27095,7 +27088,7 @@
         case "card": {
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
-          const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const finalCardTextColor = component.textColor;
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const imageHtml = component.showImage ? `
             <tr>
