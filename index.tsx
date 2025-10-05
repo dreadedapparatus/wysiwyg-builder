@@ -190,7 +190,6 @@ interface CardComponent extends BaseComponent {
   showButton: boolean;
   fontFamily: string;
   useGlobalFont: boolean;
-  useGlobalTextColor: boolean;
   useGlobalButtonAccentColor: boolean;
   width: string;
   buttonFontWeight: 'normal' | 'bold';
@@ -659,7 +658,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'video':
         return { ...baseProps, type, videoUrl: '#', imageUrl: '', alt: 'Video thumbnail', width: '100', alignment: 'center' };
       case 'card':
-        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, imageWidth: '100', showButton: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalTextColor: true, useGlobalButtonAccentColor: true, width: '100', buttonFontWeight: 'bold', buttonFontFamily: 'Arial', useGlobalButtonFont: true };
+        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, imageWidth: '100', showButton: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalButtonAccentColor: true, width: '100', buttonFontWeight: 'bold', buttonFontFamily: 'Arial', useGlobalButtonFont: true };
       case 'logo':
         return { ...baseProps, type, src: '', alt: 'Company Logo', width: '150', alignment: 'center' };
       case 'footer':
@@ -979,7 +978,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const isInColumn = targetPath?.type === 'column';
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
-          const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const finalCardTextColor = component.textColor;
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
           const isEditingTitle = editingField?.componentId === component.id && editingField?.field === 'title';
           const isEditingContent = editingField?.componentId === component.id && editingField?.field === 'content';
@@ -2268,18 +2267,11 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
                         </select>
                     </div>
-                    <div className="global-toggle-group">
-                        <label>Use Global Text Color</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalTextColor} onChange={(e) => handleChange('useGlobalTextColor', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
                      <div className="form-group">
                         <label>Text Color</label>
                          <div className="color-input-group">
-                             <input type="color" value={component.textColor} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('textColor', e.target.value)} />
-                             <input type="text" value={component.textColor} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                             <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                             <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
                         </div>
                     </div>
                     <div className="form-group">
@@ -3288,7 +3280,7 @@ const App = () => {
       case 'card': {
         const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
         const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
-        const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+        const finalCardTextColor = component.textColor;
         const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
         
         const imageHtml = component.showImage ? `
