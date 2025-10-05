@@ -24915,7 +24915,7 @@
         " here"
       ] }) });
     };
-    const renderContentComponent = (component) => {
+    const renderContentComponent = (component, targetPath) => {
       switch (component.type) {
         case "text":
         case "footer": {
@@ -25036,6 +25036,7 @@
           ] }) });
         }
         case "card": {
+          const isInColumn = targetPath?.type === "column";
           const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
@@ -25045,9 +25046,9 @@
           const cardOuterStyle = {
             width: `${component.width}%`,
             margin: "0 auto",
-            height: "100%",
             display: "flex",
-            flexDirection: "column"
+            flexDirection: "column",
+            ...isInColumn && { height: "100%" }
           };
           const cardInnerStyle = {
             backgroundColor: component.backgroundColor,
@@ -25056,38 +25057,42 @@
             fontFamily: finalCardFontFamily,
             display: "flex",
             flexDirection: "column",
-            flexGrow: 1
-          };
-          const imageWrapperStyle = {
-            position: "relative",
-            width: `${component.imageWidth}%`,
-            paddingTop: "75%",
-            // Aspect Ratio 4:3
-            margin: "0 auto 15px",
-            overflow: "hidden",
-            backgroundColor: "#f0f0f0",
-            borderRadius: "4px"
-          };
-          const imageStyle = {
-            position: "absolute",
-            top: "0",
-            left: "0",
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block"
+            ...isInColumn && { flexGrow: 1 }
           };
           const titleWrapperStyle = {
-            minHeight: "3em",
+            margin: "0 0 5px",
+            ...isInColumn && { minHeight: "3em" }
             // Reserve space for ~2 lines of title text
-            margin: "0 0 5px"
+          };
+          const contentContainerStyle = {
+            color: finalCardTextColor,
+            display: "flex",
+            flexDirection: "column",
+            ...isInColumn && { flexGrow: 1 }
+          };
+          const paragraphStyle = {
+            margin: "0 0 10px",
+            ...isInColumn && { flexGrow: 1 }
           };
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: cardOuterStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: cardInnerStyle, children: [
-            component.showImage && (!component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageWrapperStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", margin: 0, minHeight: 0, borderRadius: 0, border: "none" }, children: [
+            component.showImage && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: { width: `${component.imageWidth}%`, margin: "0 auto 15px", textAlign: "center" }, children: !component.previewSrc && !component.src ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty-image-placeholder", style: { width: "100%" }, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "icon", children: "\u{1F0CF}" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Card Image" })
-            ] }) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: imageWrapperStyle, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: component.previewSrc || component.src, alt: component.alt, style: imageStyle }) })),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { flexGrow: 1, color: finalCardTextColor, display: "flex", flexDirection: "column" }, children: [
+            ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+              "img",
+              {
+                src: component.previewSrc || component.src,
+                alt: component.alt,
+                style: {
+                  maxWidth: "100%",
+                  height: "auto",
+                  display: "block",
+                  margin: "0 auto",
+                  borderRadius: "4px"
+                }
+              }
+            ) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: contentContainerStyle, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: titleWrapperStyle, children: isEditingTitle ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 InlineEditor,
                 {
@@ -25121,12 +25126,12 @@
                     setEditingField(null);
                   },
                   tagName: "p",
-                  style: { margin: "0 0 10px", flexGrow: 1 }
+                  style: paragraphStyle
                 }
               ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 "p",
                 {
-                  style: { margin: "0 0 10px", flexGrow: 1 },
+                  style: paragraphStyle,
                   onDoubleClick: () => {
                     if (!component.isLocked) {
                       setSelectedId(component.id);
@@ -25341,7 +25346,7 @@
                   onDelete2(component.id);
                 }, children: "\u{1F5D1}\uFE0F" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerWrapperStyles, children: renderContentComponent(component) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: containerWrapperStyles, children: renderContentComponent(component, targetPath) })
             ] })
           }
         ),
@@ -27092,26 +27097,60 @@
           const finalCardFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalCardTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
           const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
-          const imageRow = component.showImage ? `<tr><td align="center" style="font-size: 0; line-height: 0; padding-bottom: 15px;"><img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block;" width="${component.imageWidth}%"></td></tr>` : "";
-          const buttonHtml = component.showButton ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;"><tr><td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:${component.buttonFontWeight}; font-size: 16px; font-family: ${finalButtonFontFamily}, sans-serif;">${component.buttonText}</a></td></tr></table>` : "";
+          const imageHtml = component.showImage ? `
+            <tr>
+                <td align="center" style="padding: 15px 15px 0;">
+                    <img src="${component.src || getPlaceholderSrc(component, 600, 400)}" alt="${component.alt}" style="max-width:100%; display:block; width:${component.imageWidth}%; margin: 0 auto;" width="${component.imageWidth}%">
+                </td>
+            </tr>
+        ` : "";
+          const titleHtml = `
+            <tr>
+                <td style="padding: 15px 15px 5px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">
+                    <h4 style="margin:0; font-size: 18px; line-height: 1.3; min-height: 2.6em;">${component.title}</h4>
+                </td>
+            </tr>
+        `;
+          const contentHtml = `
+            <tr>
+                <td style="padding: 0 15px 15px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">
+                    <p style="margin:0; font-size: 14px;">${component.content}</p>
+                </td>
+            </tr>
+        `;
+          const spacerHtml = `<tr style="height: 100%;"><td style="font-size:0; line-height:0;" height="100%">&nbsp;</td></tr>`;
+          const buttonHtml = component.showButton ? `
+            <tr>
+                <td align="center" style="padding: 0 15px 15px;">
+                    <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+                        <tr>
+                            <td align="center" bgcolor="${finalCardButtonBgColor}" style="padding:10px 20px; border-radius:5px;">
+                                <a href="${component.buttonHref}" target="_blank" style="color:${component.buttonTextColor}; text-decoration:none; font-weight:${component.buttonFontWeight}; font-size: 16px; font-family: ${finalButtonFontFamily}, sans-serif;">${component.buttonText}</a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        ` : "";
           const cardContentTable = `
-            <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="background-color:${component.backgroundColor}; border-radius: 5px; overflow: hidden;">
-                ${imageRow}
-                <tr><td style="padding: 15px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">
-                    <h4 style="margin:0 0 5px; font-size: 18px;">${component.title}</h4>
-                    <p style="margin:0 0 15px; font-size: 14px;">${component.content}</p>
-                    ${buttonHtml}
-                </td></tr>
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" height="100%" style="background-color:${component.backgroundColor}; border-radius: 5px;">
+                ${imageHtml}
+                ${titleHtml}
+                ${contentHtml}
+                ${spacerHtml}
+                ${buttonHtml}
             </table>
         `;
           const cardWrapper = `
-            <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" style="width:${component.width}%;">
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" height="100%" style="width:${component.width}%;">
               <tr>
-                <td>${cardContentTable}</td>
+                <td valign="top" height="100%" style="${containerStyles}">
+                    ${cardContentTable}
+                </td>
               </tr>
             </table>
         `;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${cardWrapper}</td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" height="100%"><tr><td valign="top" height="100%">${cardWrapper}</td></tr></table>`;
         }
         case "emoji":
           const emojiTdStyle = `padding: 10px; font-size: ${component.fontSize}px; line-height: 1; text-align: ${component.alignment}; ${containerStyles}`;
