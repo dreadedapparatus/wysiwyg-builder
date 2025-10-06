@@ -26,6 +26,10 @@ interface ContainerStyle {
   borderRight?: BorderSide;
   borderBottom?: BorderSide;
   borderLeft?: BorderSide;
+  paddingTop?: string;
+  paddingRight?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
 }
 
 interface BaseComponent {
@@ -632,48 +636,56 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
   
   const createNewComponent = (type: CreationComponentType): EmailComponent => {
     const id = `comp_${Date.now()}`;
-    const baseProps: Pick<BaseComponent, 'id' | 'containerStyle' | 'isLocked'> = { id, containerStyle: { backgroundColor: 'transparent' }, isLocked: false };
+    const baseProps: Pick<BaseComponent, 'id' | 'isLocked'> = { id, isLocked: false };
+    const transparentBg = { 
+      backgroundColor: 'transparent', 
+      paddingTop: '10', 
+      paddingRight: '10', 
+      paddingBottom: '10', 
+      paddingLeft: '10' 
+    };
+
     switch (type) {
       case 'text':
-        return { ...baseProps, type, content: 'This is a new text block. Click to edit!', fontSize: '16', color: '#000000', fontFamily: 'Arial', textAlign: 'left', useGlobalFont: true, useGlobalTextColor: true, width: '100' };
+        return { ...baseProps, type, content: 'This is a new text block. Click to edit!', fontSize: '16', color: '#000000', fontFamily: 'Arial', textAlign: 'left', useGlobalFont: true, useGlobalTextColor: true, width: '100', containerStyle: { ...transparentBg } };
       case 'image':
-        return { ...baseProps, type, src: '', alt: 'Placeholder', borderRadius: '0', width: '100', alignment: 'center' };
+        return { ...baseProps, type, src: '', alt: 'Placeholder', borderRadius: '0', width: '100', alignment: 'center', containerStyle: { ...transparentBg, paddingRight: '0', paddingLeft: '0' } };
       case 'button':
-        return { ...baseProps, type, text: 'Click Me', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal', useGlobalAccentColor: true, fontFamily: 'Arial', useGlobalFont: true };
+        return { ...baseProps, type, text: 'Click Me', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal', useGlobalAccentColor: true, fontFamily: 'Arial', useGlobalFont: true, containerStyle: { ...transparentBg } };
       case 'calendar':
         const startDate = new Date();
         const endDate = new Date();
         endDate.setHours(startDate.getHours() + 1);
-        return { ...baseProps, type, text: 'Add to Calendar', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal', useGlobalAccentColor: true, fontFamily: 'Arial', useGlobalFont: true, eventTitle: 'My Event', startTime: startDate.toISOString().slice(0, 16), endTime: endDate.toISOString().slice(0, 16), location: 'Online', description: 'This is an event description.' };
+        return { ...baseProps, type, text: 'Add to Calendar', backgroundColor: '#0d6efd', textColor: '#ffffff', fontSize: '16', fontWeight: 'normal', useGlobalAccentColor: true, fontFamily: 'Arial', useGlobalFont: true, eventTitle: 'My Event', startTime: startDate.toISOString().slice(0, 16), endTime: endDate.toISOString().slice(0, 16), location: 'Online', description: 'This is an event description.', containerStyle: { ...transparentBg } };
       case 'spacer':
-        return { ...baseProps, type, height: '20' };
+        return { ...baseProps, type, height: '20', containerStyle: { backgroundColor: 'transparent' } };
       case 'divider':
-        return { ...baseProps, type, color: '#cccccc', height: '1', padding: '10', width: '100', useGlobalAccentColor: true };
+        return { ...baseProps, type, color: '#cccccc', height: '1', padding: '10', width: '100', useGlobalAccentColor: true, containerStyle: { backgroundColor: 'transparent' } };
       case 'social':
         return { ...baseProps, type, alignment: 'center', links: [
             { id: `social_${Date.now()}_1`, platform: 'facebook', url: '#' },
             { id: `social_${Date.now()}_2`, platform: 'twitter', url: '#' },
             { id: `social_${Date.now()}_3`, platform: 'instagram', url: '#' },
-        ]};
+        ], containerStyle: { ...transparentBg }};
       case 'video':
-        return { ...baseProps, type, videoUrl: '#', imageUrl: '', alt: 'Video thumbnail', width: '100', alignment: 'center' };
+        return { ...baseProps, type, videoUrl: '#', imageUrl: '', alt: 'Video thumbnail', width: '100', alignment: 'center', containerStyle: { ...transparentBg, paddingRight: '0', paddingLeft: '0' } };
       case 'card':
-        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, imageWidth: '100', showButton: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalButtonAccentColor: true, width: '100', buttonFontWeight: 'bold', buttonFontFamily: 'Arial', useGlobalButtonFont: true };
+        return { ...baseProps, type, src: '', alt: 'Card Image', title: 'Card Title', content: 'This is some card content. Describe the item or feature here.', buttonText: 'Learn More', buttonHref: '#', backgroundColor: '#f8f9fa', textColor: '#212529', buttonBackgroundColor: '#0d6efd', buttonTextColor: '#ffffff', showImage: true, imageWidth: '100', showButton: true, fontFamily: 'Arial', useGlobalFont: true, useGlobalButtonAccentColor: true, width: '100', buttonFontWeight: 'bold', buttonFontFamily: 'Arial', useGlobalButtonFont: true, containerStyle: { backgroundColor: 'transparent' } };
       case 'logo':
-        return { ...baseProps, type, src: '', alt: 'Company Logo', width: '150', alignment: 'center' };
+        return { ...baseProps, type, src: '', alt: 'Company Logo', width: '150', alignment: 'center', containerStyle: { ...transparentBg } };
       case 'footer':
-        return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: '12', color: '#888888', fontFamily: 'Arial', textAlign: 'center', useGlobalFont: true, useGlobalTextColor: true, width: '100' };
+        return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: '12', color: '#888888', fontFamily: 'Arial', textAlign: 'center', useGlobalFont: true, useGlobalTextColor: true, width: '100', containerStyle: { ...transparentBg } };
       case 'button-group':
         return { ...baseProps, type, alignment: 'center', fontFamily: 'Arial', useGlobalFont: true, buttons: [
             { id: `btn_${Date.now()}_1`, text: 'Button 1', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff' },
             { id: `btn_${Date.now()}_2`, text: 'Button 2', href: '#', backgroundColor: '#6c757d', textColor: '#ffffff' },
-        ]};
+        ], containerStyle: { ...transparentBg }};
       case 'emoji':
-        return { ...baseProps, type, character: '🎉', fontSize: '48', alignment: 'center' };
+        return { ...baseProps, type, character: '🎉', fontSize: '48', alignment: 'center', containerStyle: { ...transparentBg } };
       case 'two-column':
-        return { ...baseProps, id, type: 'layout', layoutType: 'two-column', columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }] };
+        return { ...baseProps, id, type: 'layout', layoutType: 'two-column', columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }], containerStyle: { backgroundColor: 'transparent' } };
       case 'three-column':
-        return { ...baseProps, id, type: 'layout', layoutType: 'three-column', columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }, { id: `col_${Date.now()}_3`, components: [] }] };
+        return { ...baseProps, id, type: 'layout', layoutType: 'three-column', columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }, { id: `col_${Date.now()}_3`, components: [] }], containerStyle: { backgroundColor: 'transparent' } };
       default:
         throw new Error('Unknown component type');
     }
@@ -808,7 +820,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
           const isEditing = editingField?.componentId === component.id && editingField?.field === 'content';
-          const textStyles = { padding: '10px', fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign, width: '100%' };
+          const textStyles = { fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign, width: '100%' };
           
           const textContent = isEditing ? (
               <InlineEditor
@@ -837,7 +849,6 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'image': {
         const imageContainerStyle: React.CSSProperties = {
           textAlign: component.alignment,
-          padding: '10px 0'
         };
 
         if (!component.previewSrc && !component.src) {
@@ -878,7 +889,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'logo':
         if (!component.previewSrc && !component.src) {
             return (
-              <div style={{ textAlign: component.alignment, padding: '10px' }}>
+              <div style={{ textAlign: component.alignment }}>
                 <div className="empty-image-placeholder" style={{ width: `${component.width}px` }}>
                   <div className="icon">🏢</div>
                   <span>Logo</span>
@@ -886,14 +897,14 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
               </div>
             );
           }
-          return <div style={{ textAlign: component.alignment, padding: '10px' }}><img src={component.previewSrc || component.src} alt={component.alt} style={{ width: `${component.width}px`, maxWidth: '100%', display: 'inline-block' }} /></div>;
+          return <div style={{ textAlign: component.alignment }}><img src={component.previewSrc || component.src} alt={component.alt} style={{ width: `${component.width}px`, maxWidth: '100%', display: 'inline-block' }} /></div>;
       case 'button':
       case 'calendar':
           const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
           const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const href = component.type === 'button' ? component.href : '#'; // Calendar link is handled in export
           return (
-          <div style={{ padding: '10px', textAlign: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
               <a href={href} target="_blank" rel="noopener noreferrer" style={{
               display: 'inline-block',
               padding: '10px 20px',
@@ -912,7 +923,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'button-group':
           const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           return (
-            <div style={{ padding: '10px', textAlign: component.alignment }}>
+            <div style={{ textAlign: component.alignment }}>
                 {component.buttons.map(btn => (
                      <a key={btn.id} href={btn.href} target="_blank" rel="noopener noreferrer" style={{
                         display: 'inline-block',
@@ -942,7 +953,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           );
       case 'social':
           return (
-            <div style={{ padding: '10px', textAlign: component.alignment }}>
+            <div style={{ textAlign: component.alignment }}>
               {component.links.map(link => (
                   <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '0 5px' }}>
                       <img src={SOCIAL_ICONS[link.platform]} alt={link.platform} width="32" height="32" />
@@ -951,7 +962,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
             </div>
           );
        case 'video': {
-            const videoContainerStyle: React.CSSProperties = { padding: '10px 0', textAlign: component.alignment };
+            const videoContainerStyle: React.CSSProperties = { textAlign: component.alignment };
             const videoWrapperStyle: React.CSSProperties = { display: 'inline-block', width: `${component.width}%`, position: 'relative' };
             
             if (!component.previewSrc && !component.imageUrl) {
@@ -1086,7 +1097,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       }
       case 'emoji':
           return (
-            <div style={{ padding: '10px', textAlign: component.alignment }}>
+            <div style={{ textAlign: component.alignment }}>
                 <span style={{ fontSize: `${component.fontSize}px`, lineHeight: 1 }}>
                     {component.character}
                 </span>
@@ -1101,10 +1112,22 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
     const styles: React.CSSProperties = {};
     if (!component.containerStyle) return styles;
 
-    const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
+    const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft, paddingTop, paddingRight, paddingBottom, paddingLeft } = component.containerStyle;
 
     if (backgroundColor && backgroundColor !== 'transparent') {
         styles.backgroundColor = backgroundColor;
+    }
+     if (paddingTop && parseInt(paddingTop) >= 0) {
+        styles.paddingTop = `${paddingTop}px`;
+    }
+    if (paddingRight && parseInt(paddingRight) >= 0) {
+        styles.paddingRight = `${paddingRight}px`;
+    }
+    if (paddingBottom && parseInt(paddingBottom) >= 0) {
+        styles.paddingBottom = `${paddingBottom}px`;
+    }
+    if (paddingLeft && parseInt(paddingLeft) >= 0) {
+        styles.paddingLeft = `${paddingLeft}px`;
     }
     if (borderTop?.width && parseInt(borderTop.width) > 0) {
         styles.borderTop = `${borderTop.width}px solid ${borderTop.color}`;
@@ -1416,18 +1439,60 @@ const ContainerStyleEditor = ({ component, onUpdate }) => {
         };
         onUpdate(component.id, { ...component, containerStyle: newStyle });
     };
+    
+    const handlePaddingChange = (side, value) => {
+        const newStyle = {
+            ...containerStyle,
+            [side]: value
+        };
+        onUpdate(component.id, { ...component, containerStyle: newStyle });
+    };
 
     const borderSides = ['borderTop', 'borderRight', 'borderBottom', 'borderLeft'];
+    const paddingSides = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
     return (
-        <div className="container-style-editor">
-            <h4>Container Styles</h4>
+        <div className="container-style-editor-content">
             <div className="form-group">
                 <label>Background Color</label>
                 <div className="color-input-group">
-                    <input type="color" value={containerStyle.backgroundColor || '#ffffff'} onChange={(e) => handleStyleChange('backgroundColor', e.target.value)} />
-                    <input type="text" value={containerStyle.backgroundColor || '#ffffff'} onChange={(e) => handleStyleChange('backgroundColor', e.target.value)} />
+                    <input
+                        type="color"
+                        value={(containerStyle.backgroundColor && containerStyle.backgroundColor !== 'transparent') ? containerStyle.backgroundColor : '#ffffff'}
+                        onChange={(e) => handleStyleChange('backgroundColor', e.target.value)}
+                    />
+                    <input
+                        type="text"
+                        value={containerStyle.backgroundColor || ''}
+                        onChange={(e) => handleStyleChange('backgroundColor', e.target.value)}
+                        placeholder="transparent"
+                    />
+                    <button
+                        className="transparent-btn"
+                        onClick={() => handleStyleChange('backgroundColor', 'transparent')}
+                        title="Set background to transparent"
+                    >
+                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    </button>
                 </div>
+            </div>
+
+            <div className="padding-editor">
+                <label>Padding</label>
+                {paddingSides.map(side => (
+                    <div key={side} className="padding-row">
+                        <span>{side.replace('padding', '')}</span>
+                        <div className="padding-inputs">
+                            <input
+                                type="number"
+                                min="0"
+                                value={containerStyle[side] || '0'}
+                                onChange={(e) => handlePaddingChange(side, e.target.value)}
+                            />
+                            <span>px</span>
+                        </div>
+                    </div>
+                ))}
             </div>
             
             <div className="border-editor">
@@ -1456,6 +1521,40 @@ const ContainerStyleEditor = ({ component, onUpdate }) => {
     );
 };
 
+const CollapsibleSection = ({ title, children, defaultCollapsed = false }) => {
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+  const handleToggle = () => setIsCollapsed(!isCollapsed);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleToggle();
+    }
+  };
+
+  return (
+    <div className="collapsible-section">
+      <div 
+        className="collapsible-header" 
+        onClick={handleToggle} 
+        onKeyDown={handleKeyDown}
+        role="button" 
+        tabIndex={0} 
+        aria-expanded={!isCollapsed}
+      >
+        <span>{title}</span>
+        <span className={`collapse-icon ${isCollapsed ? 'collapsed' : ''}`}>▼</span>
+      </div>
+      {!isCollapsed && (
+        <div className="collapsible-content">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings }) => {
     const FONT_FAMILIES = ['Arial', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Times New Roman', 'Georgia', 'Garamond', 'Courier New', 'Brush Script MT'];
@@ -1482,41 +1581,44 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
         return (
             <div className="properties-panel">
                 <h3>Email Settings</h3>
-                <div className="form-group">
-                    <label>Background Color</label>
-                    <div className="color-input-group">
-                         <input type="color" value={emailSettings.backgroundColor} onChange={(e) => onUpdateSettings({ backgroundColor: e.target.value })} />
-                         <input type="text" value={emailSettings.backgroundColor} onChange={(e) => onUpdateSettings({ backgroundColor: e.target.value })} />
+                <CollapsibleSection title="Canvas Colors">
+                    <div className="form-group">
+                        <label>Background Color</label>
+                        <div className="color-input-group">
+                             <input type="color" value={emailSettings.backgroundColor} onChange={(e) => onUpdateSettings({ backgroundColor: e.target.value })} />
+                             <input type="text" value={emailSettings.backgroundColor} onChange={(e) => onUpdateSettings({ backgroundColor: e.target.value })} />
+                        </div>
                     </div>
-                </div>
-                <div className="form-group">
-                    <label>Content Area Color</label>
-                    <div className="color-input-group">
-                         <input type="color" value={emailSettings.contentBackgroundColor} onChange={(e) => onUpdateSettings({ contentBackgroundColor: e.target.value })} />
-                         <input type="text" value={emailSettings.contentBackgroundColor} onChange={(e) => onUpdateSettings({ contentBackgroundColor: e.target.value })} />
+                    <div className="form-group">
+                        <label>Content Area Color</label>
+                        <div className="color-input-group">
+                             <input type="color" value={emailSettings.contentBackgroundColor} onChange={(e) => onUpdateSettings({ contentBackgroundColor: e.target.value })} />
+                             <input type="text" value={emailSettings.contentBackgroundColor} onChange={(e) => onUpdateSettings({ contentBackgroundColor: e.target.value })} />
+                        </div>
                     </div>
-                </div>
-                <h4>Global Styles</h4>
-                 <div className="form-group">
-                    <label>Global Font Family</label>
-                    <select value={emailSettings.fontFamily} onChange={(e) => onUpdateSettings({ fontFamily: e.target.value })}>
-                        {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label>Global Text Color</label>
-                    <div className="color-input-group">
-                         <input type="color" value={emailSettings.textColor} onChange={(e) => onUpdateSettings({ textColor: e.target.value })} />
-                         <input type="text" value={emailSettings.textColor} onChange={(e) => onUpdateSettings({ textColor: e.target.value })} />
+                </CollapsibleSection>
+                <CollapsibleSection title="Global Styles">
+                     <div className="form-group">
+                        <label>Global Font Family</label>
+                        <select value={emailSettings.fontFamily} onChange={(e) => onUpdateSettings({ fontFamily: e.target.value })}>
+                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                        </select>
                     </div>
-                </div>
-                <div className="form-group">
-                    <label>Global Accent Color</label>
-                    <div className="color-input-group">
-                         <input type="color" value={emailSettings.accentColor} onChange={(e) => onUpdateSettings({ accentColor: e.target.value })} />
-                         <input type="text" value={emailSettings.accentColor} onChange={(e) => onUpdateSettings({ accentColor: e.target.value })} />
+                    <div className="form-group">
+                        <label>Global Text Color</label>
+                        <div className="color-input-group">
+                             <input type="color" value={emailSettings.textColor} onChange={(e) => onUpdateSettings({ textColor: e.target.value })} />
+                             <input type="text" value={emailSettings.textColor} onChange={(e) => onUpdateSettings({ textColor: e.target.value })} />
+                        </div>
                     </div>
-                </div>
+                    <div className="form-group">
+                        <label>Global Accent Color</label>
+                        <div className="color-input-group">
+                             <input type="color" value={emailSettings.accentColor} onChange={(e) => onUpdateSettings({ accentColor: e.target.value })} />
+                             <input type="text" value={emailSettings.accentColor} onChange={(e) => onUpdateSettings({ accentColor: e.target.value })} />
+                        </div>
+                    </div>
+                </CollapsibleSection>
             </div>
         );
     }
@@ -1603,47 +1705,32 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
             const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu.be\/)([a-zA-Z0-9_-]{11})/;
             const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)/;
 
-            const isYoutube = youtubeRegex.test(videoUrl);
-            const isVimeo = vimeoRegex.test(videoUrl);
-
-            if (!isYoutube && !isVimeo) {
-                return { thumbnailUrl: null, title: null };
+            const youtubeMatch = videoUrl.match(youtubeRegex);
+            if (youtubeMatch && youtubeMatch[1]) {
+                const videoId = youtubeMatch[1];
+                // Use the high-quality default thumbnail as it's the most reliable option for good quality.
+                const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                return { thumbnailUrl, title: null }; // We can't get the title this way, so we return null.
             }
 
-            try {
-                // Use noembed.com as a CORS-friendly oEmbed proxy for both YouTube and Vimeo
-                const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`);
-                
-                if (!response.ok) {
-                    // If the proxy fails, throw an error to be caught by the catch block.
-                    throw new Error(`noembed.com fetch failed with status: ${response.status}`);
-                }
-                
-                const data = await response.json();
+            // For Vimeo, the oEmbed approach is still necessary.
+            if (vimeoRegex.test(videoUrl)) {
+                 try {
+                    const response = await fetch(`https://jsonlink.io/oembed?url=${encodeURIComponent(videoUrl)}`);
+                    if (!response.ok) throw new Error(`oEmbed proxy fetch failed with status: ${response.status}`);
+                    
+                    const data = await response.json();
+                    if (data.error || !data.thumbnail_url) throw new Error(data.error || 'Thumbnail URL not found in oEmbed response.');
 
-                if (data.error) {
-                    // Handle cases where noembed returns a JSON error (e.g., video not found)
-                    throw new Error(data.error);
+                    return { thumbnailUrl: data.thumbnail_url, title: data.title || null };
+                } catch (error) {
+                    console.error("Failed to fetch Vimeo thumbnail:", error);
+                    return { thumbnailUrl: null, title: null };
                 }
-
-                return { thumbnailUrl: data.thumbnail_url || null, title: data.title || null };
-
-            } catch (error) {
-                console.error("Thumbnail fetch error:", error);
-                
-                // Fallback specifically for YouTube if the proxy fails
-                if (isYoutube) {
-                    const youtubeMatch = videoUrl.match(youtubeRegex);
-                    const videoId = youtubeMatch?.[1];
-                    if (videoId) {
-                        console.log("Using YouTube fallback thumbnail.");
-                        return { thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`, title: 'YouTube Video' };
-                    }
-                }
-                
-                // For Vimeo or if YouTube fallback fails, return null
-                return { thumbnailUrl: null, title: null };
             }
+
+            // Not a supported URL
+            return { thumbnailUrl: null, title: null };
         };
 
         const { thumbnailUrl, title } = await fetchVideoThumbnail(url);
@@ -1708,400 +1795,425 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
             case 'footer':
             return (
                 <>
-                    <div className="global-toggle-group">
-                        <label>Use Global Font</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Family</label>
-                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
-                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Size</label>
-                        <div className="slider-group">
-                            <input
-                                type="range"
-                                min="8"
-                                max="72"
-                                value={component.fontSize}
-                                onChange={(e) => handleChange('fontSize', e.target.value)}
-                            />
-                            <input 
-                                type="number"
-                                min="1"
-                                className="slider-value-input"
-                                value={component.fontSize} 
-                                onChange={(e) => handleChange('fontSize', e.target.value)}
-                            />
+                    <CollapsibleSection title="Typography & Style">
+                        <div className="global-toggle-group">
+                            <label>Use Global Font</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
                         </div>
-                    </div>
-
-                    <div className="form-group-row">
                         <div className="form-group">
-                            <label>Color</label>
-                            <div className="global-toggle-group">
-                                <label>Use Global</label>
-                                <label className="switch">
-                                    <input type="checkbox" checked={component.useGlobalTextColor} onChange={(e) => handleChange('useGlobalTextColor', e.target.checked)} />
-                                    <span className="slider round"></span>
-                                </label>
-                            </div>
-                            <div className="color-input-group">
-                                <input type="color" value={component.color} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('color', e.target.value)} />
-                                <input type="text" value={component.color} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('color', e.target.value)} />
+                            <label>Font Family</label>
+                            <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                                {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Font Size</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="8"
+                                    max="72"
+                                    value={component.fontSize}
+                                    onChange={(e) => handleChange('fontSize', e.target.value)}
+                                />
+                                <input 
+                                    type="number"
+                                    min="1"
+                                    className="slider-value-input"
+                                    value={component.fontSize} 
+                                    onChange={(e) => handleChange('fontSize', e.target.value)}
+                                />
                             </div>
                         </div>
-                         <div className="form-group">
-                            <label>Align</label>
-                            <div className="text-align-group">
-                                <button className={component.textAlign === 'left' ? 'active' : ''} onClick={() => handleChange('textAlign', 'left')}>L</button>
-                                <button className={component.textAlign === 'center' ? 'active' : ''} onClick={() => handleChange('textAlign', 'center')}>C</button>
-                                <button className={component.textAlign === 'right' ? 'active' : ''} onClick={() => handleChange('textAlign', 'right')}>R</button>
+
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Color</label>
+                                <div className="global-toggle-group">
+                                    <label>Use Global</label>
+                                    <label className="switch">
+                                        <input type="checkbox" checked={component.useGlobalTextColor} onChange={(e) => handleChange('useGlobalTextColor', e.target.checked)} />
+                                        <span className="slider round"></span>
+                                    </label>
+                                </div>
+                                <div className="color-input-group">
+                                    <input type="color" value={component.color} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('color', e.target.value)} />
+                                    <input type="text" value={component.color} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('color', e.target.value)} />
+                                </div>
+                            </div>
+                             <div className="form-group">
+                                <label>Align</label>
+                                <div className="text-align-group">
+                                    <button className={component.textAlign === 'left' ? 'active' : ''} onClick={() => handleChange('textAlign', 'left')}>L</button>
+                                    <button className={component.textAlign === 'center' ? 'active' : ''} onClick={() => handleChange('textAlign', 'center')}>C</button>
+                                    <button className={component.textAlign === 'right' ? 'active' : ''} onClick={() => handleChange('textAlign', 'right')}>R</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Content Width (%)</label>
-                        <div className="slider-group">
-                            <input
-                                type="range"
-                                min="10"
-                                max="100"
-                                value={component.width}
-                                onChange={(e) => handleChange('width', e.target.value)}
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Dimensions">
+                        <div className="form-group">
+                            <label>Content Width (%)</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="10"
+                                    max="100"
+                                    value={component.width}
+                                    onChange={(e) => handleChange('width', e.target.value)}
+                                />
+                                <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                            </div>
+                        </div>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Content" defaultCollapsed>
+                        <div className="form-group">
+                            <label>Content</label>
+                            <div className="rich-text-toolbar">
+                                <button onMouseDown={(e) => handleFormat(e, 'bold')}><b>B</b></button>
+                                <button onMouseDown={(e) => handleFormat(e, 'italic')}><i>I</i></button>
+                                <button onMouseDown={(e) => handleFormat(e, 'underline')}><u>U</u></button>
+                                <button onMouseDown={(e) => handleFormat(e, 'createLink')}>🔗</button>
+                                <button onMouseDown={(e) => handleFormat(e, 'unlink')}>🚫</button>
+                                <button onMouseDown={(e) => handleFormat(e, 'insertUnorderedList')}>●</button>
+                                <button onMouseDown={(e) => handleFormat(e, 'insertOrderedList')}>1.</button>
+                            </div>
+                            <div 
+                                className="rich-text-editor"
+                                contentEditable
+                                suppressContentEditableWarning
+                                dangerouslySetInnerHTML={{ __html: component.content }}
+                                onBlur={(e) => handleChange('content', e.target.innerHTML)}
                             />
-                            <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
                         </div>
-                    </div>
-                   
-                    <div className="form-group">
-                        <label>Content</label>
-                        <div className="rich-text-toolbar">
-                            <button onMouseDown={(e) => handleFormat(e, 'bold')}><b>B</b></button>
-                            <button onMouseDown={(e) => handleFormat(e, 'italic')}><i>I</i></button>
-                            <button onMouseDown={(e) => handleFormat(e, 'underline')}><u>U</u></button>
-                            <button onMouseDown={(e) => handleFormat(e, 'createLink')}>🔗</button>
-                            <button onMouseDown={(e) => handleFormat(e, 'unlink')}>🚫</button>
-                            <button onMouseDown={(e) => handleFormat(e, 'insertUnorderedList')}>●</button>
-                            <button onMouseDown={(e) => handleFormat(e, 'insertOrderedList')}>1.</button>
-                        </div>
-                        <div 
-                            className="rich-text-editor"
-                            contentEditable
-                            suppressContentEditableWarning
-                            dangerouslySetInnerHTML={{ __html: component.content }}
-                            onBlur={(e) => handleChange('content', e.target.innerHTML)}
-                        />
-                    </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'image': return (
                 <>
-                    <div className="form-group">
-                        <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
-                        <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload for Preview</button>
-                    </div>
-                    <div className="form-group">
-                        <label>Image URL</label>
-                        <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
-                        <p className="helper-text">The upload above is for preview only. You must provide a public URL here for the final email.</p>
-                    </div>
-                     <div className="form-group">
-                        <label>Link URL (optional)</label>
-                        <input type="url" placeholder="https://example.com" value={component.href || ''} onChange={(e) => handleChange('href', e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label>Alt Text</label>
-                        <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label>Width (%)</label>
-                        <div className="slider-group">
-                            <input
-                                type="range"
-                                min="10"
-                                max="100"
-                                value={component.width}
-                                onChange={(e) => handleChange('width', e.target.value)}
-                            />
-                            <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                    <CollapsibleSection title="Source & Link">
+                        <div className="form-group">
+                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
+                            <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload for Preview</button>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Alignment</label>
-                        <div className="text-align-group">
-                            <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
-                            <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
-                            <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                        <div className="form-group">
+                            <label>Image URL</label>
+                            <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
+                            <p className="helper-text">The upload above is for preview only. You must provide a public URL here for the final email.</p>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Corner Radius (px)</label>
-                        <div className="slider-group">
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={component.borderRadius}
-                                onChange={(e) => handleChange('borderRadius', e.target.value)}
-                            />
-                            <input type="number" min="0" className="slider-value-input" value={component.borderRadius} onChange={(e) => handleChange('borderRadius', e.target.value)} />
+                         <div className="form-group">
+                            <label>Link URL (optional)</label>
+                            <input type="url" placeholder="https://example.com" value={component.href || ''} onChange={(e) => handleChange('href', e.target.value)} />
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>Alt Text</label>
+                            <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
+                        </div>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Appearance">
+                        <div className="form-group">
+                            <label>Width (%)</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="10"
+                                    max="100"
+                                    value={component.width}
+                                    onChange={(e) => handleChange('width', e.target.value)}
+                                />
+                                <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Alignment</label>
+                            <div className="text-align-group">
+                                <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
+                                <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
+                                <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Corner Radius (px)</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={component.borderRadius}
+                                    onChange={(e) => handleChange('borderRadius', e.target.value)}
+                                />
+                                <input type="number" min="0" className="slider-value-input" value={component.borderRadius} onChange={(e) => handleChange('borderRadius', e.target.value)} />
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'logo': return (
                 <>
-                    <div className="form-group">
-                        <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
-                        <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload for Preview</button>
-                    </div>
-                    <div className="form-group">
-                        <label>Image URL</label>
-                        <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
-                        <p className="helper-text">The upload above is for preview only. You must provide a public URL here for the final email.</p>
-                    </div>
-                    <div className="form-group">
-                        <label>Alt Text</label>
-                        <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
-                    </div>
-                     <div className="form-group">
-                        <label>Width (px)</label>
-                        <div className="slider-group">
-                            <input type="range" min="20" max="400" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
-                            <input type="number" min="1" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                    <CollapsibleSection title="Source">
+                        <div className="form-group">
+                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
+                            <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload for Preview</button>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Alignment</label>
-                        <div className="text-align-group">
-                            <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
-                            <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
-                            <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                        <div className="form-group">
+                            <label>Image URL</label>
+                            <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
+                            <p className="helper-text">The upload above is for preview only. You must provide a public URL here for the final email.</p>
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>Alt Text</label>
+                            <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
+                        </div>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Appearance">
+                         <div className="form-group">
+                            <label>Width (px)</label>
+                            <div className="slider-group">
+                                <input type="range" min="20" max="400" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                                <input type="number" min="1" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Alignment</label>
+                            <div className="text-align-group">
+                                <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
+                                <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
+                                <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'button': return (
                 <>
-                    <div className="form-group">
-                        <label>Button Text</label>
-                        <input type="text" value={component.text} onChange={(e) => handleChange('text', e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label>URL</label>
-                        <input type="url" value={component.href} onChange={(e) => handleChange('href', e.target.value)} />
-                    </div>
-                    <div className="global-toggle-group">
-                        <label>Use Global Font</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Family</label>
-                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
-                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Size</label>
-                        <div className="slider-group">
-                            <input
-                                type="range"
-                                min="8"
-                                max="48"
-                                value={component.fontSize}
-                                onChange={(e) => handleChange('fontSize', e.target.value)}
-                            />
-                            <input 
-                                type="number"
-                                min="1"
-                                className="slider-value-input"
-                                value={component.fontSize} 
-                                onChange={(e) => handleChange('fontSize', e.target.value)}
-                            />
+                    <CollapsibleSection title="Content & Link">
+                        <div className="form-group">
+                            <label>Button Text</label>
+                            <input type="text" value={component.text} onChange={(e) => handleChange('text', e.target.value)} />
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Weight</label>
-                        <div className="button-toggle-group">
-                            <button className={component.fontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'normal')}>Normal</button>
-                            <button className={component.fontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'bold')}><b>Bold</b></button>
+                        <div className="form-group">
+                            <label>URL</label>
+                            <input type="url" value={component.href} onChange={(e) => handleChange('href', e.target.value)} />
                         </div>
-                    </div>
-                     <div className="global-toggle-group">
-                        <label>Use Global Accent Color</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    <div className="form-group">
-                        <label>Background Color</label>
-                         <div className="color-input-group">
-                             <input type="color" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
-                             <input type="text" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Styling">
+                        <div className="global-toggle-group">
+                            <label>Use Global Font</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Text Color</label>
-                        <div className="color-input-group">
-                            <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
-                             <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                        <div className="form-group">
+                            <label>Font Family</label>
+                            <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                                {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                            </select>
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>Font Size</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="8"
+                                    max="48"
+                                    value={component.fontSize}
+                                    onChange={(e) => handleChange('fontSize', e.target.value)}
+                                />
+                                <input 
+                                    type="number"
+                                    min="1"
+                                    className="slider-value-input"
+                                    value={component.fontSize} 
+                                    onChange={(e) => handleChange('fontSize', e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Font Weight</label>
+                            <div className="button-toggle-group">
+                                <button className={component.fontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'normal')}>Normal</button>
+                                <button className={component.fontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'bold')}><b>Bold</b></button>
+                            </div>
+                        </div>
+                         <div className="global-toggle-group">
+                            <label>Use Global Accent Color</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                        <div className="form-group">
+                            <label>Background Color</label>
+                             <div className="color-input-group">
+                                 <input type="color" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                                 <input type="text" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Text Color</label>
+                            <div className="color-input-group">
+                                <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                                 <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'calendar': return (
                 <>
-                    <h4>Event Details</h4>
-                    <div className="form-group">
-                        <label>Event Title</label>
-                        <input type="text" value={component.eventTitle} onChange={(e) => handleChange('eventTitle', e.target.value)} />
-                    </div>
-                     <div className="form-group">
-                        <label>Start Time</label>
-                        <input type="datetime-local" value={component.startTime} onChange={(e) => handleChange('startTime', e.target.value)} />
-                    </div>
-                     <div className="form-group">
-                        <label>End Time</label>
-                        <input type="datetime-local" value={component.endTime} onChange={(e) => handleChange('endTime', e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label>Location</label>
-                        <input type="text" value={component.location} onChange={(e) => handleChange('location', e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label>Description</label>
-                        <textarea value={component.description} onChange={(e) => handleChange('description', e.target.value)} />
-                    </div>
-                    <h4>Button Styles</h4>
-                    <div className="form-group">
-                        <label>Button Text</label>
-                        <input type="text" value={component.text} onChange={(e) => handleChange('text', e.target.value)} />
-                    </div>
-                     <div className="global-toggle-group">
-                        <label>Use Global Font</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Family</label>
-                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
-                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Size</label>
-                        <div className="slider-group">
-                            <input type="range" min="8" max="48" value={component.fontSize} onChange={(e) => handleChange('fontSize', e.target.value)} />
-                            <input type="number" min="1" className="slider-value-input" value={component.fontSize} onChange={(e) => handleChange('fontSize', e.target.value)} />
+                    <CollapsibleSection title="Event Details" defaultCollapsed>
+                        <div className="form-group">
+                            <label>Event Title</label>
+                            <input type="text" value={component.eventTitle} onChange={(e) => handleChange('eventTitle', e.target.value)} />
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Weight</label>
-                        <div className="button-toggle-group">
-                            <button className={component.fontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'normal')}>Normal</button>
-                            <button className={component.fontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'bold')}><b>Bold</b></button>
+                         <div className="form-group">
+                            <label>Start Time</label>
+                            <input type="datetime-local" value={component.startTime} onChange={(e) => handleChange('startTime', e.target.value)} />
                         </div>
-                    </div>
-                     <div className="global-toggle-group">
-                        <label>Use Global Accent Color</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    <div className="form-group">
-                        <label>Background Color</label>
-                         <div className="color-input-group">
-                             <input type="color" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
-                             <input type="text" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                         <div className="form-group">
+                            <label>End Time</label>
+                            <input type="datetime-local" value={component.endTime} onChange={(e) => handleChange('endTime', e.target.value)} />
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Text Color</label>
-                        <div className="color-input-group">
-                            <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
-                             <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                        <div className="form-group">
+                            <label>Location</label>
+                            <input type="text" value={component.location} onChange={(e) => handleChange('location', e.target.value)} />
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>Description</label>
+                            <textarea value={component.description} onChange={(e) => handleChange('description', e.target.value)} />
+                        </div>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Button Styling">
+                        <div className="form-group">
+                            <label>Button Text</label>
+                            <input type="text" value={component.text} onChange={(e) => handleChange('text', e.target.value)} />
+                        </div>
+                         <div className="global-toggle-group">
+                            <label>Use Global Font</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                        <div className="form-group">
+                            <label>Font Family</label>
+                            <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                                {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Font Size</label>
+                            <div className="slider-group">
+                                <input type="range" min="8" max="48" value={component.fontSize} onChange={(e) => handleChange('fontSize', e.target.value)} />
+                                <input type="number" min="1" className="slider-value-input" value={component.fontSize} onChange={(e) => handleChange('fontSize', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Font Weight</label>
+                            <div className="button-toggle-group">
+                                <button className={component.fontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'normal')}>Normal</button>
+                                <button className={component.fontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'bold')}><b>Bold</b></button>
+                            </div>
+                        </div>
+                         <div className="global-toggle-group">
+                            <label>Use Global Accent Color</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                        <div className="form-group">
+                            <label>Background Color</label>
+                             <div className="color-input-group">
+                                 <input type="color" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                                 <input type="text" value={component.backgroundColor} disabled={component.useGlobalAccentColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Text Color</label>
+                            <div className="color-input-group">
+                                <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                                 <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'button-group': return (
                 <>
-                    <div className="form-group">
-                        <label>Alignment</label>
-                        <div className="text-align-group">
-                            <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
-                            <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
-                            <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                    <CollapsibleSection title="Layout & Style">
+                        <div className="form-group">
+                            <label>Alignment</label>
+                            <div className="text-align-group">
+                                <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
+                                <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
+                                <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                            </div>
                         </div>
-                    </div>
-                    <div className="global-toggle-group">
-                        <label>Use Global Font</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Family</label>
-                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
-                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
-                        </select>
-                    </div>
-                     <div className="form-group">
-                        <label>Buttons</label>
-                        <div className="button-group-editor">
-                            {component.buttons.map((btn, index) => (
-                                <div key={btn.id} className="button-group-item">
-                                    <input type="text" value={btn.text} onChange={(e) => handleButtonChange(index, 'text', e.target.value)} placeholder="Button Text" />
-                                    <input type="url" value={btn.href} onChange={(e) => handleButtonChange(index, 'href', e.target.value)} placeholder="https://example.com" />
-                                     <div className="color-input-group">
-                                        <input type="color" title="Background Color" value={btn.backgroundColor} onChange={(e) => handleButtonChange(index, 'backgroundColor', e.target.value)} />
-                                        <input type="color" title="Text Color" value={btn.textColor} onChange={(e) => handleButtonChange(index, 'textColor', e.target.value)} />
+                        <div className="global-toggle-group">
+                            <label>Use Global Font</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                        <div className="form-group">
+                            <label>Font Family</label>
+                            <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                                {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                            </select>
+                        </div>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Buttons">
+                         <div className="form-group">
+                            <label>Buttons</label>
+                            <div className="button-group-editor">
+                                {component.buttons.map((btn, index) => (
+                                    <div key={btn.id} className="button-group-item">
+                                        <input type="text" value={btn.text} onChange={(e) => handleButtonChange(index, 'text', e.target.value)} placeholder="Button Text" />
+                                        <input type="url" value={btn.href} onChange={(e) => handleButtonChange(index, 'href', e.target.value)} placeholder="https://example.com" />
+                                         <div className="color-input-group">
+                                            <input type="color" title="Background Color" value={btn.backgroundColor} onChange={(e) => handleButtonChange(index, 'backgroundColor', e.target.value)} />
+                                            <input type="color" title="Text Color" value={btn.textColor} onChange={(e) => handleButtonChange(index, 'textColor', e.target.value)} />
+                                        </div>
+                                        <button onClick={() => removeGroupButton(index)} className="remove-btn">🗑️</button>
                                     </div>
-                                    <button onClick={() => removeGroupButton(index)} className="remove-btn">🗑️</button>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            <button onClick={addGroupButton} className="add-btn">Add Button</button>
                         </div>
-                        <button onClick={addGroupButton} className="add-btn">Add Button</button>
-                    </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'spacer': return (
-                <div className="form-group">
-                    <label>Height (px)</label>
-                    <div className="slider-group">
-                        <input
-                            type="range"
-                            min="10"
-                            max="200"
-                            value={component.height}
-                            onChange={(e) => handleChange('height', e.target.value)}
-                        />
-                        <input
-                            type="number"
-                            min="1"
-                            className="slider-value-input"
-                            value={component.height}
-                            onChange={(e) => handleChange('height', e.target.value)}
-                        />
+                <CollapsibleSection title="Dimensions">
+                    <div className="form-group">
+                        <label>Height (px)</label>
+                        <div className="slider-group">
+                            <input
+                                type="range"
+                                min="10"
+                                max="200"
+                                value={component.height}
+                                onChange={(e) => handleChange('height', e.target.value)}
+                            />
+                            <input
+                                type="number"
+                                min="1"
+                                className="slider-value-input"
+                                value={component.height}
+                                onChange={(e) => handleChange('height', e.target.value)}
+                            />
+                        </div>
                     </div>
-                </div>
+                </CollapsibleSection>
             );
             case 'divider': return (
-                <>
+                <CollapsibleSection title="Styling">
                      <div className="global-toggle-group">
                         <label>Use Global Accent Color</label>
                         <label className="switch">
@@ -2137,283 +2249,303 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
                         </div>
                     </div>
-                </>
+                </CollapsibleSection>
             );
              case 'social': return (
                 <>
-                    <div className="form-group">
-                        <label>Alignment</label>
-                        <div className="text-align-group">
-                            <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
-                            <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
-                            <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                    <CollapsibleSection title="Layout">
+                        <div className="form-group">
+                            <label>Alignment</label>
+                            <div className="text-align-group">
+                                <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
+                                <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
+                                <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                            </div>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Links</label>
-                        <div className="social-link-editor">
-                            {component.links.map((link, index) => (
-                                <div key={link.id} className="social-link-item">
-                                    <select value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)}>
-                                        {SOCIAL_PLATFORMS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-                                    </select>
-                                    <input type="url" value={link.url} onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="https://example.com" />
-                                    <button onClick={() => removeSocialLink(index)} className="remove-btn">🗑️</button>
-                                </div>
-                            ))}
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Links">
+                        <div className="form-group">
+                            <label>Links</label>
+                            <div className="social-link-editor">
+                                {component.links.map((link, index) => (
+                                    <div key={link.id} className="social-link-item">
+                                        <select value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)}>
+                                            {SOCIAL_PLATFORMS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+                                        </select>
+                                        <input type="url" value={link.url} onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="https://example.com" />
+                                        <button onClick={() => removeSocialLink(index)} className="remove-btn">🗑️</button>
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={addSocialLink} className="add-btn">Add Social Link</button>
                         </div>
-                        <button onClick={addSocialLink} className="add-btn">Add Social Link</button>
-                    </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'video': return (
                 <>
-                    <div className="form-group">
-                        <label>Video URL</label>
-                        <input
-                            type="url"
-                            value={component.videoUrl}
-                            onChange={(e) => handleChange('videoUrl', e.target.value)}
-                            onBlur={handleVideoUrlBlur}
-                            placeholder="https://youtube.com/watch?v=..."
-                        />
-                        <p className="helper-text">Enter a YouTube or Vimeo URL to fetch the thumbnail automatically.</p>
-                    </div>
-                    <div className="form-group">
-                        <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
-                        <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload Thumbnail</button>
-                    </div>
-                    <div className="form-group">
-                        <label>Thumbnail Image URL</label>
-                        <input type="url" value={component.imageUrl} onChange={(e) => handleChange('imageUrl', e.target.value)} onBlur={handleUrlBlur} />
-                        <p className="helper-text">The upload above is for preview only. You must provide a public URL.</p>
-                    </div>
-                    <div className="form-group">
-                        <label>Alt Text</label>
-                        <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
-                    </div>
-                     <div className="form-group">
-                        <label>Width (%)</label>
-                        <div className="slider-group">
+                    <CollapsibleSection title="Source">
+                        <div className="form-group">
+                            <label>Video URL</label>
                             <input
-                                type="range"
-                                min="10"
-                                max="100"
-                                value={component.width}
-                                onChange={(e) => handleChange('width', e.target.value)}
+                                type="url"
+                                value={component.videoUrl}
+                                onChange={(e) => handleChange('videoUrl', e.target.value)}
+                                onBlur={handleVideoUrlBlur}
+                                placeholder="https://youtube.com/watch?v=..."
                             />
-                            <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                            <p className="helper-text">Enter a YouTube or Vimeo URL to fetch the thumbnail automatically.</p>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Alignment</label>
-                        <div className="text-align-group">
-                            <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
-                            <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
-                            <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                        <div className="form-group">
+                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
+                            <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload Thumbnail</button>
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>Thumbnail Image URL</label>
+                            <input type="url" value={component.imageUrl} onChange={(e) => handleChange('imageUrl', e.target.value)} onBlur={handleUrlBlur} />
+                            <p className="helper-text">The upload above is for preview only. You must provide a public URL.</p>
+                        </div>
+                        <div className="form-group">
+                            <label>Alt Text</label>
+                            <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
+                        </div>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Appearance">
+                         <div className="form-group">
+                            <label>Width (%)</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="10"
+                                    max="100"
+                                    value={component.width}
+                                    onChange={(e) => handleChange('width', e.target.value)}
+                                />
+                                <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Alignment</label>
+                            <div className="text-align-group">
+                                <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
+                                <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
+                                <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'card': return (
                 <>
-                    <div className="form-group">
-                        <label>Show Image</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.showImage} onChange={(e) => handleChange('showImage', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    {component.showImage && (
-                        <>
-                            <div className="form-group">
-                                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
-                                <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload Preview Image</button>
-                            </div>
-                            <div className="form-group">
-                                <label>Image URL</label>
-                                <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
-                                <p className="helper-text">Public URL required for final email.</p>
-                            </div>
-                             <div className="form-group">
-                                <label>Image Width (%)</label>
-                                <div className="slider-group">
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="100"
-                                        value={component.imageWidth}
-                                        onChange={(e) => handleChange('imageWidth', e.target.value)}
-                                    />
-                                    <input type="number" min="10" max="100" className="slider-value-input" value={component.imageWidth} onChange={(e) => handleChange('imageWidth', e.target.value)} />
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label>Alt Text</label>
-                                <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
-                            </div>
-                        </>
-                    )}
-                    <div className="global-toggle-group">
-                        <label>Use Global Font</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    <div className="form-group">
-                        <label>Font Family</label>
-                        <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
-                            {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
-                        </select>
-                    </div>
-                     <div className="form-group">
-                        <label>Text Color</label>
-                         <div className="color-input-group">
-                             <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
-                             <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                    <CollapsibleSection title="Image">
+                        <div className="form-group">
+                            <label>Show Image</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.showImage} onChange={(e) => handleChange('showImage', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Width (%)</label>
-                        <div className="slider-group">
-                            <input
-                                type="range"
-                                min="10"
-                                max="100"
-                                value={component.width}
-                                onChange={(e) => handleChange('width', e.target.value)}
-                            />
-                            <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
-                        </div>
-                    </div>
-                     <div className="form-group">
-                        <label>Title</label>
-                        <input type="text" value={component.title} onChange={(e) => handleChange('title', e.target.value)} />
-                    </div>
-                     <div className="form-group">
-                        <label>Content</label>
-                        <textarea value={component.content} onChange={(e) => handleChange('content', e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label>Show Button</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.showButton} onChange={(e) => handleChange('showButton', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
-                    {component.showButton && (
-                        <>
-                            <div className="form-group">
-                                <label>Button Text</label>
-                                <input type="text" value={component.buttonText} onChange={(e) => handleChange('buttonText', e.target.value)} />
-                            </div>
-                             <div className="form-group">
-                                <label>Button URL</label>
-                                <input type="url" value={component.buttonHref} onChange={(e) => handleChange('buttonHref', e.target.value)} />
-                            </div>
-                            <div className="global-toggle-group">
-                                <label>Use Global Font</label>
-                                <label className="switch">
-                                    <input type="checkbox" checked={component.useGlobalButtonFont} onChange={(e) => handleChange('useGlobalButtonFont', e.target.checked)} />
-                                    <span className="slider round"></span>
-                                </label>
-                            </div>
-                            <div className="form-group">
-                                <label>Font Family</label>
-                                <select value={component.buttonFontFamily} disabled={component.useGlobalButtonFont} onChange={(e) => handleChange('buttonFontFamily', e.target.value)}>
-                                    {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Button Font Weight</label>
-                                <div className="button-toggle-group">
-                                    <button className={component.buttonFontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('buttonFontWeight', 'normal')}>Normal</button>
-                                    <button className={component.buttonFontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('buttonFontWeight', 'bold')}><b>Bold</b></button>
+                        {component.showImage && (
+                            <>
+                                <div className="form-group">
+                                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
+                                    <button className="upload-button" onClick={() => fileInputRef.current?.click()}>Upload Preview Image</button>
                                 </div>
-                            </div>
-                             <div className="global-toggle-group">
-                                <label>Use Global Button Color</label>
-                                <label className="switch">
-                                    <input type="checkbox" checked={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('useGlobalButtonAccentColor', e.target.checked)} />
-                                    <span className="slider round"></span>
-                                </label>
-                            </div>
-                             <div className="form-group">
-                                <label>Button Background</label>
-                                 <div className="color-input-group">
-                                     <input type="color" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
-                                     <input type="text" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
+                                <div className="form-group">
+                                    <label>Image URL</label>
+                                    <input type="url" value={component.src} onChange={(e) => handleChange('src', e.target.value)} onBlur={handleUrlBlur} />
+                                    <p className="helper-text">Public URL required for final email.</p>
                                 </div>
-                            </div>
-                        </>
-                    )}
-                     <div className="form-group">
-                        <label>Card Background</label>
-                         <div className="color-input-group">
-                             <input type="color" value={component.backgroundColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
-                             <input type="text" value={component.backgroundColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                                 <div className="form-group">
+                                    <label>Image Width (%)</label>
+                                    <div className="slider-group">
+                                        <input
+                                            type="range"
+                                            min="10"
+                                            max="100"
+                                            value={component.imageWidth}
+                                            onChange={(e) => handleChange('imageWidth', e.target.value)}
+                                        />
+                                        <input type="number" min="10" max="100" className="slider-value-input" value={component.imageWidth} onChange={(e) => handleChange('imageWidth', e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label>Alt Text</label>
+                                    <input type="text" value={component.alt} onChange={(e) => handleChange('alt', e.target.value)} />
+                                </div>
+                            </>
+                        )}
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Content">
+                        <div className="global-toggle-group">
+                            <label>Use Global Font</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>Font Family</label>
+                            <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                                {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                            </select>
+                        </div>
+                         <div className="form-group">
+                            <label>Text Color</label>
+                             <div className="color-input-group">
+                                 <input type="color" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                                 <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                            </div>
+                        </div>
+                         <div className="form-group">
+                            <label>Title</label>
+                            <input type="text" value={component.title} onChange={(e) => handleChange('title', e.target.value)} />
+                        </div>
+                         <div className="form-group">
+                            <label>Content</label>
+                            <textarea value={component.content} onChange={(e) => handleChange('content', e.target.value)} />
+                        </div>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Button">
+                        <div className="form-group">
+                            <label>Show Button</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.showButton} onChange={(e) => handleChange('showButton', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                        {component.showButton && (
+                            <>
+                                <div className="form-group">
+                                    <label>Button Text</label>
+                                    <input type="text" value={component.buttonText} onChange={(e) => handleChange('buttonText', e.target.value)} />
+                                </div>
+                                 <div className="form-group">
+                                    <label>Button URL</label>
+                                    <input type="url" value={component.buttonHref} onChange={(e) => handleChange('buttonHref', e.target.value)} />
+                                </div>
+                                <div className="global-toggle-group">
+                                    <label>Use Global Font</label>
+                                    <label className="switch">
+                                        <input type="checkbox" checked={component.useGlobalButtonFont} onChange={(e) => handleChange('useGlobalButtonFont', e.target.checked)} />
+                                        <span className="slider round"></span>
+                                    </label>
+                                </div>
+                                <div className="form-group">
+                                    <label>Font Family</label>
+                                    <select value={component.buttonFontFamily} disabled={component.useGlobalButtonFont} onChange={(e) => handleChange('buttonFontFamily', e.target.value)}>
+                                        {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Button Font Weight</label>
+                                    <div className="button-toggle-group">
+                                        <button className={component.buttonFontWeight === 'normal' ? 'active' : ''} onClick={() => handleChange('buttonFontWeight', 'normal')}>Normal</button>
+                                        <button className={component.buttonFontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('buttonFontWeight', 'bold')}><b>Bold</b></button>
+                                    </div>
+                                </div>
+                                 <div className="global-toggle-group">
+                                    <label>Use Global Button Color</label>
+                                    <label className="switch">
+                                        <input type="checkbox" checked={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('useGlobalButtonAccentColor', e.target.checked)} />
+                                        <span className="slider round"></span>
+                                    </label>
+                                </div>
+                                 <div className="form-group">
+                                    <label>Button Background</label>
+                                     <div className="color-input-group">
+                                         <input type="color" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
+                                         <input type="text" value={component.buttonBackgroundColor} disabled={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('buttonBackgroundColor', e.target.value)} />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Card Style">
+                        <div className="form-group">
+                            <label>Width (%)</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="10"
+                                    max="100"
+                                    value={component.width}
+                                    onChange={(e) => handleChange('width', e.target.value)}
+                                />
+                                <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                            </div>
+                        </div>
+                         <div className="form-group">
+                            <label>Card Background</label>
+                             <div className="color-input-group">
+                                 <input type="color" value={component.backgroundColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                                 <input type="text" value={component.backgroundColor} onChange={(e) => handleChange('backgroundColor', e.target.value)} />
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'emoji': return (
                 <>
-                    <div className="form-group">
-                        <label>Emoji Character</label>
-                        {isEditingEmoji ? (
-                            <input
-                                ref={emojiInputRef}
-                                type="text"
-                                value={component.character}
-                                onChange={(e) => handleChange('character', e.target.value)}
-                                onBlur={() => setIsEditingEmoji(false)}
-                                maxLength={2}
-                            />
-                        ) : (
-                            <button
-                                className="emoji-picker-button"
-                                onClick={() => setIsEditingEmoji(true)}
-                            >
-                                {component.character}
-                            </button>
-                        )}
-                        <p className="helper-text">Click to edit. Press Cmd+Ctrl+Space (Mac) or Win+. (Windows) for system emoji picker.</p>
-                    </div>
-                    <div className="form-group">
-                        <label>Size (px)</label>
-                        <div className="slider-group">
-                            <input
-                                type="range"
-                                min="16"
-                                max="200"
-                                value={component.fontSize}
-                                onChange={(e) => handleChange('fontSize', e.target.value)}
-                            />
-                            <input
-                                type="number"
-                                min="1"
-                                className="slider-value-input"
-                                value={component.fontSize}
-                                onChange={(e) => handleChange('fontSize', e.target.value)}
-                            />
+                    <CollapsibleSection title="Content">
+                        <div className="form-group">
+                            <label>Emoji Character</label>
+                            {isEditingEmoji ? (
+                                <input
+                                    ref={emojiInputRef}
+                                    type="text"
+                                    value={component.character}
+                                    onChange={(e) => handleChange('character', e.target.value)}
+                                    onBlur={() => setIsEditingEmoji(false)}
+                                    maxLength={2}
+                                />
+                            ) : (
+                                <button
+                                    className="emoji-picker-button"
+                                    onClick={() => setIsEditingEmoji(true)}
+                                >
+                                    {component.character}
+                                </button>
+                            )}
+                            <p className="helper-text">Click to edit. Press Cmd+Ctrl+Space (Mac) or Win+. (Windows) for system emoji picker.</p>
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Alignment</label>
-                        <div className="text-align-group">
-                            <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
-                            <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
-                            <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Appearance">
+                        <div className="form-group">
+                            <label>Size (px)</label>
+                            <div className="slider-group">
+                                <input
+                                    type="range"
+                                    min="16"
+                                    max="200"
+                                    value={component.fontSize}
+                                    onChange={(e) => handleChange('fontSize', e.target.value)}
+                                />
+                                <input
+                                    type="number"
+                                    min="1"
+                                    className="slider-value-input"
+                                    value={component.fontSize}
+                                    onChange={(e) => handleChange('fontSize', e.target.value)}
+                                />
+                            </div>
                         </div>
-                    </div>
+                        <div className="form-group">
+                            <label>Alignment</label>
+                            <div className="text-align-group">
+                                <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
+                                <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
+                                <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </>
             );
             case 'layout': 
                 const layoutComponent = component as ColumnLayoutComponent;
                 const widths = layoutComponent.columnWidths || layoutComponent.columns.map(() => 100 / layoutComponent.columns.length);
                 return (
-                    <>
+                    <CollapsibleSection title="Columns">
                         <p>You have selected a layout container. You can move or delete it, or style its background and borders below.</p>
                         <div className="column-widths-info">
                             <label>Column Widths</label>
@@ -2422,7 +2554,7 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             </div>
                             <button onClick={() => handleChange('columnWidths', undefined)} className="reset-button">Reset Column Sizes</button>
                         </div>
-                    </>
+                    </CollapsibleSection>
                 );
             default: return null;
         }
@@ -2432,7 +2564,7 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
         <div className="properties-panel">
             <h3>{component.type.charAt(0).toUpperCase() + component.type.slice(1)} Properties</h3>
             {renderProperties()}
-            {component && <ContainerStyleEditor component={component} onUpdate={onUpdate} />}
+            {component && <CollapsibleSection title="Container Styles" defaultCollapsed><ContainerStyleEditor component={component} onUpdate={onUpdate} /></CollapsibleSection>}
         </div>
     );
 }
@@ -3158,11 +3290,23 @@ const App = () => {
   const getContainerStyleString = (component: EmailComponent): string => {
     if (!component.containerStyle) return '';
 
-    const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft } = component.containerStyle;
+    const { backgroundColor, borderTop, borderRight, borderBottom, borderLeft, paddingTop, paddingRight, paddingBottom, paddingLeft } = component.containerStyle;
     let style = '';
 
     if (backgroundColor && backgroundColor !== 'transparent') {
         style += `background-color:${backgroundColor};`;
+    }
+    if (paddingTop && parseInt(paddingTop) >= 0) {
+        style += `padding-top:${paddingTop}px;`;
+    }
+    if (paddingRight && parseInt(paddingRight) >= 0) {
+        style += `padding-right:${paddingRight}px;`;
+    }
+    if (paddingBottom && parseInt(paddingBottom) >= 0) {
+        style += `padding-bottom:${paddingBottom}px;`;
+    }
+    if (paddingLeft && parseInt(paddingLeft) >= 0) {
+        style += `padding-left:${paddingLeft}px;`;
     }
     if (borderTop?.width && parseInt(borderTop.width) > 0) {
         style += `border-top:${borderTop.width}px solid ${borderTop.color};`;
@@ -3195,7 +3339,7 @@ const App = () => {
         const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
         // FIX: Correctly access the `color` property on TextComponent and FooterComponent. The property for text color is `color`, not `textColor`.
         const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
-        const textContent = `<div style="padding:10px; font-family:${finalFontFamily}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+        const textContent = `<div style="font-family:${finalFontFamily}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
         const textWrapper = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" style="width:${component.width}%;">
                 <tr><td>${textContent}</td></tr>
@@ -3205,7 +3349,7 @@ const App = () => {
       }
       case 'image':
         const imgTag = `<img src="${component.src || getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
-        const imageTdStyle = `padding: 10px 0; ${containerStyles}`;
+        const imageTdStyle = containerStyles;
         if (component.href) {
             return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${imageTdStyle}"><a href="${component.href}" target="_blank" style="text-decoration:none;">${imgTag}</a></td></tr></table>`;
         }
@@ -3222,7 +3366,7 @@ const App = () => {
         } else {
             placeholderSrc = `https://via.placeholder.com/${logoWidth}x${Math.round(logoWidth/3)}.png?text=Logo`;
         }
-        const logoTdStyle = `padding: 10px; ${containerStyles}`;
+        const logoTdStyle = containerStyles;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${logoTdStyle}"><img src="${placeholderSrc}" alt="${component.alt}" width="${component.width}" style="display:block; max-width: 100%;"></td></tr></table>`;
       case 'button':
         const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
@@ -3251,7 +3395,7 @@ const App = () => {
                 </table>
             </td>`
         ).join('');
-        const buttonGroupTdStyle = `padding:10px; ${containerStyles}`;
+        const buttonGroupTdStyle = containerStyles;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${buttonGroupTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="button-group-inner-table" style="margin: 0 auto;"><tr>${buttonsHtml}</tr></table></td></tr></table>`;
       }
       case 'spacer':
@@ -3272,10 +3416,10 @@ const App = () => {
         const linksHtml = component.links.map(link => 
             `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank"><img src="${SOCIAL_ICONS[link.platform]}" alt="${link.platform}" width="32" height="32" style="display: block;"></a></td>`
         ).join('');
-        const socialTdStyle = `padding:10px; ${containerStyles}`;
+        const socialTdStyle = containerStyles;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${socialTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
       case 'video':
-        const videoTdStyle = `padding:10px 0; ${containerStyles}`;
+        const videoTdStyle = containerStyles;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${videoTdStyle}"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${component.imageUrl || getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
       case 'card': {
         const finalCardButtonBgColor = component.useGlobalButtonAccentColor ? emailSettings.accentColor : component.buttonBackgroundColor;
@@ -3347,7 +3491,7 @@ const App = () => {
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" height="100%"><tr><td valign="top" height="100%">${cardWrapper}</td></tr></table>`;
       }
       case 'emoji':
-          const emojiTdStyle = `padding: 10px; font-size: ${component.fontSize}px; line-height: 1; text-align: ${component.alignment}; ${containerStyles}`;
+          const emojiTdStyle = `font-size: ${component.fontSize}px; line-height: 1; text-align: ${component.alignment}; ${containerStyles}`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${emojiTdStyle}"><span style="font-size: ${component.fontSize}px; line-height: 1;">${component.character}</span></td></tr></table>`;
       case 'layout':
         const columnCount = component.columns.length;
