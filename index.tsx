@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -586,7 +585,7 @@ const InlineEditor = ({ html, onUpdate, tagName = 'div', style, className, click
         const editorNode = editorRef.current;
         if (!editorNode) return;
 
-        editorNode.focus();
+        editorNode.focus({ preventScroll: true });
 
         // If click coordinates are provided, try to set the cursor position.
         // We use a zero-delay setTimeout to defer this logic until after the browser
@@ -1319,9 +1318,9 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
             <div
                 className={classNames}
                 onClick={!isLayout ? clickHandler : undefined}
-                draggable={!isLayout && !component.isLocked && !isEditingInline}
-                onDragStart={!isLayout && !component.isLocked ? handleDragStart : undefined}
-                onDragEnd={!isLayout ? handleDragEnd : undefined}
+                draggable={!component.isLocked && !isEditingInline}
+                onDragStart={!component.isLocked ? handleDragStart : undefined}
+                onDragEnd={handleDragEnd}
                 onDragOver={!isLayout ? handleItemDragOver : undefined}
                 onDrop={!isLayout ? (e) => handleDrop(e, dragOverTarget!) : undefined}
                 style={renderItemStyles}
@@ -3662,7 +3661,7 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
           <![endif]-->
           <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="background-color:${emailSettings.contentBackgroundColor}; max-width: 600px;">
             <tr>
-              <td style="padding: 0;">
+              <td>
                 ${body}
               </td>
             </tr>
