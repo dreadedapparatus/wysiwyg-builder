@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -161,6 +160,7 @@ interface SocialComponent extends BaseComponent {
     type: 'social';
     links: SocialLink[];
     alignment: 'left' | 'center' | 'right';
+    style: 'default' | 'minimalist';
 }
 
 interface VideoComponent extends BaseComponent {
@@ -552,6 +552,16 @@ const SOCIAL_ICONS = {
   website: 'https://img.icons8.com/fluent/48/000000/domain.png'
 };
 
+const MINIMALIST_SOCIAL_ICONS: { [key in SocialLink['platform']]: string } = {
+    facebook: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z',
+    twitter: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z',
+    instagram: 'M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z',
+    linkedin: 'M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-3.18V18.5h3.18v-5.9c0-.9.73-1.63 1.63-1.63s1.63.73 1.63 1.63v5.9h3.18M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m-1.55 9.94h3.1v-9h-3.1z',
+    youtube: 'M21.58,7.19C21.36,6.45 20.81,5.82 20.07,5.6C18.6,5 12,5 12,5S5.4,5 3.93,5.6C3.19,5.82 2.65,6.45 2.42,7.19C2,8.64 2,12 2,12S2,15.36 2.42,16.81C2.65,17.55 3.19,18.18 3.93,18.4C5.4,19 12,19 12,19S18.6,19 20.07,18.4C20.81,18.18 21.36,17.55 21.58,16.81C22,15.36 22,12 22,12S22,8.64 21.58,7.19M9.54,15.58V8.42L15.82,12L9.54,15.58Z',
+    website: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM11 19.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
+};
+
+
 const ColumnResizer: React.FC<{
     columnIndex: number;
     component: ColumnLayoutComponent;
@@ -725,7 +735,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
       case 'divider':
         return { ...baseProps, type, color: '#cccccc', height: '1', padding: '10', width: '100', useGlobalAccentColor: true, containerStyle: { backgroundColor: 'transparent' } };
       case 'social':
-        return { ...baseProps, type, alignment: 'center', links: [
+        return { ...baseProps, type, alignment: 'center', style: 'default', links: [
             { id: `social_${uid()}_1`, platform: 'facebook', url: '#' },
             { id: `social_${uid()}_2`, platform: 'twitter', url: '#' },
             { id: `social_${uid()}_3`, platform: 'instagram', url: '#' },
@@ -1108,6 +1118,20 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
             </div>
           );
       case 'social':
+          if (component.style === 'minimalist') {
+              const finalAccentColor = emailSettings.accentColor;
+              return (
+                  <div style={{ textAlign: component.alignment }}>
+                      {component.links.map(link => (
+                          <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '0 5px' }}>
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill={finalAccentColor} xmlns="http://www.w3.org/2000/svg">
+                                  <path d={MINIMALIST_SOCIAL_ICONS[link.platform]} />
+                              </svg>
+                          </a>
+                      ))}
+                  </div>
+              );
+          }
           return (
             <div style={{ textAlign: component.alignment }}>
               {component.links.map(link => (
@@ -2544,13 +2568,20 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
             );
              case 'social': return (
                 <>
-                    <CollapsibleSection title="Layout">
+                    <CollapsibleSection title="Layout & Style">
                         <div className="form-group">
                             <label>Alignment</label>
                             <div className="text-align-group">
                                 <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
                                 <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
                                 <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Icon Style</label>
+                            <div className="button-toggle-group">
+                                <button className={component.style === 'default' ? 'active' : ''} onClick={() => handleChange('style', 'default')}>Default</button>
+                                <button className={component.style === 'minimalist' ? 'active' : ''} onClick={() => handleChange('style', 'minimalist')}>Minimalist</button>
                             </div>
                         </div>
                     </CollapsibleSection>
@@ -2560,7 +2591,7 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             <div className="social-link-editor">
                                 {component.links.map((link, index) => (
                                     <div key={link.id} className="social-link-item">
-                                        <select value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)}>
+                                        <select value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value as SocialLink['platform'])}>
                                             {SOCIAL_PLATFORMS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
                                         </select>
                                         <input type="url" value={link.url} onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)} placeholder="https://example.com" />
@@ -3881,12 +3912,22 @@ const App = () => {
         `;
         const wrapperTdStyle = `padding:${component.padding}px 0; ${containerStyles}`;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${wrapperTdStyle}">${dividerItself}</td></tr></table>`;
-      case 'social':
-        const linksHtml = component.links.map(link => 
-            `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank"><img src="${SOCIAL_ICONS[link.platform]}" alt="${link.platform}" width="32" height="32" style="display: block;"></a></td>`
-        ).join('');
+      case 'social': {
         const socialTdStyle = containerStyles;
+        let linksHtml = '';
+        if (component.style === 'minimalist') {
+            const finalAccentColor = emailSettings.accentColor;
+            linksHtml = component.links.map(link => {
+                const svg = `<svg width="32" height="32" viewBox="0 0 24 24" fill="${finalAccentColor}" xmlns="http://www.w3.org/2000/svg"><path d="${MINIMALIST_SOCIAL_ICONS[link.platform]}" /></svg>`;
+                return `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank">${svg}</a></td>`
+            }).join('');
+        } else {
+             linksHtml = component.links.map(link => 
+                `<td style="padding: 0 5px;"><a href="${link.url}" target="_blank"><img src="${SOCIAL_ICONS[link.platform]}" alt="${link.platform}" width="32" height="32" style="display: block;"></a></td>`
+            ).join('');
+        }
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${socialTdStyle}"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr>${linksHtml}</tr></table></td></tr></table>`;
+      }
       case 'video':
         const videoTdStyle = containerStyles;
         return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${videoTdStyle}"><a href="${component.videoUrl}" target="_blank" style="display:inline-block; width:${component.width}%;"><img src="${component.imageUrl || getPlaceholderSrc(component)}" alt="${component.alt}" width="100%" style="max-width:100%; display:block;"></a></td></tr></table>`;
