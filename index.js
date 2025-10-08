@@ -24990,6 +24990,9 @@
       const target = e.target;
       if (target.classList.contains("canvas-container") || target.classList.contains("canvas")) {
         setSelectedId(null);
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
       }
     };
     const DropPlaceholder = ({ componentType }) => {
