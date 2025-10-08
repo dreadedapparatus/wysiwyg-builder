@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -6,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 type ComponentType = 'text' | 'image' | 'button' | 'spacer' | 'layout' | 'card' | 'divider' | 'social' | 'video' | 'logo' | 'footer' | 'button-group' | 'emoji' | 'calendar';
 
 // Define a new type for component creation that includes layout types.
-type CreationComponentType = ComponentType | 'two-column' | 'three-column';
+type CreationComponentType = ComponentType | 'two-column' | 'three-column' | 'image-text' | 'text-image' | 'two-column-text' | 'three-column-images' | 'two-column-cards';
 
 interface ComponentListItem {
     type: CreationComponentType;
@@ -339,6 +340,11 @@ const DEFAULT_COMPONENT_LIST: ComponentListItem[] = [
   { type: 'card', label: 'Card', icon: '🃏' },
   { type: 'two-column', label: '2 Columns', icon: '||', isLayout: true },
   { type: 'three-column', label: '3 Columns', icon: '|||', isLayout: true },
+  { type: 'image-text', label: 'Image + Text', icon: '🖼️ T', isLayout: true },
+  { type: 'text-image', label: 'Text + Image', icon: 'T 🖼️', isLayout: true },
+  { type: 'two-column-text', label: 'Two Column Text', icon: 'T | T', isLayout: true },
+  { type: 'two-column-cards', label: 'Two Cards', icon: '🃏|🃏', isLayout: true },
+  { type: 'three-column-images', label: 'Three Images', icon: '🖼️|🖼️|🖼️', isLayout: true },
 ];
 
 const getComponentMeta = (type: ComponentType | CreationComponentType, list: ComponentListItem[]) => {
@@ -565,32 +571,41 @@ const ColumnResizer: React.FC<{
     return <div className="column-resizer" ref={resizerRef} onMouseDown={handleMouseDown} />;
 };
 
-// FIX: The original `InlineEditor` component had untyped props, causing several TypeScript errors. 
-// I've defined an explicit type for the props, making `tagName` a valid JSX element key,
-// and making `style` and `className` optional. This resolves the namespace error for `JSX`,
-// the invalid component type for `Tag`, and the missing `className` property errors at call sites.
-const InlineEditor = ({ html, onUpdate, tagName = 'div', style, className }: {
+const InlineEditor = ({ html, onUpdate, tagName = 'div', style, className, clickEvent }: {
     html: string;
     onUpdate: (newHtml: string) => void;
-    // FIX: The type `keyof HTMLElementTagNameMap` is too broad, causing a "union type too complex" error from TypeScript.
-    // Constraining it to only the tags used in this component (`div`, `p`, `h4`) resolves the issue.
     tagName?: 'div' | 'p' | 'h4';
     style?: React.CSSProperties;
     className?: string;
+    clickEvent?: { clientX: number, clientY: number };
 }) => {
-    // FIX: Changed ref type from HTMLElement to HTMLDivElement to resolve type incompatibility with the default 'div' tag.
-    // The error `Type 'RefObject<HTMLElement>' is not assignable to type 'Ref<HTMLDivElement>'` occurs because
-    // the dynamic <Tag /> defaults to 'div', which expects a more specific ref type.
     const editorRef = useRef<HTMLDivElement>(null);
     const initialHtml = useRef(html); // Store initial value for Escape key
 
     useEffect(() => {
-        if (editorRef.current) {
-            editorRef.current.focus();
-            // Select all text for easy replacement
-            document.execCommand('selectAll', false, null);
+        const editorNode = editorRef.current;
+        if (!editorNode) return;
+
+        editorNode.focus();
+
+        // If click coordinates are provided, try to set the cursor position.
+        // We use a zero-delay setTimeout to defer this logic until after the browser
+        // has processed the focus event, preventing a race condition where the
+        // default focus behavior (cursor at start) overrides our range setting.
+        if (clickEvent && typeof document.caretRangeFromPoint === 'function') {
+            const timerId = setTimeout(() => {
+                const range = document.caretRangeFromPoint(clickEvent.clientX, clickEvent.clientY);
+                if (range) {
+                    const selection = window.getSelection();
+                    if (selection) {
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                }
+            }, 0);
+            return () => clearTimeout(timerId);
         }
-    }, []);
+    }, [clickEvent]);
 
     const handleBlur = () => {
         if (editorRef.current) {
@@ -635,7 +650,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
   const [draggingId, setDraggingId] = useState<string | null>(null);
   
   const createNewComponent = (type: CreationComponentType): EmailComponent => {
-    const id = `comp_${Date.now()}`;
+    const uid = () => `${Date.now()}_${Math.round(Math.random() * 1e6)}`;
+    const id = `comp_${uid()}`;
     const baseProps: Pick<BaseComponent, 'id' | 'isLocked'> = { id, isLocked: false };
     const transparentBg = { 
       backgroundColor: 'transparent', 
@@ -663,9 +679,9 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
         return { ...baseProps, type, color: '#cccccc', height: '1', padding: '10', width: '100', useGlobalAccentColor: true, containerStyle: { backgroundColor: 'transparent' } };
       case 'social':
         return { ...baseProps, type, alignment: 'center', links: [
-            { id: `social_${Date.now()}_1`, platform: 'facebook', url: '#' },
-            { id: `social_${Date.now()}_2`, platform: 'twitter', url: '#' },
-            { id: `social_${Date.now()}_3`, platform: 'instagram', url: '#' },
+            { id: `social_${uid()}_1`, platform: 'facebook', url: '#' },
+            { id: `social_${uid()}_2`, platform: 'twitter', url: '#' },
+            { id: `social_${uid()}_3`, platform: 'instagram', url: '#' },
         ], containerStyle: { ...transparentBg }};
       case 'video':
         return { ...baseProps, type, videoUrl: '#', imageUrl: '', alt: 'Video thumbnail', width: '100', alignment: 'center', containerStyle: { ...transparentBg, paddingRight: '0', paddingLeft: '0' } };
@@ -677,15 +693,76 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
         return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: '12', color: '#888888', fontFamily: 'Arial', textAlign: 'center', useGlobalFont: true, useGlobalTextColor: true, width: '100', containerStyle: { ...transparentBg } };
       case 'button-group':
         return { ...baseProps, type, alignment: 'center', fontFamily: 'Arial', useGlobalFont: true, buttons: [
-            { id: `btn_${Date.now()}_1`, text: 'Button 1', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff' },
-            { id: `btn_${Date.now()}_2`, text: 'Button 2', href: '#', backgroundColor: '#6c757d', textColor: '#ffffff' },
+            { id: `btn_${uid()}_1`, text: 'Button 1', href: '#', backgroundColor: '#0d6efd', textColor: '#ffffff' },
+            { id: `btn_${uid()}_2`, text: 'Button 2', href: '#', backgroundColor: '#6c757d', textColor: '#ffffff' },
         ], containerStyle: { ...transparentBg }};
       case 'emoji':
         return { ...baseProps, type, character: '🎉', fontSize: '48', alignment: 'center', containerStyle: { ...transparentBg } };
       case 'two-column':
-        return { ...baseProps, id, type: 'layout', layoutType: 'two-column', columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }], containerStyle: { backgroundColor: 'transparent' } };
+        return { ...baseProps, id, type: 'layout', layoutType: 'two-column', columns: [{ id: `col_${uid()}_1`, components: [] }, { id: `col_${uid()}_2`, components: [] }], containerStyle: { backgroundColor: 'transparent' } };
       case 'three-column':
-        return { ...baseProps, id, type: 'layout', layoutType: 'three-column', columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }, { id: `col_${Date.now()}_3`, components: [] }], containerStyle: { backgroundColor: 'transparent' } };
+        return { ...baseProps, id, type: 'layout', layoutType: 'three-column', columns: [{ id: `col_${uid()}_1`, components: [] }, { id: `col_${uid()}_2`, components: [] }, { id: `col_${uid()}_3`, components: [] }], containerStyle: { backgroundColor: 'transparent' } };
+      case 'image-text':
+        return {
+          ...baseProps,
+          id,
+          type: 'layout',
+          layoutType: 'two-column',
+          columns: [
+            { id: `col_${uid()}_1`, components: [createNewComponent('image') as ContentComponent] },
+            { id: `col_${uid()}_2`, components: [createNewComponent('text') as ContentComponent] },
+          ],
+          containerStyle: { backgroundColor: 'transparent' }
+        };
+      case 'text-image':
+        return {
+          ...baseProps,
+          id,
+          type: 'layout',
+          layoutType: 'two-column',
+          columns: [
+            { id: `col_${uid()}_1`, components: [createNewComponent('text') as ContentComponent] },
+            { id: `col_${uid()}_2`, components: [createNewComponent('image') as ContentComponent] },
+          ],
+          containerStyle: { backgroundColor: 'transparent' }
+        };
+      case 'two-column-text':
+        return {
+          ...baseProps,
+          id,
+          type: 'layout',
+          layoutType: 'two-column',
+          columns: [
+            { id: `col_${uid()}_1`, components: [createNewComponent('text') as ContentComponent] },
+            { id: `col_${uid()}_2`, components: [createNewComponent('text') as ContentComponent] },
+          ],
+          containerStyle: { backgroundColor: 'transparent' }
+        };
+      case 'two-column-cards':
+        return {
+          ...baseProps,
+          id,
+          type: 'layout',
+          layoutType: 'two-column',
+          columns: [
+            { id: `col_${uid()}_1`, components: [createNewComponent('card') as ContentComponent] },
+            { id: `col_${uid()}_2`, components: [createNewComponent('card') as ContentComponent] },
+          ],
+          containerStyle: { backgroundColor: 'transparent' }
+        };
+      case 'three-column-images':
+        return {
+          ...baseProps,
+          id,
+          type: 'layout',
+          layoutType: 'three-column',
+          columns: [
+            { id: `col_${uid()}_1`, components: [createNewComponent('image') as ContentComponent] },
+            { id: `col_${uid()}_2`, components: [createNewComponent('image') as ContentComponent] },
+            { id: `col_${uid()}_3`, components: [createNewComponent('image') as ContentComponent] },
+          ],
+          containerStyle: { backgroundColor: 'transparent' }
+        };
       default:
         throw new Error('Unknown component type');
     }
@@ -831,15 +908,16 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                   }}
                   style={textStyles}
                   tagName="div"
+                  clickEvent={editingField.clickEvent}
               />
           ) : (
               <div
                   dangerouslySetInnerHTML={{ __html: component.content }}
                   style={textStyles}
-                  onDoubleClick={() => {
+                  onDoubleClick={(e) => {
                       if (!component.isLocked) {
                           setSelectedId(component.id);
-                          setEditingField({ componentId: component.id, field: 'content' });
+                          setEditingField({ componentId: component.id, field: 'content', clickEvent: { clientX: e.clientX, clientY: e.clientY } });
                       }
                   }}
               />
@@ -1062,11 +1140,12 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                                       onUpdate={(newHtml) => { onUpdate(component.id, { ...component, title: newHtml }); setEditingField(null); }}
                                       tagName="h4"
                                       style={{ margin: 0, fontSize: '1.2em' }}
+                                      clickEvent={editingField.clickEvent}
                                   />
                               ) : (
                                   <h4
                                       style={{ margin: 0, fontSize: '1.2em' }}
-                                      onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title' }); } }}
+                                      onDoubleClick={(e) => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title', clickEvent: { clientX: e.clientX, clientY: e.clientY } }); } }}
                                       dangerouslySetInnerHTML={{ __html: component.title }}
                                   />
                               )}
@@ -1077,11 +1156,12 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                                   onUpdate={(newHtml) => { onUpdate(component.id, { ...component, content: newHtml }); setEditingField(null); }}
                                   tagName="p"
                                   style={paragraphStyle}
+                                  clickEvent={editingField.clickEvent}
                               />
                           ) : (
                               <p
                                   style={paragraphStyle}
-                                  onDoubleClick={() => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content' }); } }}
+                                  onDoubleClick={(e) => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content', clickEvent: { clientX: e.clientX, clientY: e.clientY } }); } }}
                                   dangerouslySetInnerHTML={{ __html: component.content }}
                               />
                           )}
@@ -1239,7 +1319,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
             <div
                 className={classNames}
                 onClick={!isLayout ? clickHandler : undefined}
-                draggable={!isLayout && !component.isLocked}
+                draggable={!isLayout && !component.isLocked && !isEditingInline}
                 onDragStart={!isLayout && !component.isLocked ? handleDragStart : undefined}
                 onDragEnd={!isLayout ? handleDragEnd : undefined}
                 onDragOver={!isLayout ? handleItemDragOver : undefined}
@@ -2932,7 +3012,7 @@ const App = () => {
   const importInputRef = useRef<HTMLInputElement>(null);
   const [componentList, setComponentList] = useState<ComponentListItem[]>(DEFAULT_COMPONENT_LIST);
   const [isPreviewing, setIsPreviewing] = useState(false);
-  const [editingField, setEditingField] = useState<{ componentId: string; field: string } | null>(null);
+  const [editingField, setEditingField] = useState<{ componentId: string; field: string; clickEvent?: { clientX: number, clientY: number } } | null>(null);
 
   
   // Load favorites and templates from localStorage on initial mount
@@ -3582,7 +3662,7 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
           <![endif]-->
           <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="background-color:${emailSettings.contentBackgroundColor}; max-width: 600px;">
             <tr>
-              <td style="padding: 20px;">
+              <td style="padding: 0;">
                 ${body}
               </td>
             </tr>
