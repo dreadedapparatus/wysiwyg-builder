@@ -875,6 +875,11 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
     const target = e.target as HTMLElement;
     if (target.classList.contains('canvas-container') || target.classList.contains('canvas')) {
       setSelectedId(null);
+      // Also blur any active element to ensure focus styles are removed,
+      // especially when deselecting from an inline editor.
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
     }
   };
 
