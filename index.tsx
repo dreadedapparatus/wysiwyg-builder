@@ -1,9 +1,10 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 // --- TYPES ---
-type ComponentType = 'text' | 'image' | 'button' | 'spacer' | 'layout' | 'card' | 'divider' | 'social' | 'video' | 'logo' | 'footer' | 'button-group' | 'emoji' | 'calendar';
+type ComponentType = 'text' | 'image' | 'button' | 'spacer' | 'layout' | 'card' | 'divider' | 'social' | 'video' | 'logo' | 'footer' | 'button-group' | 'emoji' | 'calendar' | 'table';
 
 // Define a new type for component creation that includes layout types.
 type CreationComponentType = ComponentType | 'two-column' | 'three-column' | 'image-text' | 'text-image' | 'two-column-text' | 'three-column-images' | 'two-column-cards';
@@ -209,6 +210,24 @@ interface EmojiComponent extends BaseComponent {
   alignment: 'left' | 'center' | 'right';
 }
 
+interface TableComponent extends BaseComponent {
+    type: 'table';
+    rows: number;
+    cols: number;
+    data: string[][];
+    hasHeader: boolean;
+    cellBorderWidth: string;
+    headerFillColor: string;
+    headerTextColor: string;
+    useAutoHeaderTextColor: boolean;
+    tableBackgroundColor: string;
+    fontFamily: string;
+    useGlobalFont: boolean;
+    textColor: string;
+    useGlobalTextColor: boolean;
+    width: string;
+}
+
 
 type ContentComponent = 
     | TextComponent 
@@ -223,7 +242,8 @@ type ContentComponent =
     | FooterComponent
     | ButtonGroupComponent
     | EmojiComponent
-    | CalendarButtonComponent;
+    | CalendarButtonComponent
+    | TableComponent;
 
 // --- Layout Component ---
 interface Column {
@@ -268,6 +288,32 @@ type DropLocation =
 
 
 // --- UTILITY FUNCTIONS ---
+const getContrastingTextColor = (hexColor: string): string => {
+    if (!hexColor || hexColor.length < 4) {
+        return '#000000'; // default to black for invalid colors
+    }
+
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hexColor = hexColor.replace(shorthandRegex, (m, r, g, b) => {
+        return r + r + g + g + b + b;
+    });
+
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
+    if (!result) {
+        return '#000000';
+    }
+
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+};
+
 const recursiveDelete = (items: EmailComponent[], idToDelete: string): EmailComponent[] => {
     const filtered = items.filter(c => c.id !== idToDelete);
     return filtered.map(c => {
@@ -338,6 +384,7 @@ const DEFAULT_COMPONENT_LIST: ComponentListItem[] = [
   { type: 'logo', label: 'Logo', icon: '🏢' },
   { type: 'footer', label: 'Footer', icon: '📜' },
   { type: 'card', label: 'Card', icon: '🃏' },
+  { type: 'table', label: 'Table', icon: '▦' },
   { type: 'two-column', label: '2 Columns', icon: '||', isLayout: true },
   { type: 'three-column', label: '3 Columns', icon: '|||', isLayout: true },
   { type: 'image-text', label: 'Image + Text', icon: '🖼️ T', isLayout: true },
@@ -698,6 +745,32 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
         ], containerStyle: { ...transparentBg }};
       case 'emoji':
         return { ...baseProps, type, character: '🎉', fontSize: '48', alignment: 'center', containerStyle: { ...transparentBg } };
+      case 'table': {
+        const rows = 3;
+        const cols = 3;
+        const data = Array(rows).fill(null).map((_, r) => 
+            Array(cols).fill(null).map((_, c) => r === 0 ? `Header ${c + 1}` : 'Cell')
+        );
+        return {
+          ...baseProps,
+          type: 'table',
+          rows,
+          cols,
+          data,
+          hasHeader: true,
+          cellBorderWidth: '1',
+          headerFillColor: '#f0f0f0',
+          headerTextColor: '#000000',
+          useAutoHeaderTextColor: true,
+          tableBackgroundColor: 'transparent',
+          fontFamily: 'Arial',
+          useGlobalFont: true,
+          textColor: '#000000',
+          useGlobalTextColor: true,
+          width: '100',
+          containerStyle: { ...transparentBg }
+        };
+      }
       case 'two-column':
         return { ...baseProps, id, type: 'layout', layoutType: 'two-column', columns: [{ id: `col_${uid()}_1`, components: [] }, { id: `col_${uid()}_2`, components: [] }], containerStyle: { backgroundColor: 'transparent' } };
       case 'three-column':
@@ -1209,6 +1282,118 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                 </span>
             </div>
           );
+      case 'table': {
+          const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+          const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+          const finalHeaderTextColor = component.useAutoHeaderTextColor
+            ? getContrastingTextColor(component.headerFillColor)
+            : component.headerTextColor;
+
+          const tableStyle: React.CSSProperties = {
+            width: `${component.width}%`,
+            margin: '0 auto',
+            borderCollapse: 'collapse',
+            fontFamily: finalFontFamily,
+            color: finalTextColor,
+            backgroundColor: component.tableBackgroundColor === 'transparent' ? undefined : component.tableBackgroundColor
+          };
+
+          const cellStyle: React.CSSProperties = {
+            border: `${component.cellBorderWidth}px solid #ccc`,
+            padding: '8px',
+            textAlign: 'left',
+          };
+          
+          const headerCellStyle: React.CSSProperties = {
+            ...cellStyle,
+            backgroundColor: component.headerFillColor,
+            fontWeight: 'bold',
+            color: finalHeaderTextColor,
+          };
+
+          const handleCellUpdate = (newHtml: string, r: number, c: number) => {
+            const newData = component.data.map((row, rowIndex) =>
+              row.map((cell, colIndex) => (rowIndex === r && colIndex === c ? newHtml : cell))
+            );
+            onUpdate(component.id, { ...component, data: newData });
+            setEditingField(null);
+          };
+
+          const headerRowData = component.hasHeader ? component.data[0] : null;
+          const bodyData = component.hasHeader ? component.data.slice(1) : component.data;
+
+          return (
+            <table style={tableStyle} className="canvas-table-component">
+              {component.hasHeader && headerRowData && (
+                <thead>
+                  <tr>
+                    {headerRowData.map((cellContent, c) => {
+                      const isEditing = editingField?.componentId === component.id && editingField?.rowIndex === 0 && editingField?.colIndex === c;
+                      return (
+                        <th
+                          key={`header-${c}`}
+                          style={headerCellStyle}
+                          onDoubleClick={(e) => {
+                            if (!component.isLocked) {
+                              setSelectedId(component.id);
+                              setEditingField({ componentId: component.id, field: 'cell', rowIndex: 0, colIndex: c, clickEvent: { clientX: e.clientX, clientY: e.clientY } });
+                            }
+                          }}
+                        >
+                          {isEditing ? (
+                            <InlineEditor
+                              html={cellContent}
+                              onUpdate={(newHtml) => handleCellUpdate(newHtml, 0, c)}
+                              style={{ margin: '-8px', padding: '8px', minHeight: '1.2em' }}
+                              clickEvent={editingField.clickEvent}
+                            />
+                          ) : (
+                            <div dangerouslySetInnerHTML={{ __html: cellContent }} />
+                          )}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+              )}
+              <tbody>
+                {bodyData.map((rowData, r_idx) => {
+                  const dataRowIndex = component.hasHeader ? r_idx + 1 : r_idx;
+                  return (
+                    <tr key={`row-${dataRowIndex}`}>
+                      {rowData.map((cellContent, c) => {
+                        const isEditing = editingField?.componentId === component.id && editingField?.rowIndex === dataRowIndex && editingField?.colIndex === c;
+                        return (
+                          <td
+                            key={`cell-${dataRowIndex}-${c}`}
+                            style={cellStyle}
+                            onDoubleClick={(e) => {
+                              if (!component.isLocked) {
+                                setSelectedId(component.id);
+                                setEditingField({ componentId: component.id, field: 'cell', rowIndex: dataRowIndex, colIndex: c, clickEvent: { clientX: e.clientX, clientY: e.clientY } });
+                              }
+                            }}
+                          >
+                            {isEditing ? (
+                              <InlineEditor
+                                html={cellContent}
+                                onUpdate={(newHtml) => handleCellUpdate(newHtml, dataRowIndex, c)}
+                                style={{ margin: '-8px', padding: '8px', minHeight: '1.2em' }}
+                                clickEvent={editingField.clickEvent}
+                              />
+                            ) : (
+                              <div dangerouslySetInnerHTML={{ __html: cellContent }} />
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          );
+      }
       default:
           return null;
       }
@@ -2681,6 +2866,150 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                     </CollapsibleSection>
                 </>
             );
+            case 'table':
+              const handleTableResize = (newRowsStr: string, newColsStr: string) => {
+                const newRows = Math.max(1, parseInt(newRowsStr, 10) || 1);
+                const newCols = Math.max(1, parseInt(newColsStr, 10) || 1);
+                const oldData = component.data;
+                const newData = Array(newRows).fill(null).map((_, r) =>
+                  Array(newCols).fill(null).map((_, c) => {
+                    const isHeaderRow = component.hasHeader && r === 0;
+                    const defaultText = isHeaderRow ? `Header ${c + 1}` : 'Cell';
+                    return oldData[r] && oldData[r][c] ? oldData[r][c] : defaultText;
+                  })
+                );
+                onUpdate(component.id, { ...component, data: newData, rows: newRows, cols: newCols });
+              };
+
+              return (
+                <>
+                  <CollapsibleSection title="Structure">
+                    <div className="form-group-row">
+                      <div className="form-group">
+                        <label>Rows</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={component.rows}
+                          onChange={(e) => handleTableResize(e.target.value, String(component.cols))}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Columns</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={component.cols}
+                          onChange={(e) => handleTableResize(String(component.rows), e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="global-toggle-group">
+                      <label>Enable Header Row</label>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          checked={component.hasHeader}
+                          onChange={(e) => handleChange('hasHeader', e.target.checked)}
+                        />
+                        <span className="slider round"></span>
+                      </label>
+                    </div>
+                  </CollapsibleSection>
+                  <CollapsibleSection title="Table Style">
+                    <div className="form-group">
+                      <label>Cell Border (px)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={component.cellBorderWidth}
+                        onChange={(e) => handleChange('cellBorderWidth', e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Table Background Color</label>
+                      <div className="color-input-group">
+                        <input type="color" value={component.tableBackgroundColor === 'transparent' ? '#ffffff' : component.tableBackgroundColor} onChange={(e) => handleChange('tableBackgroundColor', e.target.value)} />
+                        <input type="text" value={component.tableBackgroundColor} onChange={(e) => handleChange('tableBackgroundColor', e.target.value)} placeholder="transparent" />
+                        <button className="transparent-btn" onClick={() => handleChange('tableBackgroundColor', 'transparent')} title="Set transparent">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </CollapsibleSection>
+                  {component.hasHeader && (
+                    <CollapsibleSection title="Header Style">
+                      <div className="form-group">
+                        <label>Header Fill Color</label>
+                        <div className="color-input-group">
+                          <input type="color" value={component.headerFillColor} onChange={(e) => handleChange('headerFillColor', e.target.value)} />
+                          <input type="text" value={component.headerFillColor} onChange={(e) => handleChange('headerFillColor', e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="global-toggle-group">
+                        <label>Auto-contrast text color</label>
+                        <label className="switch">
+                          <input type="checkbox" checked={component.useAutoHeaderTextColor} onChange={(e) => handleChange('useAutoHeaderTextColor', e.target.checked)} />
+                          <span className="slider round"></span>
+                        </label>
+                      </div>
+                      {!component.useAutoHeaderTextColor && (
+                        <div className="form-group">
+                          <label>Header Text Color</label>
+                          <div className="color-input-group">
+                            <input type="color" value={component.headerTextColor} onChange={(e) => handleChange('headerTextColor', e.target.value)} />
+                            <input type="text" value={component.headerTextColor} onChange={(e) => handleChange('headerTextColor', e.target.value)} />
+                          </div>
+                        </div>
+                      )}
+                    </CollapsibleSection>
+                  )}
+                  <CollapsibleSection title="Body Typography">
+                    <div className="global-toggle-group">
+                      <label>Use Global Font</label>
+                      <label className="switch">
+                        <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                        <span className="slider round"></span>
+                      </label>
+                    </div>
+                    <div className="form-group">
+                      <label>Font Family</label>
+                      <select value={component.fontFamily} disabled={component.useGlobalFont} onChange={(e) => handleChange('fontFamily', e.target.value)}>
+                        {FONT_FAMILIES.map(font => <option key={font} value={font}>{font}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Text Color</label>
+                      <div className="global-toggle-group">
+                        <label>Use Global</label>
+                        <label className="switch">
+                          <input type="checkbox" checked={component.useGlobalTextColor} onChange={(e) => handleChange('useGlobalTextColor', e.target.checked)} />
+                          <span className="slider round"></span>
+                        </label>
+                      </div>
+                      <div className="color-input-group">
+                        <input type="color" value={component.textColor} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                        <input type="text" value={component.textColor} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('textColor', e.target.value)} />
+                      </div>
+                    </div>
+                  </CollapsibleSection>
+                  <CollapsibleSection title="Dimensions">
+                    <div className="form-group">
+                      <label>Table Width (%)</label>
+                      <div className="slider-group">
+                        <input
+                          type="range"
+                          min="10"
+                          max="100"
+                          value={component.width}
+                          onChange={(e) => handleChange('width', e.target.value)}
+                        />
+                        <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
+                      </div>
+                    </div>
+                  </CollapsibleSection>
+                </>
+              );
             case 'layout': 
                 const layoutComponent = component as ColumnLayoutComponent;
                 const widths = layoutComponent.columnWidths || layoutComponent.columns.map(() => 100 / layoutComponent.columns.length);
@@ -3072,7 +3401,7 @@ const App = () => {
   const importInputRef = useRef<HTMLInputElement>(null);
   const [componentList, setComponentList] = useState<ComponentListItem[]>(DEFAULT_COMPONENT_LIST);
   const [isPreviewing, setIsPreviewing] = useState(false);
-  const [editingField, setEditingField] = useState<{ componentId: string; field: string; clickEvent?: { clientX: number, clientY: number } } | null>(null);
+  const [editingField, setEditingField] = useState<{ componentId: string; field: string; rowIndex?: number; colIndex?: number; clickEvent?: { clientX: number, clientY: number } } | null>(null);
 
   
   // Load favorites and templates from localStorage on initial mount
@@ -3634,6 +3963,46 @@ const App = () => {
       case 'emoji':
           const emojiTdStyle = `font-size: ${component.fontSize}px; line-height: 1; text-align: ${component.alignment}; ${containerStyles}`;
           return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="${component.alignment}" style="${emojiTdStyle}"><span style="font-size: ${component.fontSize}px; line-height: 1;">${component.character}</span></td></tr></table>`;
+      case 'table': {
+        const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
+        const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.textColor;
+        const borderColor = '#cccccc'; // Hardcode a reasonable border color for email clients
+        const finalHeaderTextColor = component.useAutoHeaderTextColor
+            ? getContrastingTextColor(component.headerFillColor)
+            : component.headerTextColor;
+        
+        const tableStyles = `width:${component.width}%; border-collapse:collapse; background-color:${component.tableBackgroundColor === 'transparent' ? '' : component.tableBackgroundColor};`;
+        const cellStyles = `border:${component.cellBorderWidth}px solid ${borderColor}; padding: 8px; font-family:${finalFontFamily}, sans-serif; color:${finalTextColor};`;
+        const headerCellStyles = `${cellStyles} background-color:${component.headerFillColor}; font-weight:bold; color:${finalHeaderTextColor};`;
+        
+        const headerRowData = component.hasHeader ? component.data[0] : null;
+        const bodyRowsData = component.hasHeader ? component.data.slice(1) : component.data;
+
+        const header = component.hasHeader && headerRowData ? `
+            <thead>
+                <tr>
+                    ${headerRowData.map(cell => `<th align="left" style="${headerCellStyles}">${cell}</th>`).join('')}
+                </tr>
+            </thead>
+        ` : '';
+
+        const bodyRows = bodyRowsData.map(row => `
+            <tr>
+                ${row.map(cell => `<td style="${cellStyles}">${cell}</td>`).join('')}
+            </tr>
+        `).join('');
+
+        const body = `<tbody>${bodyRows}</tbody>`;
+
+        const tableHtml = `
+            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="${tableStyles}">
+                ${header}
+                ${body}
+            </table>
+        `;
+        
+        return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${tableHtml}</td></tr></table>`;
+      }
       case 'layout':
         const columnCount = component.columns.length;
         const columnWidths = component.columnWidths || Array(columnCount).fill(100 / columnCount);
