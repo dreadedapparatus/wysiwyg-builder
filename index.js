@@ -24731,7 +24731,7 @@
       const editorNode = editorRef.current;
       if (!editorNode)
         return;
-      editorNode.focus();
+      editorNode.focus({ preventScroll: true });
       if (clickEvent && typeof document.caretRangeFromPoint === "function") {
         const timerId = setTimeout(() => {
           const range = document.caretRangeFromPoint(clickEvent.clientX, clickEvent.clientY);
@@ -25347,9 +25347,9 @@
           {
             className: classNames,
             onClick: !isLayout ? clickHandler : void 0,
-            draggable: !isLayout && !component.isLocked && !isEditingInline,
-            onDragStart: !isLayout && !component.isLocked ? handleDragStart : void 0,
-            onDragEnd: !isLayout ? handleDragEnd : void 0,
+            draggable: !component.isLocked && !isEditingInline,
+            onDragStart: !component.isLocked ? handleDragStart : void 0,
+            onDragEnd: handleDragEnd,
             onDragOver: !isLayout ? handleItemDragOver : void 0,
             onDrop: !isLayout ? (e) => handleDrop(e, dragOverTarget) : void 0,
             style: renderItemStyles,
@@ -27458,7 +27458,7 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
           <![endif]-->
           <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="background-color:${emailSettings.contentBackgroundColor}; max-width: 600px;">
             <tr>
-              <td style="padding: 0;">
+              <td>
                 ${body}
               </td>
             </tr>
