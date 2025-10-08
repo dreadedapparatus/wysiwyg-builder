@@ -24519,7 +24519,12 @@
     { type: "footer", label: "Footer", icon: "\u{1F4DC}" },
     { type: "card", label: "Card", icon: "\u{1F0CF}" },
     { type: "two-column", label: "2 Columns", icon: "||", isLayout: true },
-    { type: "three-column", label: "3 Columns", icon: "|||", isLayout: true }
+    { type: "three-column", label: "3 Columns", icon: "|||", isLayout: true },
+    { type: "image-text", label: "Image + Text", icon: "\u{1F5BC}\uFE0F T", isLayout: true },
+    { type: "text-image", label: "Text + Image", icon: "T \u{1F5BC}\uFE0F", isLayout: true },
+    { type: "two-column-text", label: "Two Column Text", icon: "T | T", isLayout: true },
+    { type: "two-column-cards", label: "Two Cards", icon: "\u{1F0CF}|\u{1F0CF}", isLayout: true },
+    { type: "three-column-images", label: "Three Images", icon: "\u{1F5BC}\uFE0F|\u{1F5BC}\uFE0F|\u{1F5BC}\uFE0F", isLayout: true }
   ];
   var getComponentMeta = (type, list) => {
     return list.find((c) => c.type === type) || { label: type, icon: "\u2753" };
@@ -24719,15 +24724,28 @@
     }, [component, columnIndex, onUpdate]);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "column-resizer", ref: resizerRef, onMouseDown: handleMouseDown });
   };
-  var InlineEditor = ({ html, onUpdate, tagName = "div", style, className }) => {
+  var InlineEditor = ({ html, onUpdate, tagName = "div", style, className, clickEvent }) => {
     const editorRef = (0, import_react.useRef)(null);
     const initialHtml = (0, import_react.useRef)(html);
     (0, import_react.useEffect)(() => {
-      if (editorRef.current) {
-        editorRef.current.focus();
-        document.execCommand("selectAll", false, null);
+      const editorNode = editorRef.current;
+      if (!editorNode)
+        return;
+      editorNode.focus();
+      if (clickEvent && typeof document.caretRangeFromPoint === "function") {
+        const timerId = setTimeout(() => {
+          const range = document.caretRangeFromPoint(clickEvent.clientX, clickEvent.clientY);
+          if (range) {
+            const selection = window.getSelection();
+            if (selection) {
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          }
+        }, 0);
+        return () => clearTimeout(timerId);
       }
-    }, []);
+    }, [clickEvent]);
     const handleBlur = () => {
       if (editorRef.current) {
         onUpdate(editorRef.current.innerHTML);
@@ -24764,7 +24782,8 @@
     const [dragOverTarget, setDragOverTarget] = (0, import_react.useState)(null);
     const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const createNewComponent = (type) => {
-      const id = `comp_${Date.now()}`;
+      const uid = () => `${Date.now()}_${Math.round(Math.random() * 1e6)}`;
+      const id = `comp_${uid()}`;
       const baseProps = { id, isLocked: false };
       const transparentBg = {
         backgroundColor: "transparent",
@@ -24791,9 +24810,9 @@
           return { ...baseProps, type, color: "#cccccc", height: "1", padding: "10", width: "100", useGlobalAccentColor: true, containerStyle: { backgroundColor: "transparent" } };
         case "social":
           return { ...baseProps, type, alignment: "center", links: [
-            { id: `social_${Date.now()}_1`, platform: "facebook", url: "#" },
-            { id: `social_${Date.now()}_2`, platform: "twitter", url: "#" },
-            { id: `social_${Date.now()}_3`, platform: "instagram", url: "#" }
+            { id: `social_${uid()}_1`, platform: "facebook", url: "#" },
+            { id: `social_${uid()}_2`, platform: "twitter", url: "#" },
+            { id: `social_${uid()}_3`, platform: "instagram", url: "#" }
           ], containerStyle: { ...transparentBg } };
         case "video":
           return { ...baseProps, type, videoUrl: "#", imageUrl: "", alt: "Video thumbnail", width: "100", alignment: "center", containerStyle: { ...transparentBg, paddingRight: "0", paddingLeft: "0" } };
@@ -24805,15 +24824,76 @@
           return { ...baseProps, type, content: 'Your Company Name<br>123 Street, City, State 12345<br><a href="#" style="color: #888888; text-decoration: underline;">Unsubscribe</a>', fontSize: "12", color: "#888888", fontFamily: "Arial", textAlign: "center", useGlobalFont: true, useGlobalTextColor: true, width: "100", containerStyle: { ...transparentBg } };
         case "button-group":
           return { ...baseProps, type, alignment: "center", fontFamily: "Arial", useGlobalFont: true, buttons: [
-            { id: `btn_${Date.now()}_1`, text: "Button 1", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff" },
-            { id: `btn_${Date.now()}_2`, text: "Button 2", href: "#", backgroundColor: "#6c757d", textColor: "#ffffff" }
+            { id: `btn_${uid()}_1`, text: "Button 1", href: "#", backgroundColor: "#0d6efd", textColor: "#ffffff" },
+            { id: `btn_${uid()}_2`, text: "Button 2", href: "#", backgroundColor: "#6c757d", textColor: "#ffffff" }
           ], containerStyle: { ...transparentBg } };
         case "emoji":
           return { ...baseProps, type, character: "\u{1F389}", fontSize: "48", alignment: "center", containerStyle: { ...transparentBg } };
         case "two-column":
-          return { ...baseProps, id, type: "layout", layoutType: "two-column", columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }], containerStyle: { backgroundColor: "transparent" } };
+          return { ...baseProps, id, type: "layout", layoutType: "two-column", columns: [{ id: `col_${uid()}_1`, components: [] }, { id: `col_${uid()}_2`, components: [] }], containerStyle: { backgroundColor: "transparent" } };
         case "three-column":
-          return { ...baseProps, id, type: "layout", layoutType: "three-column", columns: [{ id: `col_${Date.now()}_1`, components: [] }, { id: `col_${Date.now()}_2`, components: [] }, { id: `col_${Date.now()}_3`, components: [] }], containerStyle: { backgroundColor: "transparent" } };
+          return { ...baseProps, id, type: "layout", layoutType: "three-column", columns: [{ id: `col_${uid()}_1`, components: [] }, { id: `col_${uid()}_2`, components: [] }, { id: `col_${uid()}_3`, components: [] }], containerStyle: { backgroundColor: "transparent" } };
+        case "image-text":
+          return {
+            ...baseProps,
+            id,
+            type: "layout",
+            layoutType: "two-column",
+            columns: [
+              { id: `col_${uid()}_1`, components: [createNewComponent("image")] },
+              { id: `col_${uid()}_2`, components: [createNewComponent("text")] }
+            ],
+            containerStyle: { backgroundColor: "transparent" }
+          };
+        case "text-image":
+          return {
+            ...baseProps,
+            id,
+            type: "layout",
+            layoutType: "two-column",
+            columns: [
+              { id: `col_${uid()}_1`, components: [createNewComponent("text")] },
+              { id: `col_${uid()}_2`, components: [createNewComponent("image")] }
+            ],
+            containerStyle: { backgroundColor: "transparent" }
+          };
+        case "two-column-text":
+          return {
+            ...baseProps,
+            id,
+            type: "layout",
+            layoutType: "two-column",
+            columns: [
+              { id: `col_${uid()}_1`, components: [createNewComponent("text")] },
+              { id: `col_${uid()}_2`, components: [createNewComponent("text")] }
+            ],
+            containerStyle: { backgroundColor: "transparent" }
+          };
+        case "two-column-cards":
+          return {
+            ...baseProps,
+            id,
+            type: "layout",
+            layoutType: "two-column",
+            columns: [
+              { id: `col_${uid()}_1`, components: [createNewComponent("card")] },
+              { id: `col_${uid()}_2`, components: [createNewComponent("card")] }
+            ],
+            containerStyle: { backgroundColor: "transparent" }
+          };
+        case "three-column-images":
+          return {
+            ...baseProps,
+            id,
+            type: "layout",
+            layoutType: "three-column",
+            columns: [
+              { id: `col_${uid()}_1`, components: [createNewComponent("image")] },
+              { id: `col_${uid()}_2`, components: [createNewComponent("image")] },
+              { id: `col_${uid()}_3`, components: [createNewComponent("image")] }
+            ],
+            containerStyle: { backgroundColor: "transparent" }
+          };
         default:
           throw new Error("Unknown component type");
       }
@@ -24939,17 +25019,18 @@
                 setEditingField(null);
               },
               style: textStyles,
-              tagName: "div"
+              tagName: "div",
+              clickEvent: editingField.clickEvent
             }
           ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
             "div",
             {
               dangerouslySetInnerHTML: { __html: component.content },
               style: textStyles,
-              onDoubleClick: () => {
+              onDoubleClick: (e) => {
                 if (!component.isLocked) {
                   setSelectedId(component.id);
-                  setEditingField({ componentId: component.id, field: "content" });
+                  setEditingField({ componentId: component.id, field: "content", clickEvent: { clientX: e.clientX, clientY: e.clientY } });
                 }
               }
             }
@@ -25108,16 +25189,17 @@
                     setEditingField(null);
                   },
                   tagName: "h4",
-                  style: { margin: 0, fontSize: "1.2em" }
+                  style: { margin: 0, fontSize: "1.2em" },
+                  clickEvent: editingField.clickEvent
                 }
               ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 "h4",
                 {
                   style: { margin: 0, fontSize: "1.2em" },
-                  onDoubleClick: () => {
+                  onDoubleClick: (e) => {
                     if (!component.isLocked) {
                       setSelectedId(component.id);
-                      setEditingField({ componentId: component.id, field: "title" });
+                      setEditingField({ componentId: component.id, field: "title", clickEvent: { clientX: e.clientX, clientY: e.clientY } });
                     }
                   },
                   dangerouslySetInnerHTML: { __html: component.title }
@@ -25132,16 +25214,17 @@
                     setEditingField(null);
                   },
                   tagName: "p",
-                  style: paragraphStyle
+                  style: paragraphStyle,
+                  clickEvent: editingField.clickEvent
                 }
               ) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 "p",
                 {
                   style: paragraphStyle,
-                  onDoubleClick: () => {
+                  onDoubleClick: (e) => {
                     if (!component.isLocked) {
                       setSelectedId(component.id);
-                      setEditingField({ componentId: component.id, field: "content" });
+                      setEditingField({ componentId: component.id, field: "content", clickEvent: { clientX: e.clientX, clientY: e.clientY } });
                     }
                   },
                   dangerouslySetInnerHTML: { __html: component.content }
@@ -25264,7 +25347,7 @@
           {
             className: classNames,
             onClick: !isLayout ? clickHandler : void 0,
-            draggable: !isLayout && !component.isLocked,
+            draggable: !isLayout && !component.isLocked && !isEditingInline,
             onDragStart: !isLayout && !component.isLocked ? handleDragStart : void 0,
             onDragEnd: !isLayout ? handleDragEnd : void 0,
             onDragOver: !isLayout ? handleItemDragOver : void 0,
@@ -27375,7 +27458,7 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
           <![endif]-->
           <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="background-color:${emailSettings.contentBackgroundColor}; max-width: 600px;">
             <tr>
-              <td style="padding: 20px;">
+              <td style="padding: 0;">
                 ${body}
               </td>
             </tr>
