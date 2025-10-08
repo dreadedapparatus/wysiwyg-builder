@@ -27596,7 +27596,7 @@
                 <tr><td>${textContent}</td></tr>
             </table>
         `;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${textWrapper}</td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="center" style="${containerStyles}">${textWrapper}</td></tr></table>`;
         }
         case "image":
           const imgTag = `<img src="${component.src || getPlaceholderSrc(component)}" alt="${component.alt}" style="width:${component.width}%; max-width:100%; display:block; border:0; border-radius:${component.borderRadius}px;">`;
@@ -27622,15 +27622,15 @@
         case "button":
           const finalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
           const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
-          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px; display: block;">${component.text}</a></td></tr></table>`;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${buttonContent}</td></tr></table>`;
+          const buttonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" bgcolor="${finalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${component.href}" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalFontFamily}, sans-serif; font-size: ${component.fontSize}px; display: block;">${component.text}</a></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="center" style="${containerStyles}">${buttonContent}</td></tr></table>`;
         case "calendar":
           const finalCalButtonBgColor = component.useGlobalAccentColor ? emailSettings.accentColor : component.backgroundColor;
           const finalCalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const icsContent = generateIcsContent(component);
           const dataUri = `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`;
-          const calButtonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;"><tr><td align="center" bgcolor="${finalCalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${dataUri}" download="event.ics" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalCalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${calButtonContent}</td></tr></table>`;
+          const calButtonContent = `<table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" bgcolor="${finalCalButtonBgColor}" style="padding:10px 20px; border-radius:5px;"><a href="${dataUri}" download="event.ics" target="_blank" style="color:${component.textColor}; text-decoration:none; font-weight:${component.fontWeight}; font-family: ${finalCalFontFamily}, sans-serif; font-size: ${component.fontSize}px;">${component.text}</a></td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="center" style="${containerStyles}">${calButtonContent}</td></tr></table>`;
         case "button-group": {
           const finalGroupFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const buttonsHtml = component.buttons.map(
@@ -27660,7 +27660,7 @@
             </table>
         `;
           const wrapperTdStyle = `padding:${component.padding}px 0; ${containerStyles}`;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${wrapperTdStyle}">${dividerItself}</td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="center" style="${wrapperTdStyle}">${dividerItself}</td></tr></table>`;
         case "social": {
           const socialTdStyle = containerStyles;
           let linksHtml = "";
@@ -27735,7 +27735,7 @@
               </tr>
             </table>
         `;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" height="100%"><tr><td valign="top" height="100%">${cardWrapper}</td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" height="100%"><tr><td align="center" valign="top" height="100%">${cardWrapper}</td></tr></table>`;
         }
         case "emoji":
           const emojiTdStyle = `font-size: ${component.fontSize}px; line-height: 1; text-align: ${component.alignment}; ${containerStyles}`;
@@ -27769,7 +27769,7 @@
                 ${body}
             </table>
         `;
-          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td style="${containerStyles}">${tableHtml}</td></tr></table>`;
+          return `<table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%"><tr><td align="center" style="${containerStyles}">${tableHtml}</td></tr></table>`;
         }
         case "layout":
           const columnCount = component.columns.length;
