@@ -1591,3 +1591,61 @@ input:checked + .slider:before {
 .template-item.static-template .template-name {
     cursor: default;
 }
+
+.layout-selector-group {
+    display: flex;
+    gap: 10px;
+    justify-content: space-around;
+}
+.layout-selector-group button {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--md-sys-color-surface-container-high);
+    border: 2px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--shape-corner-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 60px;
+}
+.layout-selector-group button:hover {
+    border-color: var(--md-sys-color-primary-container);
+}
+.layout-selector-group button.active {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+}
+.layout-icon {
+    display: flex;
+    height: 100%;
+    gap: 4px;
+}
+.layout-icon .img {
+    background-color: var(--md-sys-color-secondary-container);
+    border-radius: 2px;
+}
+.layout-icon .txt {
+    background-color: var(--md-sys-color-outline);
+    border-radius: 2px;
+    flex-grow: 1;
+}
+/* Icon: Top */
+.layout-icon.icon-top {
+    flex-direction: column;
+}
+.layout-icon.icon-top .img {
+    height: 40%;
+}
+/* Icon: Left */
+.layout-icon.icon-left {
+    flex-direction: row;
+}
+.layout-icon.icon-left .img {
+    width: 40%;
+}
+/* Icon: Right */
+.layout-icon.icon-right {
+    flex-direction: row-reverse;
+}
+.layout-icon.icon-right .img {
+    width: 40%;
+}
