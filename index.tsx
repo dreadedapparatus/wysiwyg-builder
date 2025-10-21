@@ -907,6 +907,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
     e.stopPropagation();
     setDragOverTarget(null);
     setDraggingComponentType(null);
+    setDraggingId(null);
 
     const newComponentType = e.dataTransfer.getData('application/reactflow') as CreationComponentType;
     const movedComponentData = e.dataTransfer.getData('application/json-component');
@@ -959,6 +960,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
     const target = e.target as HTMLElement;
     if (target.classList.contains('canvas-container') || target.classList.contains('canvas')) {
       setSelectedId(null);
+      setEditingField(null);
       // Also blur any active element to ensure focus styles are removed,
       // especially when deselecting from an inline editor.
       if (document.activeElement instanceof HTMLElement) {
@@ -1005,7 +1007,13 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                   onDoubleClick={(e) => {
                       if (!component.isLocked) {
                           setSelectedId(component.id);
-                          setEditingField({ componentId: component.id, field: 'content', clickEvent: { clientX: e.clientX, clientY: e.clientY } });
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setEditingField({
+                              componentId: component.id,
+                              field: 'content',
+                              clickEvent: { clientX: e.clientX, clientY: e.clientY },
+                              position: { top: rect.top + window.scrollY, left: rect.left + window.scrollX, width: rect.width, height: rect.height }
+                          });
                       }
                   }}
               />
@@ -1260,7 +1268,13 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                   ) : (
                     <h4
                       style={{ margin: 0, fontSize: '1.2em' }}
-                      onDoubleClick={(e) => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'title', clickEvent: { clientX: e.clientX, clientY: e.clientY } }); } }}
+                      onDoubleClick={(e) => {
+                          if (!component.isLocked) {
+                              setSelectedId(component.id);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setEditingField({ componentId: component.id, field: 'title', clickEvent: { clientX: e.clientX, clientY: e.clientY }, position: { top: rect.top + window.scrollY, left: rect.left + window.scrollX, width: rect.width, height: rect.height } });
+                          }
+                      }}
                       dangerouslySetInnerHTML={{ __html: component.title }}
                     />
                   )}
@@ -1276,7 +1290,13 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                 ) : (
                   <p
                     style={paragraphStyle}
-                    onDoubleClick={(e) => { if (!component.isLocked) { setSelectedId(component.id); setEditingField({ componentId: component.id, field: 'content', clickEvent: { clientX: e.clientX, clientY: e.clientY } }); } }}
+                    onDoubleClick={(e) => {
+                        if (!component.isLocked) {
+                            setSelectedId(component.id);
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setEditingField({ componentId: component.id, field: 'content', clickEvent: { clientX: e.clientX, clientY: e.clientY }, position: { top: rect.top + window.scrollY, left: rect.left + window.scrollX, width: rect.width, height: rect.height } });
+                        }
+                    }}
                     dangerouslySetInnerHTML={{ __html: component.content }}
                   />
                 )}
@@ -1360,7 +1380,15 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                           onDoubleClick={(e) => {
                             if (!component.isLocked) {
                               setSelectedId(component.id);
-                              setEditingField({ componentId: component.id, field: 'cell', rowIndex: 0, colIndex: c, clickEvent: { clientX: e.clientX, clientY: e.clientY } });
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setEditingField({
+                                  componentId: component.id,
+                                  field: 'cell',
+                                  rowIndex: 0,
+                                  colIndex: c,
+                                  clickEvent: { clientX: e.clientX, clientY: e.clientY },
+                                  position: { top: rect.top + window.scrollY, left: rect.left + window.scrollX, width: rect.width, height: rect.height }
+                              });
                             }
                           }}
                         >
@@ -1394,7 +1422,15 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                             onDoubleClick={(e) => {
                               if (!component.isLocked) {
                                 setSelectedId(component.id);
-                                setEditingField({ componentId: component.id, field: 'cell', rowIndex: dataRowIndex, colIndex: c, clickEvent: { clientX: e.clientX, clientY: e.clientY } });
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setEditingField({
+                                    componentId: component.id,
+                                    field: 'cell',
+                                    rowIndex: dataRowIndex,
+                                    colIndex: c,
+                                    clickEvent: { clientX: e.clientX, clientY: e.clientY },
+                                    position: { top: rect.top + window.scrollY, left: rect.left + window.scrollX, width: rect.width, height: rect.height }
+                                });
                               }
                             }}
                           >
@@ -1836,7 +1872,12 @@ const ContainerStyleEditor = ({ component, onUpdate }) => {
     );
 };
 
-const CollapsibleSection = ({ title, children, defaultCollapsed = false }) => {
+// FIX: Explicitly type the CollapsibleSection component props to resolve a TypeScript parsing issue where the `children` prop was not being correctly inferred from the JSX syntax. This single change fixes all related errors throughout the file.
+const CollapsibleSection: React.FC<{
+  title: string;
+  children: React.ReactNode;
+  defaultCollapsed?: boolean;
+}> = ({ title, children, defaultCollapsed = false }) => {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   const handleToggle = () => setIsCollapsed(!isCollapsed);
@@ -1952,19 +1993,6 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
         onUpdate(component.id, { ...component, [prop]: value });
     };
     
-    const handleFormat = (e: React.MouseEvent, command: string) => {
-        e.preventDefault();
-        if (command === 'createLink') {
-            const url = prompt('Enter the link URL:', 'https://');
-            if (url) {
-                // execCommand is deprecated but necessary for this simple implementation
-                document.execCommand(command, false, url);
-            }
-        } else {
-            document.execCommand(command, false);
-        }
-    };
-
     const getImageDimensions = (url: string): Promise<{ width: number, height: number }> => {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -2111,12 +2139,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
             return (
                 <>
                     <CollapsibleSection title="Typography & Style">
-                        <div className="global-toggle-group">
-                            <label>Use Global Font</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                        <div className="form-group">
+                            <div className="global-toggle-group">
+                                <label>Use Global Font</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Font Family</label>
@@ -2147,7 +2177,7 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         <div className="form-group-row">
                             <div className="form-group">
                                 <label>Color</label>
-                                <div className="global-toggle-group">
+                                <div className="global-toggle-group" style={{ marginBottom: '8px' }}>
                                     <label>Use Global</label>
                                     <label className="switch">
                                         <input type="checkbox" checked={component.useGlobalTextColor} onChange={(e) => handleChange('useGlobalTextColor', e.target.checked)} />
@@ -2182,27 +2212,6 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                 />
                                 <input type="number" min="10" max="100" className="slider-value-input" value={component.width} onChange={(e) => handleChange('width', e.target.value)} />
                             </div>
-                        </div>
-                    </CollapsibleSection>
-                    <CollapsibleSection title="Content" defaultCollapsed>
-                        <div className="form-group">
-                            <label>Content</label>
-                            <div className="rich-text-toolbar">
-                                <button onMouseDown={(e) => handleFormat(e, 'bold')}><b>B</b></button>
-                                <button onMouseDown={(e) => handleFormat(e, 'italic')}><i>I</i></button>
-                                <button onMouseDown={(e) => handleFormat(e, 'underline')}><u>U</u></button>
-                                <button onMouseDown={(e) => handleFormat(e, 'createLink')}>🔗</button>
-                                <button onMouseDown={(e) => handleFormat(e, 'unlink')}>🚫</button>
-                                <button onMouseDown={(e) => handleFormat(e, 'insertUnorderedList')}>●</button>
-                                <button onMouseDown={(e) => handleFormat(e, 'insertOrderedList')}>1.</button>
-                            </div>
-                            <div 
-                                className="rich-text-editor"
-                                contentEditable
-                                suppressContentEditableWarning
-                                dangerouslySetInnerHTML={{ __html: component.content }}
-                                onBlur={(e) => handleChange('content', e.target.innerHTML)}
-                            />
                         </div>
                     </CollapsibleSection>
                 </>
@@ -2315,12 +2324,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         </div>
                     </CollapsibleSection>
                     <CollapsibleSection title="Styling">
-                        <div className="global-toggle-group">
-                            <label>Use Global Font</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                        <div className="form-group">
+                            <div className="global-toggle-group">
+                                <label>Use Global Font</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Font Family</label>
@@ -2354,12 +2365,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                 <button className={component.fontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'bold')}><b>Bold</b></button>
                             </div>
                         </div>
-                         <div className="global-toggle-group">
-                            <label>Use Global Accent Color</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                         <div className="form-group">
+                            <div className="global-toggle-group">
+                                <label>Use Global Accent Color</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Background Color</label>
@@ -2407,12 +2420,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             <label>Button Text</label>
                             <input type="text" value={component.text} onChange={(e) => handleChange('text', e.target.value)} />
                         </div>
-                         <div className="global-toggle-group">
-                            <label>Use Global Font</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                         <div className="form-group">
+                            <div className="global-toggle-group">
+                                <label>Use Global Font</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Font Family</label>
@@ -2434,12 +2449,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                 <button className={component.fontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('fontWeight', 'bold')}><b>Bold</b></button>
                             </div>
                         </div>
-                         <div className="global-toggle-group">
-                            <label>Use Global Accent Color</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                         <div className="form-group">
+                            <div className="global-toggle-group">
+                                <label>Use Global Accent Color</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Background Color</label>
@@ -2469,12 +2486,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                 <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
                             </div>
                         </div>
-                        <div className="global-toggle-group">
-                            <label>Use Global Font</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                        <div className="form-group">
+                            <div className="global-toggle-group">
+                                <label>Use Global Font</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Font Family</label>
@@ -2529,12 +2548,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
             );
             case 'divider': return (
                 <CollapsibleSection title="Styling">
-                     <div className="global-toggle-group">
-                        <label>Use Global Accent Color</label>
-                        <label className="switch">
-                            <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
-                            <span className="slider round"></span>
-                        </label>
+                     <div className="form-group">
+                        <div className="global-toggle-group">
+                            <label>Use Global Accent Color</label>
+                            <label className="switch">
+                                <input type="checkbox" checked={component.useGlobalAccentColor} onChange={(e) => handleChange('useGlobalAccentColor', e.target.checked)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Color</label>
@@ -2660,46 +2681,50 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
             case 'card': return (
                 <>
                     <CollapsibleSection title="Layout">
-                        <div className="layout-selector-group">
-                            <button
-                                className={component.layout === 'image-top' ? 'active' : ''}
-                                onClick={() => handleChange('layout', 'image-top')}
-                                title="Image on Top"
-                            >
-                                <div className="layout-icon icon-top">
-                                    <div className="img"></div>
-                                    <div className="txt"></div>
-                                </div>
-                            </button>
-                            <button
-                                className={component.layout === 'image-left' ? 'active' : ''}
-                                onClick={() => handleChange('layout', 'image-left')}
-                                title="Image on Left"
-                            >
-                                <div className="layout-icon icon-left">
-                                    <div className="img"></div>
-                                    <div className="txt"></div>
-                                </div>
-                            </button>
-                            <button
-                                className={component.layout === 'image-right' ? 'active' : ''}
-                                onClick={() => handleChange('layout', 'image-right')}
-                                title="Image on Right"
-                            >
-                                 <div className="layout-icon icon-right">
-                                    <div className="img"></div>
-                                    <div className="txt"></div>
-                                </div>
-                            </button>
+                        <div className="form-group">
+                            <div className="layout-selector-group">
+                                <button
+                                    className={component.layout === 'image-top' ? 'active' : ''}
+                                    onClick={() => handleChange('layout', 'image-top')}
+                                    title="Image on Top"
+                                >
+                                    <div className="layout-icon icon-top">
+                                        <div className="img"></div>
+                                        <div className="txt"></div>
+                                    </div>
+                                </button>
+                                <button
+                                    className={component.layout === 'image-left' ? 'active' : ''}
+                                    onClick={() => handleChange('layout', 'image-left')}
+                                    title="Image on Left"
+                                >
+                                    <div className="layout-icon icon-left">
+                                        <div className="img"></div>
+                                        <div className="txt"></div>
+                                    </div>
+                                </button>
+                                <button
+                                    className={component.layout === 'image-right' ? 'active' : ''}
+                                    onClick={() => handleChange('layout', 'image-right')}
+                                    title="Image on Right"
+                                >
+                                     <div className="layout-icon icon-right">
+                                        <div className="img"></div>
+                                        <div className="txt"></div>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
                     </CollapsibleSection>
                     <CollapsibleSection title="Image">
                         <div className="form-group">
-                            <label>Show Image</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.showImage} onChange={(e) => handleChange('showImage', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                            <div className="global-toggle-group">
+                                <label>Show Image</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.showImage} onChange={(e) => handleChange('showImage', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         {component.showImage && (
                             <>
@@ -2732,13 +2757,15 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             </>
                         )}
                     </CollapsibleSection>
-                    <CollapsibleSection title="Content">
-                        <div className="global-toggle-group">
-                            <label>Use Global Font</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                    <CollapsibleSection title="Content" defaultCollapsed>
+                        <div className="form-group">
+                            <div className="global-toggle-group">
+                                <label>Use Global Font</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Font Family</label>
@@ -2753,22 +2780,16 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                  <input type="text" value={component.textColor} onChange={(e) => handleChange('textColor', e.target.value)} />
                             </div>
                         </div>
-                         <div className="form-group">
-                            <label>Title</label>
-                            <input type="text" value={component.title} onChange={(e) => handleChange('title', e.target.value)} />
-                        </div>
-                         <div className="form-group">
-                            <label>Content</label>
-                            <textarea value={component.content} onChange={(e) => handleChange('content', e.target.value)} />
-                        </div>
                     </CollapsibleSection>
-                    <CollapsibleSection title="Button">
+                    <CollapsibleSection title="Button" defaultCollapsed>
                         <div className="form-group">
-                            <label>Show Button</label>
-                            <label className="switch">
-                                <input type="checkbox" checked={component.showButton} onChange={(e) => handleChange('showButton', e.target.checked)} />
-                                <span className="slider round"></span>
-                            </label>
+                            <div className="global-toggle-group">
+                                <label>Show Button</label>
+                                <label className="switch">
+                                    <input type="checkbox" checked={component.showButton} onChange={(e) => handleChange('showButton', e.target.checked)} />
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
                         </div>
                         {component.showButton && (
                             <>
@@ -2780,12 +2801,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                     <label>Button URL</label>
                                     <input type="url" value={component.buttonHref} onChange={(e) => handleChange('buttonHref', e.target.value)} />
                                 </div>
-                                <div className="global-toggle-group">
-                                    <label>Use Global Font</label>
-                                    <label className="switch">
-                                        <input type="checkbox" checked={component.useGlobalButtonFont} onChange={(e) => handleChange('useGlobalButtonFont', e.target.checked)} />
-                                        <span className="slider round"></span>
-                                    </label>
+                                <div className="form-group">
+                                    <div className="global-toggle-group">
+                                        <label>Use Global Font</label>
+                                        <label className="switch">
+                                            <input type="checkbox" checked={component.useGlobalButtonFont} onChange={(e) => handleChange('useGlobalButtonFont', e.target.checked)} />
+                                            <span className="slider round"></span>
+                                        </label>
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label>Font Family</label>
@@ -2800,12 +2823,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                                         <button className={component.buttonFontWeight === 'bold' ? 'active' : ''} onClick={() => handleChange('buttonFontWeight', 'bold')}><b>Bold</b></button>
                                     </div>
                                 </div>
-                                 <div className="global-toggle-group">
-                                    <label>Use Global Button Color</label>
-                                    <label className="switch">
-                                        <input type="checkbox" checked={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('useGlobalButtonAccentColor', e.target.checked)} />
-                                        <span className="slider round"></span>
-                                    </label>
+                                 <div className="form-group">
+                                    <div className="global-toggle-group">
+                                        <label>Use Global Button Color</label>
+                                        <label className="switch">
+                                            <input type="checkbox" checked={component.useGlobalButtonAccentColor} onChange={(e) => handleChange('useGlobalButtonAccentColor', e.target.checked)} />
+                                            <span className="slider round"></span>
+                                        </label>
+                                    </div>
                                 </div>
                                  <div className="form-group">
                                     <label>Button Background</label>
@@ -2817,7 +2842,7 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                             </>
                         )}
                     </CollapsibleSection>
-                    <CollapsibleSection title="Card Style">
+                    <CollapsibleSection title="Card Style" defaultCollapsed>
                         <div className="form-group">
                             <label>Width (%)</label>
                             <div className="slider-group">
@@ -2935,16 +2960,18 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         />
                       </div>
                     </div>
-                    <div className="global-toggle-group">
-                      <label>Enable Header Row</label>
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          checked={component.hasHeader}
-                          onChange={(e) => handleChange('hasHeader', e.target.checked)}
-                        />
-                        <span className="slider round"></span>
-                      </label>
+                    <div className="form-group">
+                        <div className="global-toggle-group">
+                          <label>Enable Header Row</label>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={component.hasHeader}
+                              onChange={(e) => handleChange('hasHeader', e.target.checked)}
+                            />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
                     </div>
                   </CollapsibleSection>
                   <CollapsibleSection title="Table Style">
@@ -2977,12 +3004,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                           <input type="text" value={component.headerFillColor} onChange={(e) => handleChange('headerFillColor', e.target.value)} />
                         </div>
                       </div>
-                      <div className="global-toggle-group">
-                        <label>Auto-contrast text color</label>
-                        <label className="switch">
-                          <input type="checkbox" checked={component.useAutoHeaderTextColor} onChange={(e) => handleChange('useAutoHeaderTextColor', e.target.checked)} />
-                          <span className="slider round"></span>
-                        </label>
+                      <div className="form-group">
+                        <div className="global-toggle-group">
+                          <label>Auto-contrast text color</label>
+                          <label className="switch">
+                            <input type="checkbox" checked={component.useAutoHeaderTextColor} onChange={(e) => handleChange('useAutoHeaderTextColor', e.target.checked)} />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
                       </div>
                       {!component.useAutoHeaderTextColor && (
                         <div className="form-group">
@@ -2996,12 +3025,14 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                     </CollapsibleSection>
                   )}
                   <CollapsibleSection title="Body Typography">
-                    <div className="global-toggle-group">
-                      <label>Use Global Font</label>
-                      <label className="switch">
-                        <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
-                        <span className="slider round"></span>
-                      </label>
+                    <div className="form-group">
+                        <div className="global-toggle-group">
+                          <label>Use Global Font</label>
+                          <label className="switch">
+                            <input type="checkbox" checked={component.useGlobalFont} onChange={(e) => handleChange('useGlobalFont', e.target.checked)} />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
                     </div>
                     <div className="form-group">
                       <label>Font Family</label>
@@ -3011,7 +3042,7 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                     </div>
                     <div className="form-group">
                       <label>Text Color</label>
-                      <div className="global-toggle-group">
+                      <div className="global-toggle-group" style={{ marginBottom: '8px' }}>
                         <label>Use Global</label>
                         <label className="switch">
                           <input type="checkbox" checked={component.useGlobalTextColor} onChange={(e) => handleChange('useGlobalTextColor', e.target.checked)} />
@@ -3417,6 +3448,84 @@ const getInitialState = (): AppState => {
     return defaultAppState;
 };
 
+const InlineRichTextToolbar = ({ position, onFormat }) => {
+    const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (!position) return;
+
+        const checkSelectionFormats = () => {
+            const newActiveFormats = new Set<string>();
+            const commands = ['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList'];
+            commands.forEach(cmd => {
+                if (document.queryCommandState(cmd)) {
+                    newActiveFormats.add(cmd);
+                }
+            });
+
+            const selection = window.getSelection();
+            if (selection?.anchorNode) {
+                let node: Node | null = selection.anchorNode;
+                // Traverse up the DOM tree from the anchor node
+                while (node && node.nodeName !== 'BODY') {
+                    if (node.nodeName === 'A') {
+                        newActiveFormats.add('link');
+                        break;
+                    }
+                    if ((node as HTMLElement).isContentEditable) {
+                        // Stop if we reach the editor boundary and haven't found a link
+                        break;
+                    }
+                    node = node.parentNode;
+                }
+            }
+            
+            setActiveFormats(newActiveFormats);
+        };
+
+        // Delay the initial check slightly to ensure selection is updated after click
+        const timeoutId = setTimeout(checkSelectionFormats, 0);
+        document.addEventListener('selectionchange', checkSelectionFormats);
+
+        return () => {
+            clearTimeout(timeoutId);
+            document.removeEventListener('selectionchange', checkSelectionFormats);
+        };
+    }, [position]);
+
+
+    if (!position) return null;
+
+    const style: React.CSSProperties = {
+        position: 'absolute',
+        top: `${position.top - 45}px`, // Position it above the element
+        left: `${position.left + position.width / 2}`,
+        transform: 'translateX(-50%)', // Center it horizontally
+        zIndex: 1002,
+    };
+
+    const handleMouseDown = (e: React.MouseEvent, command: string) => {
+        // Prevent the editor from losing focus
+        e.preventDefault();
+        onFormat(command);
+    };
+    
+    return createPortal(
+        <div className="inline-rich-text-toolbar" style={style}>
+            <button className={activeFormats.has('bold') ? 'active' : ''} onMouseDown={(e) => handleMouseDown(e, 'bold')} title="Bold"><b>B</b></button>
+            <button className={activeFormats.has('italic') ? 'active' : ''} onMouseDown={(e) => handleMouseDown(e, 'italic')} title="Italic"><i>I</i></button>
+            <button className={activeFormats.has('underline') ? 'active' : ''} onMouseDown={(e) => handleMouseDown(e, 'underline')} title="Underline"><u>U</u></button>
+            <div className="toolbar-separator"></div>
+            <button className={activeFormats.has('link') ? 'active' : ''} onMouseDown={(e) => handleMouseDown(e, 'createLink')} title="Link">🔗</button>
+            <button onMouseDown={(e) => handleMouseDown(e, 'unlink')} title="Unlink" disabled={!activeFormats.has('link')}>🚫</button>
+            <div className="toolbar-separator"></div>
+            <button className={activeFormats.has('insertUnorderedList') ? 'active' : ''} onMouseDown={(e) => handleMouseDown(e, 'insertUnorderedList')} title="Unordered List">●</button>
+            <button className={activeFormats.has('insertOrderedList') ? 'active' : ''} onMouseDown={(e) => handleMouseDown(e, 'insertOrderedList')} title="Ordered List">1.</button>
+        </div>,
+        document.body
+    );
+};
+
 
 const App = () => {
   const { state, setState, undo, redo, canUndo, canRedo } = useHistory<AppState>(getInitialState());
@@ -3432,7 +3541,14 @@ const App = () => {
   const importInputRef = useRef<HTMLInputElement>(null);
   const [componentList, setComponentList] = useState<ComponentListItem[]>(DEFAULT_COMPONENT_LIST);
   const [isPreviewing, setIsPreviewing] = useState(false);
-  const [editingField, setEditingField] = useState<{ componentId: string; field: string; rowIndex?: number; colIndex?: number; clickEvent?: { clientX: number, clientY: number } } | null>(null);
+  const [editingField, setEditingField] = useState<{
+      componentId: string;
+      field: string;
+      rowIndex?: number;
+      colIndex?: number;
+      clickEvent?: { clientX: number, clientY: number };
+      position?: { top: number, left: number, width: number, height: number };
+  } | null>(null);
 
   
   // Load favorites and templates from localStorage on initial mount
@@ -3555,8 +3671,16 @@ const App = () => {
   }, [undo, redo, isPreviewing]);
 
   useEffect(() => {
-      setEditingField(null);
-  }, [selectedId]);
+      if (selectedId) {
+        const selectedComponent = findComponent(selectedId, components);
+        const isTextEditable = selectedComponent && ['text', 'footer', 'card', 'table'].includes(selectedComponent.type);
+        if (!isTextEditable) {
+           setEditingField(null);
+        }
+      } else {
+        setEditingField(null);
+      }
+  }, [selectedId, components]);
 
 
   const setComponents = (updater: (prev: EmailComponent[]) => EmailComponent[]) => {
@@ -3782,6 +3906,17 @@ const App = () => {
 
   const handleReorderComponents = (newList: ComponentListItem[]) => {
     setComponentList(newList);
+  };
+
+  const handleFormat = (command: string) => {
+    if (command === 'createLink') {
+        const url = prompt('Enter the link URL:', 'https://');
+        if (url) {
+            document.execCommand(command, false, url);
+        }
+    } else {
+        document.execCommand(command, false);
+    }
   };
 
 
@@ -4211,6 +4346,7 @@ img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration
           onUpdateSettings={handleUpdateEmailSettings}
         />
       </main>
+      <InlineRichTextToolbar position={editingField?.position} onFormat={handleFormat} />
       {isPreviewing && <PreviewMode html={generateEmailHtml()} onExit={() => setIsPreviewing(false)} />}
       {showExportModal && <ExportModal html={generateEmailHtml()} onClose={() => setShowExportModal(false)} />}
       {showTemplatesModal && 
