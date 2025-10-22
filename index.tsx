@@ -226,6 +226,9 @@ interface TableComponent extends BaseComponent {
     textColor: string;
     useGlobalTextColor: boolean;
     width: string;
+    textAlign: 'left' | 'center' | 'right';
+    verticalAlign: 'top' | 'middle' | 'bottom';
+    fontSize: string;
 }
 
 
@@ -678,6 +681,14 @@ const InlineEditor = ({ html, onUpdate, tagName = 'div', style, className, click
                 editorRef.current.blur();
             }
         }
+        
+        // On Ctrl/Cmd + Enter, insert a line break
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            document.execCommand('insertHTML', false, '<br>');
+            return;
+        }
+
         // On Enter (without Shift), just blur to save
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -778,6 +789,9 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           textColor: '#000000',
           useGlobalTextColor: true,
           width: '100',
+          textAlign: 'left',
+          verticalAlign: 'top',
+          fontSize: '14',
           containerStyle: { ...transparentBg }
         };
       }
@@ -987,7 +1001,7 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
           const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
           const isEditing = editingField?.componentId === component.id && editingField?.field === 'content';
-          const textStyles = { fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign, width: '100%' };
+          const textStyles: React.CSSProperties = { fontSize: `${component.fontSize}px`, color: finalTextColor, fontFamily: finalFontFamily, textAlign: component.textAlign, width: '100%', wordBreak: 'break-word', overflowWrap: 'break-word' };
           
           const textContent = isEditing ? (
               <InlineEditor
@@ -1208,6 +1222,13 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
               ...(isInColumn && { minHeight: '3em' }), // Reserve space for ~2 lines of title text
           };
 
+          const titleStyle: React.CSSProperties = {
+              margin: 0,
+              fontSize: '1.2em',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+          };
+
           const contentContainerStyle: React.CSSProperties = {
             color: finalCardTextColor,
             display: 'flex',
@@ -1218,6 +1239,8 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const paragraphStyle: React.CSSProperties = {
             margin: '0 0 10px',
             flexGrow: 1, // Let the paragraph itself grow
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
           };
 
           const imageContainer = component.showImage ? (
@@ -1262,12 +1285,12 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
                       html={component.title}
                       onUpdate={(newHtml) => { onUpdate(component.id, { ...component, title: newHtml }); setEditingField(null); }}
                       tagName="h4"
-                      style={{ margin: 0, fontSize: '1.2em' }}
+                      style={titleStyle}
                       clickEvent={editingField.clickEvent}
                     />
                   ) : (
                     <h4
-                      style={{ margin: 0, fontSize: '1.2em' }}
+                      style={titleStyle}
                       onDoubleClick={(e) => {
                           if (!component.isLocked) {
                               setSelectedId(component.id);
@@ -1345,7 +1368,11 @@ const Canvas = ({ components, setComponents, selectedId, setSelectedId, emailSet
           const cellStyle: React.CSSProperties = {
             border: `${component.cellBorderWidth}px solid #ccc`,
             padding: '8px',
-            textAlign: 'left',
+            textAlign: component.textAlign,
+            verticalAlign: component.verticalAlign,
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+            fontSize: `${component.fontSize}px`,
           };
           
           const headerCellStyle: React.CSSProperties = {
@@ -1911,26 +1938,79 @@ const CollapsibleSection: React.FC<{
   );
 };
 
+const EMOJI_CATEGORIES = {
+  'Smileys & People': ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦵', '🦿', '🦶', '👂', '🦻', '👃', '🧠', '🦷', '🦴', '👀', '👁️', '👅', '👄', '👶', '🧒', '👦', '👧', '🧑', '👱', '👨', '🧔', '👨‍🦰', '👨‍🦱', '👨‍🦳', '👨‍🦲', '👩', '👩‍🦰', '👩‍🦱', '👩‍🦳', '👩‍🦲', '👱‍♀️', '👱‍♂️', '🧓', '👴', '👵', '🙍', '🙍‍♂️', '🙍‍♀️', '🙎', '🙎‍♂️', '🙎‍♀️', '🙅', '🙅‍♂️', '🙅‍♀️', '🙆', '🙆‍♂️', '🙆‍♀️', '💁', '💁‍♂️', '💁‍♀️', '🙋', '🙋‍♂️', '🙋‍♀️', '🧏', '🧏‍♂️', '🧏‍♀️', '🙇', '🙇‍♂️', '🙇‍♀️', '🤦', '🤦‍♂️', '🤦‍♀️', '🤷', '🤷‍♂️', '🤷‍♀️', '🧑‍⚕️', '👨‍⚕️', '👩‍⚕️', '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🧑‍🏫', '👨‍🏫', '👩‍🏫', '🧑‍⚖️', '👨‍⚖️', '👩‍⚖️', '🧑‍🌾', '👨‍🌾', '👩‍🌾', '🧑‍🍳', '👨‍🍳', '👩‍🍳', '🧑‍🔧', '👨‍🔧', '👩‍🔧', '🧑‍🏭', '👨‍🏭', '👩‍🏭', '🧑‍💼', '👨‍💼', '👩‍💼', '🧑‍🔬', '👨‍🔬', '👩‍🔬', '🧑‍💻', '👨‍💻', '👩‍💻', '🧑‍🎤', '👨‍🎤', '👩‍🎤', '🧑‍🎨', '👨‍🎨', '👩‍🎨', '🧑‍✈️', '👨‍✈️', '👩‍✈️', '🧑‍🚀', '👨‍🚀', '👩‍🚀', '🧑‍🚒', '👨‍🚒', '👩‍🚒', '👮', '👮‍♂️', '👮‍♀️', '🕵️', '🕵️‍♂️', '🕵️‍♀️', '💂', '💂‍♂️', '💂‍♀️', '👷', '👷‍♂️', '👷‍♀️', '🤴', '👸', '👳', '👳‍♂️', '👳‍♀️', '👲', '🧕', '🤵', '👰', '🤰', '🤱', '🧑‍🍼', '👨‍🍼', '👩‍🍼', '👼', '🎅', '🤶', '🦸', '🦸‍♂️', '🦸‍♀️', '🦹', '🦹‍♂️', '🦹‍♀️', '🧙', '🧙‍♂️', '🧙‍♀️', '🧚', '🧚‍♂️', '🧚‍♀️', '🧛', '🧛‍♂️', '🧛‍♀️', '🧜', '🧜‍♂️', '🧜‍♀️', '🧝', '🧝‍♂️', '🧝‍♀️', '🧞', '🧞‍♂️', '🧞‍♀️', '🧟', '🧟‍♂️', '🧟‍♀️', '💆', '💆‍♂️', '💆‍♀️', '💇', '💇‍♂️', '💇‍♀️', '🚶', '🚶‍♂️', '🚶‍♀️', '🧍', '🧍‍♂️', '🧍‍♀️', '🧎', '🧎‍♂️', '🧎‍♀️', '🧑‍🦽', '👨‍🦽', '👩‍🦽', '🧑‍🦼', '👨‍🦼', '👩‍🦼', '🧑‍🦯', '👨‍🦯', '👩‍🦯', '🏃', '🏃‍♂️', '🏃‍♀️', '💃', '🕺', '🕴️', '👯', '👯‍♂️', '👯‍♀️', '🧖', '🧖‍♂️', '🧖‍♀️', '🧗', '🧗‍♂️', '🧗‍♀️', '🤺', '🏇', '⛷️', '🏂', '🏌️', '🏌️‍♂️', '🏌️‍♀️', '🏄', '🏄‍♂️', '🏄‍♀️', '🚣', '🚣‍♂️', '🚣‍♀️', '🏊', '🏊‍♂️', '🏊‍♀️', '⛹️', '⛹️‍♂️', '⛹️‍♀️', '🏋️', '🏋️‍♂️', '🏋️‍♀️', '🚴', '🚴‍♂️', '🚴‍♀️', '🚵', '🚵‍♂️', '🚵‍♀️', '🤸', '🤸‍♂️', '🤸‍♀️', '🤼', '🤼‍♂️', '🤼‍♀️', '🤽', '🤽‍♂️', '🤽‍♀️', '🤾', '🤾‍♂️', '🤾‍♀️', '🤹', '🤹‍♂️', '🤹‍♀️', '🧘', '🧘‍♂️', '🧘‍♀️', '🛀', '🛌', '🧑‍🤝‍🧑', '👭', '👫', '👬', '💏', '💑', '👪', '👨‍👩‍👦', '👨‍👩‍👧', '👨‍👩‍👧‍👦', '👨‍👩‍👦‍👦', '👨‍👩‍👧‍👧', '👨‍👨‍👦', '👨‍👨‍👧', '👨‍👨‍👧‍👦', '👨‍👨‍👦‍👦', '👨‍👨‍👧‍👧', '👩‍👩‍👦', '👩‍👩‍👧', '👩‍👩‍👧‍👦', '👩‍👩‍👦‍👦', '👩‍👩‍👧‍👧', '👨‍👦', '👨‍👦‍👦', '👨‍👧', '👨‍👧‍👦', '👨‍👧‍👧', '👩‍👦', '👩‍👦‍👦', '👩‍👧', '👩‍👧‍👦', '👩‍👧‍👧', '🗣️', '👤', '👥', '🫂'],
+  'Animals & Nature': ['🙈', '🙉', '🙊', '🐒', '🦍', '🦧', '🐶', '🐕', '🦮', '🐕‍🦺', '🐩', '🐺', '🦊', '🦝', '🐱', '🐈', '🐈‍⬛', '🦁', '🐯', '🐅', '🐆', '🐴', '🐎', '🦄', '🦓', '🦌', '🐮', '🐂', '🐃', '🐄', '🐷', '🐖', '🐗', '🐽', '🐏', '🐑', '🐐', '🐪', '🐫', '🦙', '🦒', '🐘', '🦏', '🦛', '🐭', '🐁', '🐀', '🐹', '🐰', '🐇', '🐿️', '🦔', '🦇', '🐻', '🐨', '🐼', '🦥', '🦦', '🦨', '🦘', '🦡', '🐾', '🦃', '🐔', '🐓', '🐣', '🐤', '🐥', '🐦', '🐧', '🕊️', '🦅', '🦆', '🦢', '🦉', '🦩', '🦚', '🦜', '🐸', '🐊', '🐢', '🦎', '🐍', '🐲', '🐉', '🦕', '🦖', '🐳', '🐋', '🐬', '🐟', '🐠', '🐡', '🦈', '🐙', '🐚', '🐌', '🦋', '🐛', '🐜', '🐝', '🐞', '🦗', '🕷️', '🕸️', '🦂', '🦟', '🦠', '💐', '🌸', '💮', '🏵️', '🌹', '🥀', '🌺', '🌻', '🌼', '🌷', '🌱', '🌲', '🌳', '🌴', '🌵', '🌾', '🌿', '☘️', '🍀', '🍁', '🍂', '🍃', '🌍', '🌎', '🌏', '🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘', '🌙', '🌚', '🌛', '🌜', '🌡️', '☀️', '🌝', '🌞', '🪐', '⭐', '🌟', '🌠', '🌌', '☁️', '⛅', '⛈️', '🌤️', '🌥️', '🌦️', '🌧️', '🌨️', '🌩️', '🌪️', '🌫️', '🌬️', '🌀', '🌈', '🌂', '☂️', '☔', '⛱️', '⚡', '❄️', '☃️', '⛄', '☄️', '🔥', '💧', '🌊'],
+  'Food & Drink': ['🍇', '🍈', '🍉', '🍊', '🍋', '🍌', '🍍', '🥭', '🍎', '🍏', '🍐', '🍑', '🍒', '🍓', '🥝', '🍅', '🥥', '🥑', '🍆', '🥔', '🥕', '🌽', '🌶️', '🥒', '🥬', '🥦', '🧄', '🧅', '🍄', '🥜', '🌰', '🍞', '🥐', '🥖', '🥨', '🥯', '🥞', '🧇', '🧀', '🍖', '🍗', '🥩', '🥓', '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🥙', '🧆', '🥚', '🍳', '🥘', '🍲', '🥣', '🥗', '🍿', '🧈', '🧂', '🥫', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🦀', '🦞', '🦐', '🦑', '🦪', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯', '🍼', '🥛', '☕', '🍵', '🍶', '🍾', '🍷', '🍸', '🍹', '🍺', '🍻', '🥂', '🥃', '🥤', '🧃', '🧉', '🧊', '🥢', '🍽️', '🍴', '🥄', '🔪', '🏺'],
+  'Activities': ['🕴️', '🧗', '🧗‍♀️', '🧗‍♂️', '🤺', '🏇', '⛷️', '🏂', '🏌️', '🏌️‍♀️', '🏌️‍♂️', '🏄', '🏄‍♀️', '🏄‍♂️', '🚣', '🚣‍♀️', '🚣‍♂️', '🏊', '🏊‍♀️', '🏊‍♂️', '⛹️', '⛹️‍♀️', '⛹️‍♂️', '🏋️', '🏋️‍♀️', '🏋️‍♂️', '🚴', '🚴‍♀️', '🚴‍♂️', '🚵', '🚵‍♀️', '🚵‍♂️', '🤸', '🤸‍♀️', '🤸‍♂️', '🤼', '🤼‍♀️', '🤼‍♂️', '🤽', '🤽‍♀️', '🤽‍♂️', '🤾', '🤾‍♀️', '🤾‍♂️', '🤹', '🤹‍♀️', '🤹‍♂️', '🧘', '🧘‍♀️', '🧘‍♂️', '🎈', '🎉', '🎊', '🎋', '🎍', '🎎', '🎏', '🎐', '🎑', '🧧', '🎀', '🎁', '🎗️', '🎟️', '🎫', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '⚽', '⚾', '🥎', '🏀', '🏐', '🏈', '🏉', '🎾', '🎳', '🏏', '🏑', '🏒', '🥍', '🏓', '🏸', '🥊', '🥋', '🥅', '⛳', '⛸️', '🎣', '🎽', '🎿', '🛷', '🥌', '🎯', '🎱', '🔮', '🧿', '🎮', '🕹️', '🎰', '🎲', '🧩', '🧸', '🪅', '🪆', '♟️', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🪀', '🪁'],
+  'Travel & Places': ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🛵', '🚲', '🛴', '🛹', '🛼', '🚏', '🛣️', '🛤️', '🛢️', '⛽', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚆', '🚝', '🚄', '🚅', '🚈', '🚂', '✈️', '🛫', '🛬', '💺', '🚁', '🚟', '🛰️', '⛵', '🚤', '🛥️', '🛳️', '⛴️', '🚢', '⚓', '🚧', '🗼', '🗽', '⛪', '🕌', '🛕', '🕍', '⛩️', '🕋', '⛲', '⛺', '🌁', '🌃', '🏙️', '🌄', '🌅', '🌆', '🌇', '🌉', '🎠', '🎡', '🎢', '🎪', '🚂', '🏠', '🏡', '🏘️', '🏚️', '🏢', '🏬', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛️', '🏟️', '🗿', '🗺️'],
+  'Objects': ['💌', '🕳️', '💣', '🔫', '🔪', '🗡️', '🛡️', '🚬', '⚰️', '⚱️', '🏺', '🧭', '🧱', '💈', '🛢️', '⚗️', '⚖️', '🦯', '🧰', '🔧', '🔨', '⚒️', '⛏️', '🔩', '⚙️', '⛓️', '🧲', '💉', '🩸', '💊', '🩹', '🩺', '🚪', '🛗', ' gương', '🪟', '🛏️', '🛋️', '🪑', '🚽', '🪠', '🚿', '🛁', '🪒', '🧴', '🧷', '🧹', '🧺', '🧻', '🧼', '🧽', '🧯', '🛒', '👓', '🕶️', '🥽', '🥼', '🦺', '👔', '👕', '👖', '🧣', '🧤', '🧥', '🧦', '👗', '👘', '🥻', '🩱', '🩲', '🩳', '👙', '👚', '👛', '👜', '👝', '🎒', '👞', '👟', '🥾', '🥿', '👠', '👡', '🩰', '👢', '👑', '👒', '🎩', '🎓', '🧢', '⛑️', '💄', '💍', '💼'],
+  'Symbols': ['☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗️', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿', '🅿️', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤', '🔡', '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔢', '#️⃣', '*️⃣', '⏏️', '▶️', '⏸️', '⏯️', '⏹️', '⏺️', '⏭️', '⏮️', '⏩', '⏪', '⏫', '⏬', '◀️', '🔼', '🔽', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↪️', '↩️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '➗', '✖️', '♾️', '💲', '💱', '™️', '©️', '®️', '👁️‍🗨️', '🔚', '🔙', '🔛', '🔜', '🔝', '〰️', '✔️', '☑️', '🔘', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '🟤', '⚫', '⚪', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '🟫', '⬛', '⬜', '◼️', '◻️', '◾', '◽', '▪️', '▫️', '🔶', '🔷', '🔸', '🔹', '🔺', '🔻', '🔲', '🔳', '💭', '🗯️', '💬', '🗨️', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛', '🕜', '🕝', '🕞', '🕟', '🕠', '🕡', '🕢', '🕣', '🕤', '🕥', '🕦', '🕧'],
+  'Flags': ['🏁', '🚩', '🎌', '🏴', '🏳️', '🏳️‍🌈', '🏳️‍⚧️', '🏴‍☠️', '🇦🇨', '🇦🇩', '🇦🇪', '🇦🇫', '🇦🇬', '🇦🇮', '🇦🇱', '🇦🇲', '🇦🇴', '🇦🇶', '🇦🇷', '🇦🇸', '🇦🇹', '🇦🇺', '🇦🇼', '🇦🇽', '🇦🇿', '🇧🇦', '🇧🇧', '🇧🇩', '🇧🇪', '🇧🇫', '🇧🇬', '🇧🇭', '🇧🇮', '🇧🇯', '🇧🇱', '🇧🇲', '🇧🇳', '🇧🇴', '🇧🇶', '🇧🇷', '🇧🇸', '🇧🇹', '🇧🇻', '🇧🇼', '🇧🇾', '🇧🇿', '🇨🇦', '🇨🇨', '🇨🇩', '🇨🇫', '🇨🇬', '🇨🇭', '🇨🇮', '🇨🇰', '🇨🇱', '🇨🇲', '🇨🇳', '🇨🇴', '🇨🇵', '🇨🇷', '🇨🇺', '🇨🇻', '🇨🇼', '🇨🇽', '🇨🇾', '🇨🇿', '🇩🇪', '🇩🇬', '🇩🇯', '🇩🇰', '🇩🇲', '🇩🇴', '🇩🇿', '🇪🇦', '🇪🇨', '🇪🇪', '🇪🇬', '🇪🇭', '🇪🇷', '🇪🇸', '🇪🇹', '🇪🇺', '🇫🇮', '🇫🇯', '🇫🇰', '🇫🇲', '🇫🇴', '🇫🇷', '🇬🇦', '🇬🇧', '🇬🇩', '🇬🇪', '🇬🇫', '🇬🇬', '🇬🇭', '🇬🇮', '🇬🇱', '🇬🇲', '🇬🇳', '🇬🇵', '🇬🇶', '🇬🇷', '🇬🇸', '🇬🇹', '🇬🇺', '🇬🇼', '🇬🇾', '🇭🇰', '🇭🇲', '🇭🇳', '🇭🇷', '🇭🇹', '🇭🇺', '🇮🇨', '🇮🇩', '🇮🇪', '🇮🇱', '🇮🇲', '🇮🇳', '🇮🇴', '🇮🇶', '🇮🇷', '🇮🇸', '🇮🇹', '🇯🇪', '🇯🇲', '🇯🇴', '🇯🇵', '🇰🇪', '🇰🇬', '🇰🇭', '🇰🇮', '🇰🇲', '🇰🇳', '🇰🇵', '🇰🇷', '🇰🇼', '🇰🇾', '🇰🇿', '🇱🇦', '🇱🇧', '🇱🇨', '🇱🇮', '🇱🇰', '🇱🇷', '🇱🇸', '🇱🇹', '🇱🇺', '🇱🇻', '🇱🇾', '🇲🇦', '🇲🇨', '🇲🇩', '🇲🇪', '🇲🇫', '🇲🇬', '🇲🇭', '🇲🇰', '🇲🇱', '🇲🇲', '🇲🇳', '🇲🇴', '🇲🇵', '🇲🇶', '🇲🇷', '🇲🇸', '🇲🇹', '🇲🇺', '🇲🇻', '🇲🇼', '🇲🇽', '🇲🇾', '🇲🇿', '🇳🇦', '🇳🇨', '🇳🇪', '🇳🇫', '🇳🇬', '🇳🇮', '🇳🇱', '🇳🇴', '🇳🇵', '🇳🇷', '🇳🇺', '🇳🇿', '🇴🇲', '🇵🇦', '🇵🇪', '🇵🇫', '🇵🇬', '🇵🇭', '🇵🇰', '🇵🇱', '🇵🇲', '🇵🇳', '🇵🇷', '🇵🇸', '🇵🇹', '🇵🇼', '🇵🇾', '🇶🇦', '🇷🇪', '🇷🇴', '🇷🇸', '🇷🇺', '🇷🇼', '🇸🇦', '🇸🇧', '🇸🇨', '🇸🇩', '🇸🇪', '🇸🇬', '🇸🇭', '🇸🇮', '🇸🇯', '🇸🇰', '🇸🇱', '🇸🇲', '🇸🇳', '🇸🇴', '🇸🇷', '🇸🇸', '🇸🇹', '🇸🇻', '🇸🇽', '🇸🇾', '🇸🇿', '🇹🇦', '🇹🇨', '🇹🇩', '🇹🇫', '🇹🇬', '🇹🇭', '🇹🇯', '🇹🇰', '🇹🇱', '🇹🇲', '🇹🇳', '🇹🇴', '🇹🇷', '🇹🇹', '🇹🇻', '🇹🇼', '🇹🇿', '🇺🇦', '🇺🇬', '🇺🇲', '🇺🇳', '🇺🇸', '🇺🇾', '🇺🇿', '🇻🇦', '🇻🇨', '🇻🇪', '🇻🇬', '🇻🇮', '🇻🇳', '🇻🇺', '🇼🇫', '🇼🇸', '🇽🇰', '🇾🇪', '🇾🇹', '🇿🇦', '🇿🇲', '🇿🇼', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁷󠁬󠁳󠁿']
+};
+
+
+const EmojiPicker = ({ onSelect, onClose, position }) => {
+    const pickerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onClose]);
+    
+    const style: React.CSSProperties = {
+        position: 'absolute',
+        top: position.top,
+        left: position.left,
+        zIndex: 1003
+    };
+
+    return createPortal(
+        <div ref={pickerRef} className="emoji-picker-popover" style={style}>
+            {Object.entries(EMOJI_CATEGORIES).map(([category, emojis]) => (
+                <div key={category}>
+                    <div className="emoji-category">{category}</div>
+                    <div className="emoji-grid">
+                        {emojis.map(emoji => (
+                            <button
+                                key={emoji}
+                                className="emoji-picker-button"
+                                onClick={() => {
+                                    onSelect(emoji);
+                                    onClose();
+                                }}
+                            >
+                                {emoji}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>,
+        document.body
+    );
+};
+
 
 const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings }) => {
     const FONT_FAMILIES = ['Arial', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Times New Roman', 'Georgia', 'Garamond', 'Courier New', 'Brush Script MT'];
     const SOCIAL_PLATFORMS = Object.keys(SOCIAL_ICONS) as SocialLink['platform'][];
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [isEditingEmoji, setIsEditingEmoji] = useState(false);
-    const emojiInputRef = useRef<HTMLInputElement>(null);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const emojiButtonRef = useRef<HTMLButtonElement>(null);
     
     // Reset editing state when the selected component changes
     useEffect(() => {
-        setIsEditingEmoji(false);
+        setShowEmojiPicker(false);
     }, [component?.id]);
-
-    // Focus input when editing state becomes true
-    useEffect(() => {
-        if (isEditingEmoji && emojiInputRef.current) {
-            emojiInputRef.current.focus();
-            emojiInputRef.current.select();
-        }
-    }, [isEditingEmoji]);
 
 
     if (!component) {
@@ -2866,62 +2946,62 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                     </CollapsibleSection>
                 </>
             );
-            case 'emoji': return (
-                <>
-                    <CollapsibleSection title="Content">
-                        <div className="form-group">
-                            <label>Emoji Character</label>
-                            {isEditingEmoji ? (
-                                <input
-                                    ref={emojiInputRef}
-                                    type="text"
-                                    value={component.character}
-                                    onChange={(e) => handleChange('character', e.target.value)}
-                                    onBlur={() => setIsEditingEmoji(false)}
-                                    maxLength={2}
-                                />
-                            ) : (
+            case 'emoji': 
+                const buttonRect = emojiButtonRef.current?.getBoundingClientRect();
+                const pickerPosition = buttonRect ? { top: buttonRect.bottom + 8, left: buttonRect.left } : { top: 0, left: 0 };
+            
+                return (
+                    <>
+                        <CollapsibleSection title="Content">
+                            <div className="form-group">
+                                <label>Emoji Character</label>
                                 <button
-                                    className="emoji-picker-button"
-                                    onClick={() => setIsEditingEmoji(true)}
+                                    ref={emojiButtonRef}
+                                    className="emoji-display-button"
+                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                                 >
                                     {component.character}
                                 </button>
-                            )}
-                            <p className="helper-text">Click to edit. Press Cmd+Ctrl+Space (Mac) or Win+. (Windows) for system emoji picker.</p>
-                        </div>
-                    </CollapsibleSection>
-                    <CollapsibleSection title="Appearance">
-                        <div className="form-group">
-                            <label>Size (px)</label>
-                            <div className="slider-group">
-                                <input
-                                    type="range"
-                                    min="16"
-                                    max="200"
-                                    value={component.fontSize}
-                                    onChange={(e) => handleChange('fontSize', e.target.value)}
-                                />
-                                <input
-                                    type="number"
-                                    min="1"
-                                    className="slider-value-input"
-                                    value={component.fontSize}
-                                    onChange={(e) => handleChange('fontSize', e.target.value)}
-                                />
                             </div>
-                        </div>
-                        <div className="form-group">
-                            <label>Alignment</label>
-                            <div className="text-align-group">
-                                <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
-                                <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
-                                <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                        </CollapsibleSection>
+                        <CollapsibleSection title="Appearance">
+                            <div className="form-group">
+                                <label>Size (px)</label>
+                                <div className="slider-group">
+                                    <input
+                                        type="range"
+                                        min="16"
+                                        max="200"
+                                        value={component.fontSize}
+                                        onChange={(e) => handleChange('fontSize', e.target.value)}
+                                    />
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        className="slider-value-input"
+                                        value={component.fontSize}
+                                        onChange={(e) => handleChange('fontSize', e.target.value)}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    </CollapsibleSection>
-                </>
-            );
+                            <div className="form-group">
+                                <label>Alignment</label>
+                                <div className="text-align-group">
+                                    <button className={component.alignment === 'left' ? 'active' : ''} onClick={() => handleChange('alignment', 'left')}>L</button>
+                                    <button className={component.alignment === 'center' ? 'active' : ''} onClick={() => handleChange('alignment', 'center')}>C</button>
+                                    <button className={component.alignment === 'right' ? 'active' : ''} onClick={() => handleChange('alignment', 'right')}>R</button>
+                                </div>
+                            </div>
+                        </CollapsibleSection>
+                        {showEmojiPicker && (
+                            <EmojiPicker
+                                onSelect={(emoji) => handleChange('character', emoji)}
+                                onClose={() => setShowEmojiPicker(false)}
+                                position={pickerPosition}
+                            />
+                        )}
+                    </>
+                );
             case 'table':
               const handleTableResize = (newRowsStr: string, newColsStr: string) => {
                 const newRows = Math.max(1, parseInt(newRowsStr, 10) || 1);
@@ -3041,6 +3121,25 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                       </select>
                     </div>
                     <div className="form-group">
+                        <label>Font Size</label>
+                        <div className="slider-group">
+                            <input
+                                type="range"
+                                min="8"
+                                max="48"
+                                value={component.fontSize}
+                                onChange={(e) => handleChange('fontSize', e.target.value)}
+                            />
+                            <input 
+                                type="number"
+                                min="1"
+                                className="slider-value-input"
+                                value={component.fontSize} 
+                                onChange={(e) => handleChange('fontSize', e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <div className="form-group">
                       <label>Text Color</label>
                       <div className="global-toggle-group" style={{ marginBottom: '8px' }}>
                         <label>Use Global</label>
@@ -3053,6 +3152,24 @@ const PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings 
                         <input type="color" value={component.textColor} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('textColor', e.target.value)} />
                         <input type="text" value={component.textColor} disabled={component.useGlobalTextColor} onChange={(e) => handleChange('textColor', e.target.value)} />
                       </div>
+                    </div>
+                    <div className="form-group-row">
+                        <div className="form-group">
+                            <label>Horizontal Align</label>
+                            <div className="text-align-group">
+                                <button className={component.textAlign === 'left' ? 'active' : ''} onClick={() => handleChange('textAlign', 'left')}>L</button>
+                                <button className={component.textAlign === 'center' ? 'active' : ''} onClick={() => handleChange('textAlign', 'center')}>C</button>
+                                <button className={component.textAlign === 'right' ? 'active' : ''} onClick={() => handleChange('textAlign', 'right')}>R</button>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Vertical Align</label>
+                            <div className="button-toggle-group">
+                                <button className={component.verticalAlign === 'top' ? 'active' : ''} onClick={() => handleChange('verticalAlign', 'top')}>Top</button>
+                                <button className={component.verticalAlign === 'middle' ? 'active' : ''} onClick={() => handleChange('verticalAlign', 'middle')}>Middle</button>
+                                <button className={component.verticalAlign === 'bottom' ? 'active' : ''} onClick={() => handleChange('verticalAlign', 'bottom')}>Bottom</button>
+                            </div>
+                        </div>
                     </div>
                   </CollapsibleSection>
                   <CollapsibleSection title="Dimensions">
@@ -3974,7 +4091,7 @@ const App = () => {
         const finalFontFamily = component.useGlobalFont ? emailSettings.fontFamily : component.fontFamily;
         // FIX: Correctly access the `color` property on TextComponent and FooterComponent. The property for text color is `color`, not `textColor`.
         const finalTextColor = component.useGlobalTextColor ? emailSettings.textColor : component.color;
-        const textContent = `<div style="font-family:${finalFontFamily}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5;">${component.content}</div>`;
+        const textContent = `<div style="font-family:${finalFontFamily}, sans-serif; font-size:${component.fontSize}px; color:${finalTextColor}; text-align:${component.textAlign}; line-height: 1.5; word-break: break-word; overflow-wrap: break-word;">${component.content}</div>`;
         const textWrapper = `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" align="center" style="width:${component.width}%;">
                 <tr><td>${textContent}</td></tr>
@@ -4073,8 +4190,8 @@ const App = () => {
         const finalButtonFontFamily = component.useGlobalButtonFont ? emailSettings.fontFamily : component.buttonFontFamily;
 
         // Common parts
-        const titleHtml = `<h4 style="margin:0; font-size: 18px; line-height: 1.3; min-height: 2.6em; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">${component.title}</h4>`;
-        const contentHtml = `<p style="margin:0; font-size: 14px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif;">${component.content}</p>`;
+        const titleHtml = `<h4 style="margin:0; font-size: 18px; line-height: 1.3; min-height: 2.6em; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif; word-break: break-word; overflow-wrap: break-word;">${component.title}</h4>`;
+        const contentHtml = `<p style="margin:0; font-size: 14px; color: ${finalCardTextColor}; font-family: ${finalCardFontFamily}, sans-serif; word-break: break-word; overflow-wrap: break-word;">${component.content}</p>`;
         const buttonHtml = component.showButton ? `
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-top: 15px;">
                 <tr>
@@ -4148,7 +4265,7 @@ const App = () => {
             : component.headerTextColor;
         
         const tableStyles = `width:${component.width}%; border-collapse:collapse; background-color:${component.tableBackgroundColor === 'transparent' ? '' : component.tableBackgroundColor};`;
-        const cellStyles = `border:${component.cellBorderWidth}px solid ${borderColor}; padding: 8px; font-family:${finalFontFamily}, sans-serif; color:${finalTextColor};`;
+        const cellStyles = `border:${component.cellBorderWidth}px solid ${borderColor}; padding: 8px; font-family:${finalFontFamily}, sans-serif; color:${finalTextColor}; word-break: break-word; overflow-wrap: break-word; text-align:${component.textAlign}; vertical-align:${component.verticalAlign}; font-size:${component.fontSize}px;`;
         const headerCellStyles = `${cellStyles} background-color:${component.headerFillColor}; font-weight:bold; color:${finalHeaderTextColor};`;
         
         const headerRowData = component.hasHeader ? component.data[0] : null;
@@ -4157,14 +4274,14 @@ const App = () => {
         const header = component.hasHeader && headerRowData ? `
             <thead>
                 <tr>
-                    ${headerRowData.map(cell => `<th align="left" style="${headerCellStyles}">${cell}</th>`).join('')}
+                    ${headerRowData.map(cell => `<th align="${component.textAlign}" valign="${component.verticalAlign}" style="${headerCellStyles}">${cell}</th>`).join('')}
                 </tr>
             </thead>
         ` : '';
 
         const bodyRows = bodyRowsData.map(row => `
             <tr>
-                ${row.map(cell => `<td style="${cellStyles}">${cell}</td>`).join('')}
+                ${row.map(cell => `<td align="${component.textAlign}" valign="${component.verticalAlign}" style="${cellStyles}">${cell}</td>`).join('')}
             </tr>
         `).join('');
 
