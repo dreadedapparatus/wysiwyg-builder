@@ -1019,7 +1019,7 @@ input:checked + .slider:before {
 .icon-right .txt { width: 60%; }
 
 /* Emoji Picker Button */
-.emoji-picker-button {
+.emoji-display-button {
     background: none;
     border: 1px solid var(--md-sys-color-outline-variant);
     font-size: 48px;
@@ -1030,7 +1030,7 @@ input:checked + .slider:before {
     background-color: var(--md-sys-color-surface-container-high);
     transition: all 0.2s;
 }
-.emoji-picker-button:hover {
+.emoji-display-button:hover {
     border-color: var(--md-sys-color-primary);
 }
 
@@ -1214,6 +1214,45 @@ a:hover .video-play-button {
     height: 24px;
     background-color: var(--md-sys-color-outline-variant);
     margin: 0 6px;
+}
+
+/* Emoji Picker Popover */
+.emoji-picker-popover {
+    background-color: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--shape-corner-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    width: 280px;
+    padding: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.emoji-category {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 8px 4px 4px;
+    text-transform: uppercase;
+}
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 4px;
+}
+.emoji-picker-button {
+    background-color: transparent;
+    border: none;
+    border-radius: var(--shape-corner-sm);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.emoji-picker-button:hover {
+    background-color: var(--md-sys-color-secondary-container);
 }
 
 
@@ -1508,10 +1547,4 @@ a:hover .video-play-button {
 .data-actions button:hover {
   background-color: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
-  border-color: var(--md-sys-color-secondary-container);
-}
-
-.canvas-table-component {
-  /* This class is for scoping canvas table styles to avoid conflicting with the main UI */
-  /* Any specific preview styles for tables on the canvas go here */
 }
