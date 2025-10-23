@@ -25805,34 +25805,6 @@
       ] })
     ] });
   };
-  var CollapsibleSection = ({ title, children, defaultCollapsed = false }) => {
-    const [isCollapsed, setIsCollapsed] = (0, import_react.useState)(defaultCollapsed);
-    const handleToggle = () => setIsCollapsed(!isCollapsed);
-    const handleKeyDown = (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        handleToggle();
-      }
-    };
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "collapsible-section", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-        "div",
-        {
-          className: "collapsible-header",
-          onClick: handleToggle,
-          onKeyDown: handleKeyDown,
-          role: "button",
-          tabIndex: 0,
-          "aria-expanded": !isCollapsed,
-          children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: title }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `collapse-icon ${isCollapsed ? "collapsed" : ""}`, children: "\u25BC" })
-          ]
-        }
-      ),
-      !isCollapsed && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "collapsible-content", children })
-    ] });
-  };
   var EMOJI_CATEGORIES = {
     "Smileys & People": ["\u{1F600}", "\u{1F603}", "\u{1F604}", "\u{1F601}", "\u{1F606}", "\u{1F605}", "\u{1F602}", "\u{1F923}", "\u{1F60A}", "\u{1F607}", "\u{1F642}", "\u{1F643}", "\u{1F609}", "\u{1F60C}", "\u{1F60D}", "\u{1F970}", "\u{1F618}", "\u{1F617}", "\u{1F619}", "\u{1F61A}", "\u{1F60B}", "\u{1F61B}", "\u{1F61D}", "\u{1F61C}", "\u{1F92A}", "\u{1F928}", "\u{1F9D0}", "\u{1F913}", "\u{1F60E}", "\u{1F978}", "\u{1F929}", "\u{1F973}", "\u{1F60F}", "\u{1F612}", "\u{1F61E}", "\u{1F614}", "\u{1F61F}", "\u{1F615}", "\u{1F641}", "\u2639\uFE0F", "\u{1F623}", "\u{1F616}", "\u{1F62B}", "\u{1F629}", "\u{1F97A}", "\u{1F622}", "\u{1F62D}", "\u{1F624}", "\u{1F620}", "\u{1F621}", "\u{1F92C}", "\u{1F92F}", "\u{1F633}", "\u{1F975}", "\u{1F976}", "\u{1F631}", "\u{1F628}", "\u{1F630}", "\u{1F625}", "\u{1F613}", "\u{1F917}", "\u{1F914}", "\u{1F92D}", "\u{1F92B}", "\u{1F925}", "\u{1F636}", "\u{1F610}", "\u{1F611}", "\u{1F62C}", "\u{1F644}", "\u{1F62F}", "\u{1F626}", "\u{1F627}", "\u{1F62E}", "\u{1F632}", "\u{1F971}", "\u{1F634}", "\u{1F924}", "\u{1F62A}", "\u{1F635}", "\u{1F910}", "\u{1F974}", "\u{1F922}", "\u{1F92E}", "\u{1F927}", "\u{1F637}", "\u{1F912}", "\u{1F915}", "\u{1F911}", "\u{1F920}", "\u{1F608}", "\u{1F47F}", "\u{1F479}", "\u{1F47A}", "\u{1F921}", "\u{1F4A9}", "\u{1F47B}", "\u{1F480}", "\u2620\uFE0F", "\u{1F47D}", "\u{1F47E}", "\u{1F916}", "\u{1F383}", "\u{1F63A}", "\u{1F638}", "\u{1F639}", "\u{1F63B}", "\u{1F63C}", "\u{1F63D}", "\u{1F640}", "\u{1F63F}", "\u{1F63E}", "\u{1F44B}", "\u{1F91A}", "\u{1F590}\uFE0F", "\u270B", "\u{1F596}", "\u{1F44C}", "\u{1F90F}", "\u270C\uFE0F", "\u{1F91E}", "\u{1F91F}", "\u{1F918}", "\u{1F919}", "\u{1F448}", "\u{1F449}", "\u{1F446}", "\u{1F595}", "\u{1F447}", "\u261D\uFE0F", "\u{1F44D}", "\u{1F44E}", "\u270A", "\u{1F44A}", "\u{1F91B}", "\u{1F91C}", "\u{1F44F}", "\u{1F64C}", "\u{1F450}", "\u{1F932}", "\u{1F91D}", "\u{1F64F}", "\u270D\uFE0F", "\u{1F485}", "\u{1F933}", "\u{1F4AA}", "\u{1F9BE}", "\u{1F9B5}", "\u{1F9BF}", "\u{1F9B6}", "\u{1F442}", "\u{1F9BB}", "\u{1F443}", "\u{1F9E0}", "\u{1F9B7}", "\u{1F9B4}", "\u{1F440}", "\u{1F441}\uFE0F", "\u{1F445}", "\u{1F444}", "\u{1F476}", "\u{1F9D2}", "\u{1F466}", "\u{1F467}", "\u{1F9D1}", "\u{1F471}", "\u{1F468}", "\u{1F9D4}", "\u{1F468}\u200D\u{1F9B0}", "\u{1F468}\u200D\u{1F9B1}", "\u{1F468}\u200D\u{1F9B3}", "\u{1F468}\u200D\u{1F9B2}", "\u{1F469}", "\u{1F469}\u200D\u{1F9B0}", "\u{1F469}\u200D\u{1F9B1}", "\u{1F469}\u200D\u{1F9B3}", "\u{1F469}\u200D\u{1F9B2}", "\u{1F471}\u200D\u2640\uFE0F", "\u{1F471}\u200D\u2642\uFE0F", "\u{1F9D3}", "\u{1F474}", "\u{1F475}", "\u{1F64D}", "\u{1F64D}\u200D\u2642\uFE0F", "\u{1F64D}\u200D\u2640\uFE0F", "\u{1F64E}", "\u{1F64E}\u200D\u2642\uFE0F", "\u{1F64E}\u200D\u2640\uFE0F", "\u{1F645}", "\u{1F645}\u200D\u2642\uFE0F", "\u{1F645}\u200D\u2640\uFE0F", "\u{1F646}", "\u{1F646}\u200D\u2642\uFE0F", "\u{1F646}\u200D\u2640\uFE0F", "\u{1F481}", "\u{1F481}\u200D\u2642\uFE0F", "\u{1F481}\u200D\u2640\uFE0F", "\u{1F64B}", "\u{1F64B}\u200D\u2642\uFE0F", "\u{1F64B}\u200D\u2640\uFE0F", "\u{1F9CF}", "\u{1F9CF}\u200D\u2642\uFE0F", "\u{1F9CF}\u200D\u2640\uFE0F", "\u{1F647}", "\u{1F647}\u200D\u2642\uFE0F", "\u{1F647}\u200D\u2640\uFE0F", "\u{1F926}", "\u{1F926}\u200D\u2642\uFE0F", "\u{1F926}\u200D\u2640\uFE0F", "\u{1F937}", "\u{1F937}\u200D\u2642\uFE0F", "\u{1F937}\u200D\u2640\uFE0F", "\u{1F9D1}\u200D\u2695\uFE0F", "\u{1F468}\u200D\u2695\uFE0F", "\u{1F469}\u200D\u2695\uFE0F", "\u{1F9D1}\u200D\u{1F393}", "\u{1F468}\u200D\u{1F393}", "\u{1F469}\u200D\u{1F393}", "\u{1F9D1}\u200D\u{1F3EB}", "\u{1F468}\u200D\u{1F3EB}", "\u{1F469}\u200D\u{1F3EB}", "\u{1F9D1}\u200D\u2696\uFE0F", "\u{1F468}\u200D\u2696\uFE0F", "\u{1F469}\u200D\u2696\uFE0F", "\u{1F9D1}\u200D\u{1F33E}", "\u{1F468}\u200D\u{1F33E}", "\u{1F469}\u200D\u{1F33E}", "\u{1F9D1}\u200D\u{1F373}", "\u{1F468}\u200D\u{1F373}", "\u{1F469}\u200D\u{1F373}", "\u{1F9D1}\u200D\u{1F527}", "\u{1F468}\u200D\u{1F527}", "\u{1F469}\u200D\u{1F527}", "\u{1F9D1}\u200D\u{1F3ED}", "\u{1F468}\u200D\u{1F3ED}", "\u{1F469}\u200D\u{1F3ED}", "\u{1F9D1}\u200D\u{1F4BC}", "\u{1F468}\u200D\u{1F4BC}", "\u{1F469}\u200D\u{1F4BC}", "\u{1F9D1}\u200D\u{1F52C}", "\u{1F468}\u200D\u{1F52C}", "\u{1F469}\u200D\u{1F52C}", "\u{1F9D1}\u200D\u{1F4BB}", "\u{1F468}\u200D\u{1F4BB}", "\u{1F469}\u200D\u{1F4BB}", "\u{1F9D1}\u200D\u{1F3A4}", "\u{1F468}\u200D\u{1F3A4}", "\u{1F469}\u200D\u{1F3A4}", "\u{1F9D1}\u200D\u{1F3A8}", "\u{1F468}\u200D\u{1F3A8}", "\u{1F469}\u200D\u{1F3A8}", "\u{1F9D1}\u200D\u2708\uFE0F", "\u{1F468}\u200D\u2708\uFE0F", "\u{1F469}\u200D\u2708\uFE0F", "\u{1F9D1}\u200D\u{1F680}", "\u{1F468}\u200D\u{1F680}", "\u{1F469}\u200D\u{1F680}", "\u{1F9D1}\u200D\u{1F692}", "\u{1F468}\u200D\u{1F692}", "\u{1F469}\u200D\u{1F692}", "\u{1F46E}", "\u{1F46E}\u200D\u2642\uFE0F", "\u{1F46E}\u200D\u2640\uFE0F", "\u{1F575}\uFE0F", "\u{1F575}\uFE0F\u200D\u2642\uFE0F", "\u{1F575}\uFE0F\u200D\u2640\uFE0F", "\u{1F482}", "\u{1F482}\u200D\u2642\uFE0F", "\u{1F482}\u200D\u2640\uFE0F", "\u{1F477}", "\u{1F477}\u200D\u2642\uFE0F", "\u{1F477}\u200D\u2640\uFE0F", "\u{1F934}", "\u{1F478}", "\u{1F473}", "\u{1F473}\u200D\u2642\uFE0F", "\u{1F473}\u200D\u2640\uFE0F", "\u{1F472}", "\u{1F9D5}", "\u{1F935}", "\u{1F470}", "\u{1F930}", "\u{1F931}", "\u{1F9D1}\u200D\u{1F37C}", "\u{1F468}\u200D\u{1F37C}", "\u{1F469}\u200D\u{1F37C}", "\u{1F47C}", "\u{1F385}", "\u{1F936}", "\u{1F9B8}", "\u{1F9B8}\u200D\u2642\uFE0F", "\u{1F9B8}\u200D\u2640\uFE0F", "\u{1F9B9}", "\u{1F9B9}\u200D\u2642\uFE0F", "\u{1F9B9}\u200D\u2640\uFE0F", "\u{1F9D9}", "\u{1F9D9}\u200D\u2642\uFE0F", "\u{1F9D9}\u200D\u2640\uFE0F", "\u{1F9DA}", "\u{1F9DA}\u200D\u2642\uFE0F", "\u{1F9DA}\u200D\u2640\uFE0F", "\u{1F9DB}", "\u{1F9DB}\u200D\u2642\uFE0F", "\u{1F9DB}\u200D\u2640\uFE0F", "\u{1F9DC}", "\u{1F9DC}\u200D\u2642\uFE0F", "\u{1F9DC}\u200D\u2640\uFE0F", "\u{1F9DD}", "\u{1F9DD}\u200D\u2642\uFE0F", "\u{1F9DD}\u200D\u2640\uFE0F", "\u{1F9DE}", "\u{1F9DE}\u200D\u2642\uFE0F", "\u{1F9DE}\u200D\u2640\uFE0F", "\u{1F9DF}", "\u{1F9DF}\u200D\u2642\uFE0F", "\u{1F9DF}\u200D\u2640\uFE0F", "\u{1F486}", "\u{1F486}\u200D\u2642\uFE0F", "\u{1F486}\u200D\u2640\uFE0F", "\u{1F487}", "\u{1F487}\u200D\u2642\uFE0F", "\u{1F487}\u200D\u2640\uFE0F", "\u{1F6B6}", "\u{1F6B6}\u200D\u2642\uFE0F", "\u{1F6B6}\u200D\u2640\uFE0F", "\u{1F9CD}", "\u{1F9CD}\u200D\u2642\uFE0F", "\u{1F9CD}\u200D\u2640\uFE0F", "\u{1F9CE}", "\u{1F9CE}\u200D\u2642\uFE0F", "\u{1F9CE}\u200D\u2640\uFE0F", "\u{1F9D1}\u200D\u{1F9BD}", "\u{1F468}\u200D\u{1F9BD}", "\u{1F469}\u200D\u{1F9BD}", "\u{1F9D1}\u200D\u{1F9BC}", "\u{1F468}\u200D\u{1F9BC}", "\u{1F469}\u200D\u{1F9BC}", "\u{1F9D1}\u200D\u{1F9AF}", "\u{1F468}\u200D\u{1F9AF}", "\u{1F469}\u200D\u{1F9AF}", "\u{1F3C3}", "\u{1F3C3}\u200D\u2642\uFE0F", "\u{1F3C3}\u200D\u2640\uFE0F", "\u{1F483}", "\u{1F57A}", "\u{1F574}\uFE0F", "\u{1F46F}", "\u{1F46F}\u200D\u2642\uFE0F", "\u{1F46F}\u200D\u2640\uFE0F", "\u{1F9D6}", "\u{1F9D6}\u200D\u2642\uFE0F", "\u{1F9D6}\u200D\u2640\uFE0F", "\u{1F9D7}", "\u{1F9D7}\u200D\u2642\uFE0F", "\u{1F9D7}\u200D\u2640\uFE0F", "\u{1F93A}", "\u{1F3C7}", "\u26F7\uFE0F", "\u{1F3C2}", "\u{1F3CC}\uFE0F", "\u{1F3CC}\uFE0F\u200D\u2642\uFE0F", "\u{1F3CC}\uFE0F\u200D\u2640\uFE0F", "\u{1F3C4}", "\u{1F3C4}\u200D\u2642\uFE0F", "\u{1F3C4}\u200D\u2640\uFE0F", "\u{1F6A3}", "\u{1F6A3}\u200D\u2642\uFE0F", "\u{1F6A3}\u200D\u2640\uFE0F", "\u{1F3CA}", "\u{1F3CA}\u200D\u2642\uFE0F", "\u{1F3CA}\u200D\u2640\uFE0F", "\u26F9\uFE0F", "\u26F9\uFE0F\u200D\u2642\uFE0F", "\u26F9\uFE0F\u200D\u2640\uFE0F", "\u{1F3CB}\uFE0F", "\u{1F3CB}\uFE0F\u200D\u2642\uFE0F", "\u{1F3CB}\uFE0F\u200D\u2640\uFE0F", "\u{1F6B4}", "\u{1F6B4}\u200D\u2642\uFE0F", "\u{1F6B4}\u200D\u2640\uFE0F", "\u{1F6B5}", "\u{1F6B5}\u200D\u2642\uFE0F", "\u{1F6B5}\u200D\u2640\uFE0F", "\u{1F938}", "\u{1F938}\u200D\u2642\uFE0F", "\u{1F938}\u200D\u2640\uFE0F", "\u{1F93C}", "\u{1F93C}\u200D\u2642\uFE0F", "\u{1F93C}\u200D\u2640\uFE0F", "\u{1F93D}", "\u{1F93D}\u200D\u2642\uFE0F", "\u{1F93D}\u200D\u2640\uFE0F", "\u{1F93E}", "\u{1F93E}\u200D\u2642\uFE0F", "\u{1F93E}\u200D\u2640\uFE0F", "\u{1F939}", "\u{1F939}\u200D\u2642\uFE0F", "\u{1F939}\u200D\u2640\uFE0F", "\u{1F9D8}", "\u{1F9D8}\u200D\u2642\uFE0F", "\u{1F9D8}\u200D\u2640\uFE0F", "\u{1F6C0}", "\u{1F6CC}", "\u{1F9D1}\u200D\u{1F91D}\u200D\u{1F9D1}", "\u{1F46D}", "\u{1F46B}", "\u{1F46C}", "\u{1F48F}", "\u{1F491}", "\u{1F46A}", "\u{1F468}\u200D\u{1F469}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}", "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F469}\u200D\u{1F466}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F467}", "\u{1F468}\u200D\u{1F468}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F468}\u200D\u{1F467}", "\u{1F468}\u200D\u{1F468}\u200D\u{1F467}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F468}\u200D\u{1F466}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F468}\u200D\u{1F467}\u200D\u{1F467}", "\u{1F469}\u200D\u{1F469}\u200D\u{1F466}", "\u{1F469}\u200D\u{1F469}\u200D\u{1F467}", "\u{1F469}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466}", "\u{1F469}\u200D\u{1F469}\u200D\u{1F466}\u200D\u{1F466}", "\u{1F469}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F467}", "\u{1F468}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F466}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F467}", "\u{1F468}\u200D\u{1F467}\u200D\u{1F466}", "\u{1F468}\u200D\u{1F467}\u200D\u{1F467}", "\u{1F469}\u200D\u{1F466}", "\u{1F469}\u200D\u{1F466}\u200D\u{1F466}", "\u{1F469}\u200D\u{1F467}", "\u{1F469}\u200D\u{1F467}\u200D\u{1F466}", "\u{1F469}\u200D\u{1F467}\u200D\u{1F467}", "\u{1F5E3}\uFE0F", "\u{1F464}", "\u{1F465}", "\u{1FAC2}"],
     "Animals & Nature": ["\u{1F648}", "\u{1F649}", "\u{1F64A}", "\u{1F412}", "\u{1F98D}", "\u{1F9A7}", "\u{1F436}", "\u{1F415}", "\u{1F9AE}", "\u{1F415}\u200D\u{1F9BA}", "\u{1F429}", "\u{1F43A}", "\u{1F98A}", "\u{1F99D}", "\u{1F431}", "\u{1F408}", "\u{1F408}\u200D\u2B1B", "\u{1F981}", "\u{1F42F}", "\u{1F405}", "\u{1F406}", "\u{1F434}", "\u{1F40E}", "\u{1F984}", "\u{1F993}", "\u{1F98C}", "\u{1F42E}", "\u{1F402}", "\u{1F403}", "\u{1F404}", "\u{1F437}", "\u{1F416}", "\u{1F417}", "\u{1F43D}", "\u{1F40F}", "\u{1F411}", "\u{1F410}", "\u{1F42A}", "\u{1F42B}", "\u{1F999}", "\u{1F992}", "\u{1F418}", "\u{1F98F}", "\u{1F99B}", "\u{1F42D}", "\u{1F401}", "\u{1F400}", "\u{1F439}", "\u{1F430}", "\u{1F407}", "\u{1F43F}\uFE0F", "\u{1F994}", "\u{1F987}", "\u{1F43B}", "\u{1F428}", "\u{1F43C}", "\u{1F9A5}", "\u{1F9A6}", "\u{1F9A8}", "\u{1F998}", "\u{1F9A1}", "\u{1F43E}", "\u{1F983}", "\u{1F414}", "\u{1F413}", "\u{1F423}", "\u{1F424}", "\u{1F425}", "\u{1F426}", "\u{1F427}", "\u{1F54A}\uFE0F", "\u{1F985}", "\u{1F986}", "\u{1F9A2}", "\u{1F989}", "\u{1F9A9}", "\u{1F99A}", "\u{1F99C}", "\u{1F438}", "\u{1F40A}", "\u{1F422}", "\u{1F98E}", "\u{1F40D}", "\u{1F432}", "\u{1F409}", "\u{1F995}", "\u{1F996}", "\u{1F433}", "\u{1F40B}", "\u{1F42C}", "\u{1F41F}", "\u{1F420}", "\u{1F421}", "\u{1F988}", "\u{1F419}", "\u{1F41A}", "\u{1F40C}", "\u{1F98B}", "\u{1F41B}", "\u{1F41C}", "\u{1F41D}", "\u{1F41E}", "\u{1F997}", "\u{1F577}\uFE0F", "\u{1F578}\uFE0F", "\u{1F982}", "\u{1F99F}", "\u{1F9A0}", "\u{1F490}", "\u{1F338}", "\u{1F4AE}", "\u{1F3F5}\uFE0F", "\u{1F339}", "\u{1F940}", "\u{1F33A}", "\u{1F33B}", "\u{1F33C}", "\u{1F337}", "\u{1F331}", "\u{1F332}", "\u{1F333}", "\u{1F334}", "\u{1F335}", "\u{1F33E}", "\u{1F33F}", "\u2618\uFE0F", "\u{1F340}", "\u{1F341}", "\u{1F342}", "\u{1F343}", "\u{1F30D}", "\u{1F30E}", "\u{1F30F}", "\u{1F311}", "\u{1F312}", "\u{1F313}", "\u{1F314}", "\u{1F315}", "\u{1F316}", "\u{1F317}", "\u{1F318}", "\u{1F319}", "\u{1F31A}", "\u{1F31B}", "\u{1F31C}", "\u{1F321}\uFE0F", "\u2600\uFE0F", "\u{1F31D}", "\u{1F31E}", "\u{1FA90}", "\u2B50", "\u{1F31F}", "\u{1F320}", "\u{1F30C}", "\u2601\uFE0F", "\u26C5", "\u26C8\uFE0F", "\u{1F324}\uFE0F", "\u{1F325}\uFE0F", "\u{1F326}\uFE0F", "\u{1F327}\uFE0F", "\u{1F328}\uFE0F", "\u{1F329}\uFE0F", "\u{1F32A}\uFE0F", "\u{1F32B}\uFE0F", "\u{1F32C}\uFE0F", "\u{1F300}", "\u{1F308}", "\u{1F302}", "\u2602\uFE0F", "\u2614", "\u26F1\uFE0F", "\u26A1", "\u2744\uFE0F", "\u2603\uFE0F", "\u26C4", "\u2604\uFE0F", "\u{1F525}", "\u{1F4A7}", "\u{1F30A}"],
@@ -25881,6 +25853,24 @@
       document.body
     );
   };
+  var Tab = ({ label, isActive, onClick }) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+    "button",
+    {
+      className: `tab-button ${isActive ? "active" : ""}`,
+      onClick,
+      role: "tab",
+      "aria-selected": isActive,
+      children: label
+    }
+  );
+  var TabPanel = ({ isActive, children }) => isActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tab-panel", role: "tabpanel", children }) : null;
+  var Tabs = ({ tabs, children }) => {
+    const [activeTab, setActiveTab] = (0, import_react.useState)(0);
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "properties-tabs", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tab-list", role: "tablist", children: tabs.map((tab, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tab, { label: tab, isActive: index === activeTab, onClick: () => setActiveTab(index) }, tab)) }),
+      children.map((child, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TabPanel, { isActive: index === activeTab, children: child }, index))
+    ] });
+  };
   var PropertiesPanel = ({ component, onUpdate, emailSettings, onUpdateSettings }) => {
     const FONT_FAMILIES = ["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
     const SOCIAL_PLATFORMS = Object.keys(SOCIAL_ICONS);
@@ -25893,7 +25883,8 @@
     if (!component) {
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "properties-panel", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Email Settings" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Canvas Colors", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Canvas Colors" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
@@ -25909,7 +25900,8 @@
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Global Styles", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Global Styles" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Global Font Family" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: emailSettings.fontFamily, onChange: (e) => onUpdateSettings({ fontFamily: e.target.value }), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
@@ -26065,89 +26057,97 @@
       switch (component.type) {
         case "text":
         case "footer":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Typography & Style", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "range",
-                      min: "8",
-                      max: "72",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "number",
-                      min: "1",
-                      className: "slider-value-input",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
-                    }
-                  )
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Color" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", style: { marginBottom: "8px" }, children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalTextColor, onChange: (e) => handleChange("useGlobalTextColor", e.target.checked) }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("color", e.target.value) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("color", e.target.value) })
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Typography & Style" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
                   ] })
+                ] }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
                 ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Align" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "left" ? "active" : "", onClick: () => handleChange("textAlign", "left"), children: "L" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "center" ? "active" : "", onClick: () => handleChange("textAlign", "center"), children: "C" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "right" ? "active" : "", onClick: () => handleChange("textAlign", "right"), children: "R" })
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                      "input",
+                      {
+                        type: "range",
+                        min: "8",
+                        max: "72",
+                        value: component.fontSize,
+                        onChange: (e) => handleChange("fontSize", e.target.value)
+                      }
+                    ),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                      "input",
+                      {
+                        type: "number",
+                        min: "1",
+                        className: "slider-value-input",
+                        value: component.fontSize,
+                        onChange: (e) => handleChange("fontSize", e.target.value)
+                      }
+                    )
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Color" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", style: { marginBottom: "8px" }, children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalTextColor, onChange: (e) => handleChange("useGlobalTextColor", e.target.checked) }),
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("color", e.target.value) }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("color", e.target.value) })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Align" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "left" ? "active" : "", onClick: () => handleChange("textAlign", "left"), children: "L" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "center" ? "active" : "", onClick: () => handleChange("textAlign", "center"), children: "C" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "right" ? "active" : "", onClick: () => handleChange("textAlign", "right"), children: "R" })
+                    ] })
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Dimensions" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Content Width (%)" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                      "input",
+                      {
+                        type: "range",
+                        min: "10",
+                        max: "100",
+                        value: component.width,
+                        onChange: (e) => handleChange("width", e.target.value)
+                      }
+                    ),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
                   ] })
                 ] })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Dimensions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Content Width (%)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "range",
-                    min: "10",
-                    max: "100",
-                    value: component.width,
-                    onChange: (e) => handleChange("width", e.target.value)
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
-              ] })
-            ] }) })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "image":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Source & Link", children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Source & Link" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", ref: fileInputRef, onChange: handleImageUpload, accept: "image/*", style: { display: "none" } }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "upload-button", onClick: () => fileInputRef.current?.click(), children: "Upload for Preview" })
@@ -26165,8 +26165,9 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Appearance", children: [
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Appearance" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
@@ -26207,11 +26208,13 @@
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "0", className: "slider-value-input", value: component.borderRadius, onChange: (e) => handleChange("borderRadius", e.target.value) })
                 ] })
               ] })
-            ] })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "logo":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Source", children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Source" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", ref: fileInputRef, onChange: handleImageUpload, accept: "image/*", style: { display: "none" } }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "upload-button", onClick: () => fileInputRef.current?.click(), children: "Upload for Preview" })
@@ -26225,8 +26228,9 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Appearance", children: [
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Appearance" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (px)" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
@@ -26242,11 +26246,13 @@
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
                 ] })
               ] })
-            ] })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "button":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Content & Link", children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Content & Link" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.text, onChange: (e) => handleChange("text", e.target.value) })
@@ -26255,154 +26261,190 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "URL" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.href, onChange: (e) => handleChange("href", e.target.value) })
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Styling", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "range",
-                      min: "8",
-                      max: "48",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "number",
-                      min: "1",
-                      className: "slider-value-input",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
-                    }
-                  )
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Weight" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "normal" ? "active" : "", onClick: () => handleChange("fontWeight", "normal"), children: "Normal" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Typography" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                      "input",
+                      {
+                        type: "range",
+                        min: "8",
+                        max: "48",
+                        value: component.fontSize,
+                        onChange: (e) => handleChange("fontSize", e.target.value)
+                      }
+                    ),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                      "input",
+                      {
+                        type: "number",
+                        min: "1",
+                        className: "slider-value-input",
+                        value: component.fontSize,
+                        onChange: (e) => handleChange("fontSize", e.target.value)
+                      }
+                    )
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Weight" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "normal" ? "active" : "", onClick: () => handleChange("fontWeight", "normal"), children: "Normal" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
+                  ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Colors" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
+                  ] })
                 ] })
               ] })
-            ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "calendar":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Event Details", defaultCollapsed: true, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Event Title" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.eventTitle, onChange: (e) => handleChange("eventTitle", e.target.value) })
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Event Details" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Event Title" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.eventTitle, onChange: (e) => handleChange("eventTitle", e.target.value) })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Start Time" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "datetime-local", value: component.startTime, onChange: (e) => handleChange("startTime", e.target.value) })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "End Time" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "datetime-local", value: component.endTime, onChange: (e) => handleChange("endTime", e.target.value) })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Location" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.location, onChange: (e) => handleChange("location", e.target.value) })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Description" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { value: component.description, onChange: (e) => handleChange("description", e.target.value) })
+                ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Start Time" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "datetime-local", value: component.startTime, onChange: (e) => handleChange("startTime", e.target.value) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "End Time" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "datetime-local", value: component.endTime, onChange: (e) => handleChange("endTime", e.target.value) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Location" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.location, onChange: (e) => handleChange("location", e.target.value) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Description" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { value: component.description, onChange: (e) => handleChange("description", e.target.value) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Button" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.text, onChange: (e) => handleChange("text", e.target.value) })
+                ] })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Button Styling", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.text, onChange: (e) => handleChange("text", e.target.value) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "8", max: "48", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", className: "slider-value-input", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Weight" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "normal" ? "active" : "", onClick: () => handleChange("fontWeight", "normal"), children: "Normal" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Typography" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "8", max: "48", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", className: "slider-value-input", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Weight" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "normal" ? "active" : "", onClick: () => handleChange("fontWeight", "normal"), children: "Normal" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.fontWeight === "bold" ? "active" : "", onClick: () => handleChange("fontWeight", "bold"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Bold" }) })
+                  ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Colors" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Background Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
+                  ] })
                 ] })
               ] })
-            ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "button-group":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Layout & Style", children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Buttons" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "button-group-editor", children: component.buttons.map((btn, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-group-item", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: btn.text, onChange: (e) => handleButtonChange(index, "text", e.target.value), placeholder: "Button Text" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: btn.href, onChange: (e) => handleButtonChange(index, "href", e.target.value), placeholder: "https://example.com" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", title: "Background Color", value: btn.backgroundColor, onChange: (e) => handleButtonChange(index, "backgroundColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", title: "Text Color", value: btn.textColor, onChange: (e) => handleButtonChange(index, "textColor", e.target.value) })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => removeGroupButton(index), className: "remove-btn", children: "\u{1F5D1}\uFE0F" })
+                ] }, btn.id)) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: addGroupButton, className: "add-btn", children: "Add Button" })
+              ] })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Layout & Style" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
@@ -26422,91 +26464,101 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Buttons", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Buttons" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "button-group-editor", children: component.buttons.map((btn, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-group-item", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: btn.text, onChange: (e) => handleButtonChange(index, "text", e.target.value), placeholder: "Button Text" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: btn.href, onChange: (e) => handleButtonChange(index, "href", e.target.value), placeholder: "https://example.com" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", title: "Background Color", value: btn.backgroundColor, onChange: (e) => handleButtonChange(index, "backgroundColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", title: "Text Color", value: btn.textColor, onChange: (e) => handleButtonChange(index, "textColor", e.target.value) })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => removeGroupButton(index), className: "remove-btn", children: "\u{1F5D1}\uFE0F" })
-              ] }, btn.id)) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: addGroupButton, className: "add-btn", children: "Add Button" })
-            ] }) })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "spacer":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Dimensions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Height (px)" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "input",
-                {
-                  type: "range",
-                  min: "10",
-                  max: "200",
-                  value: component.height,
-                  onChange: (e) => handleChange("height", e.target.value)
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "input",
-                {
-                  type: "number",
-                  min: "1",
-                  className: "slider-value-input",
-                  value: component.height,
-                  onChange: (e) => handleChange("height", e.target.value)
-                }
-              )
-            ] })
-          ] }) });
-        case "divider":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Styling", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Dimensions" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Height (px)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "input",
+                    {
+                      type: "range",
+                      min: "10",
+                      max: "200",
+                      value: component.height,
+                      onChange: (e) => handleChange("height", e.target.value)
+                    }
+                  ),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "input",
+                    {
+                      type: "number",
+                      min: "1",
+                      className: "slider-value-input",
+                      value: component.height,
+                      onChange: (e) => handleChange("height", e.target.value)
+                    }
+                  )
+                ] })
               ] })
             ] }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Color" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("color", e.target.value) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("color", e.target.value) })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
+          ] });
+        case "divider":
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Styling" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Accent Color" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalAccentColor, onChange: (e) => handleChange("useGlobalAccentColor", e.target.checked) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                ] })
+              ] }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Color" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.color, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("color", e.target.value) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.color, disabled: component.useGlobalAccentColor, onChange: (e) => handleChange("color", e.target.value) })
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Thickness (px)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.height, onChange: (e) => handleChange("height", e.target.value) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Vertical Padding (px)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.padding, onChange: (e) => handleChange("padding", e.target.value) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "input",
+                    {
+                      type: "range",
+                      min: "10",
+                      max: "100",
+                      value: component.width,
+                      onChange: (e) => handleChange("width", e.target.value)
+                    }
+                  ),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+                ] })
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Thickness (px)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.height, onChange: (e) => handleChange("height", e.target.value) })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Vertical Padding (px)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.padding, onChange: (e) => handleChange("padding", e.target.value) })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "range",
-                    min: "10",
-                    max: "100",
-                    value: component.width,
-                    onChange: (e) => handleChange("width", e.target.value)
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
-              ] })
-            ] })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "social":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Layout & Style", children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Links" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "social-link-editor", children: component.links.map((link, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "social-link-item", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: link.platform, onChange: (e) => handleSocialLinkChange(index, "platform", e.target.value), children: SOCIAL_PLATFORMS.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: p, children: p.charAt(0).toUpperCase() + p.slice(1) }, p)) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: link.url, onChange: (e) => handleSocialLinkChange(index, "url", e.target.value), placeholder: "https://example.com" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => removeSocialLink(index), className: "remove-btn", children: "\u{1F5D1}\uFE0F" })
+                ] }, link.id)) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: addSocialLink, className: "add-btn", children: "Add Social Link" })
+              ] })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Layout & Style" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
@@ -26522,20 +26574,13 @@
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.style === "minimalist" ? "active" : "", onClick: () => handleChange("style", "minimalist"), children: "Minimalist" })
                 ] })
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Links", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Links" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "social-link-editor", children: component.links.map((link, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "social-link-item", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: link.platform, onChange: (e) => handleSocialLinkChange(index, "platform", e.target.value), children: SOCIAL_PLATFORMS.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: p, children: p.charAt(0).toUpperCase() + p.slice(1) }, p)) }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: link.url, onChange: (e) => handleSocialLinkChange(index, "url", e.target.value), placeholder: "https://example.com" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => removeSocialLink(index), className: "remove-btn", children: "\u{1F5D1}\uFE0F" })
-              ] }, link.id)) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: addSocialLink, className: "add-btn", children: "Add Social Link" })
-            ] }) })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "video":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Source", children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Source" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Video URL" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
@@ -26563,8 +26608,9 @@
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
               ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Appearance", children: [
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Appearance" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
@@ -26589,125 +26635,137 @@
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
                 ] })
               ] })
-            ] })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "card":
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Layout", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-selector-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "button",
-                {
-                  className: component.layout === "image-top" ? "active" : "",
-                  onClick: () => handleChange("layout", "image-top"),
-                  title: "Image on Top",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-icon icon-top", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "img" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "txt" })
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Image" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Show Image" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.showImage, onChange: (e) => handleChange("showImage", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
                   ] })
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "button",
-                {
-                  className: component.layout === "image-left" ? "active" : "",
-                  onClick: () => handleChange("layout", "image-left"),
-                  title: "Image on Left",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-icon icon-left", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "img" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "txt" })
+                ] }) }),
+                component.showImage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", ref: fileInputRef, onChange: handleImageUpload, accept: "image/*", style: { display: "none" } }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "upload-button", onClick: () => fileInputRef.current?.click(), children: "Upload Preview Image" })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Public URL required for final email." })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
                   ] })
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "button",
-                {
-                  className: component.layout === "image-right" ? "active" : "",
-                  onClick: () => handleChange("layout", "image-right"),
-                  title: "Image on Right",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-icon icon-right", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "img" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "txt" })
-                  ] })
-                }
-              )
-            ] }) }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Image", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Show Image" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.showImage, onChange: (e) => handleChange("showImage", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
                 ] })
-              ] }) }),
-              component.showImage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Button" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Show Button" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.showButton, onChange: (e) => handleChange("showButton", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }) }),
+                component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonText, onChange: (e) => handleChange("buttonText", e.target.value) })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button URL" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.buttonHref, onChange: (e) => handleChange("buttonHref", e.target.value) })
+                  ] })
+                ] })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Layout" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-selector-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "button",
+                    {
+                      className: component.layout === "image-top" ? "active" : "",
+                      onClick: () => handleChange("layout", "image-top"),
+                      title: "Image on Top",
+                      children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-icon icon-top", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "img" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "txt" })
+                      ] })
+                    }
+                  ),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "button",
+                    {
+                      className: component.layout === "image-left" ? "active" : "",
+                      onClick: () => handleChange("layout", "image-left"),
+                      title: "Image on Left",
+                      children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-icon icon-left", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "img" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "txt" })
+                      ] })
+                    }
+                  ),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "button",
+                    {
+                      className: component.layout === "image-right" ? "active" : "",
+                      onClick: () => handleChange("layout", "image-right"),
+                      title: "Image on Right",
+                      children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "layout-icon icon-right", children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "img" }),
+                        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "txt" })
+                      ] })
+                    }
+                  )
+                ] }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", ref: fileInputRef, onChange: handleImageUpload, accept: "image/*", style: { display: "none" } }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "upload-button", onClick: () => fileInputRef.current?.click(), children: "Upload Preview Image" })
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Card Width (%)" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "10", max: "100", value: component.width, onChange: (e) => handleChange("width", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+                  ] })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image URL" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.src, onChange: (e) => handleChange("src", e.target.value), onBlur: handleUrlBlur }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "helper-text", children: "Public URL required for final email." })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                component.showImage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Image Width (%)" }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                      "input",
-                      {
-                        type: "range",
-                        min: "10",
-                        max: "100",
-                        value: component.imageWidth,
-                        onChange: (e) => handleChange("imageWidth", e.target.value)
-                      }
-                    ),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "10", max: "100", value: component.imageWidth, onChange: (e) => handleChange("imageWidth", e.target.value) }),
                     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.imageWidth, onChange: (e) => handleChange("imageWidth", e.target.value) })
                   ] })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alt Text" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.alt, onChange: (e) => handleChange("alt", e.target.value) })
                 ] })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Content", defaultCollapsed: true, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
-                ] })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Button", defaultCollapsed: true, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Show Button" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.showButton, onChange: (e) => handleChange("showButton", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Content Style" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button Text" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonText, onChange: (e) => handleChange("buttonText", e.target.value) })
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
                 ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Button URL" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: component.buttonHref, onChange: (e) => handleChange("buttonHref", e.target.value) })
-                ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, onChange: (e) => handleChange("textColor", e.target.value) })
+                  ] })
+                ] })
+              ] }),
+              component.showButton && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Button Style" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
@@ -26740,84 +26798,56 @@
                     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.buttonBackgroundColor, disabled: component.useGlobalButtonAccentColor, onChange: (e) => handleChange("buttonBackgroundColor", e.target.value) })
                   ] })
                 ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Card Style" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Card Background" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
+                  ] })
+                ] })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Card Style", defaultCollapsed: true, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Width (%)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "range",
-                      min: "10",
-                      max: "100",
-                      value: component.width,
-                      onChange: (e) => handleChange("width", e.target.value)
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Card Background" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.backgroundColor, onChange: (e) => handleChange("backgroundColor", e.target.value) })
-                ] })
-              ] })
-            ] })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "emoji":
           const buttonRect = emojiButtonRef.current?.getBoundingClientRect();
           const pickerPosition = buttonRect ? { top: buttonRect.bottom + 8, left: buttonRect.left } : { top: 0, left: 0 };
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Content", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Emoji Character" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "button",
-                {
-                  ref: emojiButtonRef,
-                  className: "emoji-display-button",
-                  onClick: () => setShowEmojiPicker(!showEmojiPicker),
-                  children: component.character
-                }
-              )
-            ] }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Appearance", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Size (px)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Style", "Container"], children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Content & Appearance" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Emoji Character" }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
+                    "button",
                     {
-                      type: "range",
-                      min: "16",
-                      max: "200",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
-                    }
-                  ),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "number",
-                      min: "1",
-                      className: "slider-value-input",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
+                      ref: emojiButtonRef,
+                      className: "emoji-display-button",
+                      onClick: () => setShowEmojiPicker(!showEmojiPicker),
+                      children: component.character
                     }
                   )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Size (px)" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "16", max: "200", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", className: "slider-value-input", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "left" ? "active" : "", onClick: () => handleChange("alignment", "left"), children: "L" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "center" ? "active" : "", onClick: () => handleChange("alignment", "center"), children: "C" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
+                  ] })
                 ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Alignment" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "left" ? "active" : "", onClick: () => handleChange("alignment", "left"), children: "L" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "center" ? "active" : "", onClick: () => handleChange("alignment", "center"), children: "C" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.alignment === "right" ? "active" : "", onClick: () => handleChange("alignment", "right"), children: "R" })
-                ] })
-              ] })
+              ] }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
             ] }),
             showEmojiPicker && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
               EmojiPicker,
@@ -26842,8 +26872,9 @@
             );
             onUpdate(component.id, { ...component, data: newData, rows: newRows, cols: newCols });
           };
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Structure", children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Content", "Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Structure" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Rows" }),
@@ -26884,155 +26915,138 @@
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
                 ] })
               ] }) })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Table Style", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Cell Border (px)" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "number",
-                    min: "0",
-                    value: component.cellBorderWidth,
-                    onChange: (e) => handleChange("cellBorderWidth", e.target.value)
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Table Background Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.tableBackgroundColor === "transparent" ? "#ffffff" : component.tableBackgroundColor, onChange: (e) => handleChange("tableBackgroundColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.tableBackgroundColor, onChange: (e) => handleChange("tableBackgroundColor", e.target.value), placeholder: "transparent" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "transparent-btn", onClick: () => handleChange("tableBackgroundColor", "transparent"), title: "Set transparent", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "10" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", { x1: "4.93", y1: "4.93", x2: "19.07", y2: "19.07" })
-                  ] }) })
-                ] })
-              ] })
-            ] }),
-            component.hasHeader && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Header Style", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Header Fill Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.headerFillColor, onChange: (e) => handleChange("headerFillColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.headerFillColor, onChange: (e) => handleChange("headerFillColor", e.target.value) })
-                ] })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Auto-contrast text color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useAutoHeaderTextColor, onChange: (e) => handleChange("useAutoHeaderTextColor", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              !component.useAutoHeaderTextColor && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Header Text Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.headerTextColor, onChange: (e) => handleChange("headerTextColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.headerTextColor, onChange: (e) => handleChange("headerTextColor", e.target.value) })
-                ] })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Body Typography", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
-                ] })
-              ] }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                    "input",
-                    {
-                      type: "range",
-                      min: "8",
-                      max: "48",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
-                    }
-                  ),
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Table Style" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Cell Border (px)" }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                     "input",
                     {
                       type: "number",
-                      min: "1",
-                      className: "slider-value-input",
-                      value: component.fontSize,
-                      onChange: (e) => handleChange("fontSize", e.target.value)
+                      min: "0",
+                      value: component.cellBorderWidth,
+                      onChange: (e) => handleChange("cellBorderWidth", e.target.value)
                     }
                   )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Table Background Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.tableBackgroundColor === "transparent" ? "#ffffff" : component.tableBackgroundColor, onChange: (e) => handleChange("tableBackgroundColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.tableBackgroundColor, onChange: (e) => handleChange("tableBackgroundColor", e.target.value), placeholder: "transparent" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "transparent-btn", onClick: () => handleChange("tableBackgroundColor", "transparent"), title: "Set transparent", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", { cx: "12", cy: "12", r: "10" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", { x1: "4.93", y1: "4.93", x2: "19.07", y2: "19.07" })
+                    ] }) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Table Width (%)" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "10", max: "100", value: component.width, onChange: (e) => handleChange("width", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
+                  ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", style: { marginBottom: "8px" }, children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global" }),
+              component.hasHeader && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Header Style" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Header Fill Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.headerFillColor, onChange: (e) => handleChange("headerFillColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.headerFillColor, onChange: (e) => handleChange("headerFillColor", e.target.value) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Auto-contrast text color" }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalTextColor, onChange: (e) => handleChange("useGlobalTextColor", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useAutoHeaderTextColor, onChange: (e) => handleChange("useAutoHeaderTextColor", e.target.checked) }),
                     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
                   ] })
-                ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) })
+                ] }) }),
+                !component.useAutoHeaderTextColor && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Header Text Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.headerTextColor, onChange: (e) => handleChange("headerTextColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.headerTextColor, onChange: (e) => handleChange("headerTextColor", e.target.value) })
+                  ] })
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Body Typography" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-group", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global Font" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalFont, onChange: (e) => handleChange("useGlobalFont", e.target.checked) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                  ] })
+                ] }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Horizontal Align" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "left" ? "active" : "", onClick: () => handleChange("textAlign", "left"), children: "L" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "center" ? "active" : "", onClick: () => handleChange("textAlign", "center"), children: "C" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "right" ? "active" : "", onClick: () => handleChange("textAlign", "right"), children: "R" })
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Family" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: component.fontFamily, disabled: component.useGlobalFont, onChange: (e) => handleChange("fontFamily", e.target.value), children: FONT_FAMILIES.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: font, children: font }, font)) })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Font Size" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "range", min: "8", max: "48", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", className: "slider-value-input", value: component.fontSize, onChange: (e) => handleChange("fontSize", e.target.value) })
                   ] })
                 ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Vertical Align" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.verticalAlign === "top" ? "active" : "", onClick: () => handleChange("verticalAlign", "top"), children: "Top" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.verticalAlign === "middle" ? "active" : "", onClick: () => handleChange("verticalAlign", "middle"), children: "Middle" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.verticalAlign === "bottom" ? "active" : "", onClick: () => handleChange("verticalAlign", "bottom"), children: "Bottom" })
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Text Color" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "global-toggle-group", style: { marginBottom: "8px" }, children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Use Global" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "switch", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: component.useGlobalTextColor, onChange: (e) => handleChange("useGlobalTextColor", e.target.checked) }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "slider round" })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-input-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "color", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: component.textColor, disabled: component.useGlobalTextColor, onChange: (e) => handleChange("textColor", e.target.value) })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group-row", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Horizontal Align" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "text-align-group", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "left" ? "active" : "", onClick: () => handleChange("textAlign", "left"), children: "L" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "center" ? "active" : "", onClick: () => handleChange("textAlign", "center"), children: "C" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.textAlign === "right" ? "active" : "", onClick: () => handleChange("textAlign", "right"), children: "R" })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Vertical Align" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "button-toggle-group", children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.verticalAlign === "top" ? "active" : "", onClick: () => handleChange("verticalAlign", "top"), children: "Top" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.verticalAlign === "middle" ? "active" : "", onClick: () => handleChange("verticalAlign", "middle"), children: "Middle" }),
+                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: component.verticalAlign === "bottom" ? "active" : "", onClick: () => handleChange("verticalAlign", "bottom"), children: "Bottom" })
+                    ] })
                   ] })
                 ] })
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Dimensions", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-group", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Table Width (%)" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "slider-group", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "range",
-                    min: "10",
-                    max: "100",
-                    value: component.width,
-                    onChange: (e) => handleChange("width", e.target.value)
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "10", max: "100", className: "slider-value-input", value: component.width, onChange: (e) => handleChange("width", e.target.value) })
-              ] })
-            ] }) })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         case "layout":
           const layoutComponent = component;
           const widths = layoutComponent.columnWidths || layoutComponent.columns.map(() => 100 / layoutComponent.columns.length);
-          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CollapsibleSection, { title: "Columns", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "You have selected a layout container. You can move or delete it, or style its background and borders below." }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "column-widths-info", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Column Widths" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "column-widths-display", children: [
-                widths.map((w) => w.toFixed(1)).join("% / "),
-                "%"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleChange("columnWidths", void 0), className: "reset-button", children: "Reset Column Sizes" })
-            ] })
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, { tabs: ["Style", "Container"], children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "property-group", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Columns" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "You can move or delete this layout, or style its container." }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "column-widths-info", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "Column Widths" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "column-widths-display", children: [
+                  widths.map((w) => w.toFixed(1)).join("% / "),
+                  "%"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => handleChange("columnWidths", void 0), className: "reset-button", children: "Reset Column Sizes" })
+              ] })
+            ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate })
           ] });
         default:
           return null;
@@ -27043,8 +27057,7 @@
         component.type.charAt(0).toUpperCase() + component.type.slice(1),
         " Properties"
       ] }),
-      renderProperties(),
-      component && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollapsibleSection, { title: "Container Styles", defaultCollapsed: true, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContainerStyleEditor, { component, onUpdate }) })
+      renderProperties()
     ] });
   };
   var ExportModal = ({ html, onClose }) => {
@@ -27365,7 +27378,7 @@
       position: "absolute",
       top: `${position.top - 45}px`,
       // Position it above the element
-      left: `${position.left + position.width / 2}`,
+      left: `${position.left + position.width / 2}px`,
       transform: "translateX(-50%)",
       // Center it horizontally
       zIndex: 1002
